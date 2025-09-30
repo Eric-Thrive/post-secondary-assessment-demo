@@ -1,0 +1,76 @@
+# Assessment Report Generator
+
+## Overview
+This project is an AI-powered educational assessment application that generates comprehensive accommodation reports for K-12 and post-secondary educational contexts. It analyzes uploaded documents using advanced AI function calling to produce structured reports, including barrier identification, accommodation mappings, and evidence-based recommendations. The system aims to streamline assessment processes and provide tailored support plans for students.
+
+## Recent Changes (September 19, 2025)
+- **Centralized Post-Secondary Report Parsing**: Created dedicated parsing utility for post-secondary reports at `client/src/utils/postSecondaryReportParser.ts`
+  - Extracted all markdown parsing logic from FigmaEnhancedReportViewer into reusable functions
+  - Improved maintainability by centralizing parsing functions for sections, accommodations, and barriers
+  - Standardized parsing of all 4 required accommodation categories (Academic, Testing, Technology Support, Additional Resources/Services)
+- **Isolated Pathway Configuration**: Implemented dedicated configuration module for post-secondary pathway settings at `server/config/postSecondaryPathways.ts`
+  - Isolated post-secondary module configuration to prevent interference with other report types (K-12, tutoring)
+  - Enhanced demo environment support with automatic simple pathway selection
+  - Validation functions ensure all 4 accommodation categories are generated in reports
+  - Strict separation between demo and production environments maintained
+
+## Recent Changes (September 13, 2025)
+- **Enhanced Document Processing System**: Implemented comprehensive multi-format document support with advanced OCR capabilities
+  - **PDF Processing with OCR Fallback**: Enhanced PDFExtractionService with intelligent OCR fallback using Tesseract.js
+    - Automatic detection of scanned PDFs when text extraction yields minimal content (<50 characters)
+    - PDF-to-image conversion using PDF.js canvas rendering at 2.0x scale for optimal OCR accuracy
+    - Sequential page processing with 10-page limit to balance functionality with performance
+    - Comprehensive error handling and progress logging throughout the OCR pipeline
+  - **Word Document Support**: Added complete Microsoft Word document processing using Mammoth.js
+    - Client-side text extraction from .docx and .docm files
+    - Removed .doc support with clear user guidance to convert to modern formats
+    - Robust validation and error handling for document processing failures
+  - **Image OCR Processing**: Integrated Tesseract.js for extracting text from scanned images
+    - Support for multiple image formats: JPG, PNG, GIF, BMP, TIFF, WEBP
+    - Confidence scoring and validation of OCR results
+    - Progress tracking and detailed logging for troubleshooting
+  - **Enhanced File Upload Interface**: Updated DocumentUpload component to support expanded file types
+    - Accepts: .pdf, .docx, .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp, .txt
+    - Maintained 4-document upload limit with improved user feedback
+    - All processing remains client-side for maximum security and data privacy
+- **Previous Database Migration Completed (September 12, 2025)**: Full Supabase to Replit PostgreSQL migration with comprehensive development database setup and enhanced security controls
+
+## User Preferences
+Preferred communication style: Simple, everyday language.
+Report formatting:
+- Serial numbering required for all barriers (e.g., "Observed Barrier 1:", "Observed Barrier 2:", etc.)
+- Sequential numbering required for all accommodations within each category (e.g., Academic Accommodations: 1., 2., 3.)
+Prompt Management:
+- No changes to prompts or templates without explicit user permission
+- User must approve all modifications to system instructions, report templates, and database content
+- Always ask before updating any prompt-related content
+
+## System Architecture
+The application features a dual-module architecture for K-12 and Post-Secondary assessments, each with distinct AI configurations, database schemas, and report generation workflows.
+
+**Frontend:**
+-   **Framework:** React with TypeScript
+-   **Styling:** Tailwind CSS with shadcn/ui components
+-   **State Management:** React Context API, React Query
+-   **PDF Processing:** Client-side text extraction using PDF.js worker
+
+**Backend:**
+-   **Runtime:** Node.js with Express.js
+-   **AI Processing:** Direct OpenAI integration (GPT-4.1 primary, GPT-4o fallback)
+-   **Database:** Replit PostgreSQL (unified for dev and production)
+-   **ORM:** Drizzle with PostgreSQL dialect
+-   **API:** RESTful API with `/api` prefix
+
+**Key Features & Design Patterns:**
+-   **Dual-Module Architecture:** Separate K-12 and Post-Secondary modules with tailored configurations, prompts, and lookup tables.
+-   **AI Processing Pipeline:** Handles multi-file document upload, client-side PDF extraction, direct OpenAI analysis, template enforcement, and structured report generation.
+-   **Advanced AI Configuration:** Strict model enforcement (GPT-4.1 primary, GPT-4o fallback), dynamic function calling for database queries, comprehensive system prompts (6,371+ characters), expert inference for missing data, and smart token management.
+-   **Report Generation:** Markdown output with export options (PDF, Word, raw text), including structured data extraction for educational assessments.
+-   **Review & Edit Workflow:** Allows users to review, edit, and restore original versions of generated reports with change tracking.
+-   **Prompt Management:** System prompts and report templates are database-driven for real-time updates and flexibility.
+
+## External Dependencies
+-   **OpenAI GPT-4.1 / GPT-4o:** AI models for analysis, content generation, and function calling.
+-   **Replit PostgreSQL:** Primary database for development and production data storage.
+-   **@neondatabase/serverless:** PostgreSQL client for database interaction.
+-   **pdfjs-dist:** For client-side PDF text extraction.

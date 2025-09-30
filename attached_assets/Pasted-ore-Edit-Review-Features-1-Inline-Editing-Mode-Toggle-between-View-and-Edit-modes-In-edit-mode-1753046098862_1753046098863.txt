@@ -1,0 +1,86 @@
+ore Edit/Review Features
+1. Inline Editing Mode
+
+Toggle between "View" and "Edit" modes
+In edit mode, clicking any barrier or accommodation makes it editable
+Use contentEditable divs (simple HTML feature) or inline text inputs
+Visual indicators for edited content (different color/background)
+2. QC Review Workflow
+
+Flag System: Color-coded badges next to each item
+🟢 Green: Database validated
+🟡 Yellow: AI-inferred (needs review)
+🔴 Red: User flagged for review
+Approval Checkboxes: Simple checkbox next to each barrier/accommodation
+Bulk Actions: "Approve All Validated" / "Flag All Inferred"
+3. Change Tracking
+
+Sidebar Panel: Collapsible "Changes" panel showing:
+Original text → New text
+Who made the change
+Timestamp
+Type of change (edit/delete/add)
+Change Counter: Badge showing number of pending changes
+4. Version Control
+
+Database Structure:
+assessment_cases (existing)
+- original_report (new column - stores pristine version)
+- current_report (existing - working version)
+report_edits (new table)
+- id, case_id, section, original_text, new_text, 
+- editor_name, timestamp, status (pending/approved/rejected)
+5. Simple UI Implementation
+
+[View Mode] [Edit Mode] [Review Changes (3)]
+----------------------------------------
+Section 2: Functional Barriers
+✓ Slowed Processing Speed [Validated] 
+  Takes significantly longer to complete tasks...
+  
+☐ Attention Difficulties [AI-Inferred] ⚠️
+  Student shows difficulty maintaining focus...
+  [Edit] [Flag for Review]
+User Workflow
+Initial Review: User sees report with QC indicators
+Edit Mode: Click to edit any text inline
+Review Panel: See all changes in one place
+Approval Process: Check off reviewed items
+Finalization: "Finalize Report" button locks changes
+Easy Implementation Strategies
+Reuse Existing Patterns:
+
+Use React Query's optimistic updates for instant feedback
+Leverage existing markdown parser for edit/view modes
+Use existing session data for user tracking
+Extend current database schema minimally
+Simple State Management:
+
+// Track edits in component state
+const [edits, setEdits] = useState({});
+const [originalReport, setOriginalReport] = useState(null);
+// Simple diff tracking
+const trackEdit = (section, itemId, newText, originalText) => {
+  setEdits(prev => ({
+    ...prev,
+    [`${section}-${itemId}`]: { newText, originalText, timestamp: new Date() }
+  }));
+};
+Progressive Enhancement:
+
+Start with basic inline editing
+Add change tracking next
+Then add approval workflow
+Finally add version history
+UI/UX Considerations
+Visual Feedback:
+
+Edited text gets light yellow background
+Hover shows "Original: [text]" tooltip
+Save indicator shows when changes are persisted
+Simplified Actions:
+
+Double-click to edit (familiar pattern)
+Auto-save after 2 seconds of inactivity
+Undo button per edit (not global undo)
+"Reset Section" option for major mistakes

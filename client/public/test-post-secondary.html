@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Post-Secondary Reports</title>
+</head>
+<body>
+    <h1>Post-Secondary Reports Test</h1>
+    <div id="status">Loading...</div>
+    <div id="results"></div>
+
+    <script>
+        // Set the environment to post-secondary-demo
+        localStorage.setItem('app-environment', 'post-secondary-demo');
+        localStorage.setItem('activeModule', 'post_secondary');
+        
+        const statusEl = document.getElementById('status');
+        const resultsEl = document.getElementById('results');
+        
+        // Test the API directly
+        async function testAPI() {
+            statusEl.textContent = 'Testing API...';
+            
+            try {
+                // Check environment
+                const env = localStorage.getItem('app-environment');
+                const module = localStorage.getItem('activeModule');
+                
+                resultsEl.innerHTML += `<p>Environment: ${env}</p>`;
+                resultsEl.innerHTML += `<p>Module: ${module}</p>`;
+                
+                // Test demo endpoint directly
+                const response = await fetch('/api/demo-assessment-cases/post_secondary', {
+                    credentials: 'include'
+                });
+                
+                resultsEl.innerHTML += `<p>Demo Endpoint Status: ${response.status}</p>`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultsEl.innerHTML += `<p style="color: green;">✅ Success! Found ${data.length} demo cases</p>`;
+                    resultsEl.innerHTML += '<h3>Case IDs:</h3><ul>';
+                    data.forEach(c => {
+                        resultsEl.innerHTML += `<li>${c.id} - ${c.status}</li>`;
+                    });
+                    resultsEl.innerHTML += '</ul>';
+                } else {
+                    resultsEl.innerHTML += `<p style="color: red;">❌ Failed: ${response.statusText}</p>`;
+                }
+                
+                statusEl.textContent = 'Test complete!';
+                
+                // After 2 seconds, navigate to the actual page
+                setTimeout(() => {
+                    statusEl.textContent = 'Navigating to Post-Secondary Reports page...';
+                    window.location.href = '/post-secondary-reports';
+                }, 2000);
+                
+            } catch (error) {
+                statusEl.textContent = 'Error!';
+                resultsEl.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run the test
+        testAPI();
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+dist/
+.cache/
+
+# Environment files (IMPORTANT: Never commit API keys)
+.env
+.env.local
+.env.development
+.env.production
+
+# System files
+.DS_Store
+*.tar.gz
+
+# Build artifacts  
+server/public
+vite.config.ts.*
+
+# Database backups (contain sensitive data)
+database_backup_*/
+*.sql
+simple_backup.sql
+
+# Database exports (CRITICAL: contain PII and sensitive data)
+exports/
+db-exports/
+scripts/exports/
+scripts/db-exports/
+**/production-*/
+**/development-*/
+**/demo-*/
+**/test-exports/
+*.backup
+*.dump
+database-exports/
+
+# Security-sensitive files (NEVER commit these)
+secrets/
+credentials/
+**/api-keys/
+**/*-credentials.json
+**/*-secrets.json
+**/*-config.json
+config/production.json
+config/secrets.json
+
+# Data files that may contain PII
+**/*-data.json
+**/*-users.json
+**/*-customers.json
+**/*-sessions.json
+**/*-analytics.json
+user-data/
+customer-data/
+
+# Logs
+logs/
+*.log
+
+# IDE files
+.vscode/
+.idea/

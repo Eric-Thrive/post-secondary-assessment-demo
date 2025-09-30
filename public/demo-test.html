@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { margin: 10px 0; padding: 10px; background: #f4f4f4; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        pre { background: #f8f9fa; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Post-Secondary Demo Test</h1>
+    
+    <div id="environment" class="status">
+        Checking environment...
+    </div>
+    
+    <div id="api-status" class="status">
+        Testing API endpoint...
+    </div>
+    
+    <div id="cases-list">
+        <h2>Assessment Cases:</h2>
+        <pre id="cases-content">Loading...</pre>
+    </div>
+    
+    <button onclick="navigateToApp()">Go to Post-Secondary Reports</button>
+    
+    <script>
+        // Set environment
+        const environment = localStorage.getItem('app-environment');
+        document.getElementById('environment').innerHTML = `
+            Environment: <strong>${environment || 'Not set'}</strong>
+            ${environment?.includes('demo') ? ' ✅ Demo mode enabled' : ' ❌ Not in demo mode'}
+        `;
+        document.getElementById('environment').className = environment?.includes('demo') ? 'status success' : 'status error';
+        
+        // Test API
+        fetch('/api/demo-assessment-cases/post_secondary')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('api-status').innerHTML = `
+                    ✅ Demo API working! Loaded ${data.length} cases
+                `;
+                document.getElementById('api-status').className = 'status success';
+                
+                // Display cases
+                const casesInfo = data.map(c => ({
+                    id: c.id,
+                    display_name: c.display_name,
+                    status: c.status,
+                    module_type: c.module_type,
+                    has_report: !!c.analysis_result
+                }));
+                
+                document.getElementById('cases-content').textContent = JSON.stringify(casesInfo, null, 2);
+            })
+            .catch(error => {
+                document.getElementById('api-status').innerHTML = `
+                    ❌ API Error: ${error.message}
+                `;
+                document.getElementById('api-status').className = 'status error';
+                document.getElementById('cases-content').textContent = 'Failed to load cases';
+            });
+        
+        function navigateToApp() {
+            window.location.href = '/post-secondary-reports';
+        }
+    </script>
+</body>
+</html>

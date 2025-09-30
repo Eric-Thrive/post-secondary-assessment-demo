@@ -1,0 +1,34 @@
+Manual GitHub Repository Setup Instructions
+==========================================
+
+Since Replit has Git protection mechanisms, you'll need to run these commands manually:
+
+1. First, check current status:
+   git status
+
+2. Stage all files:
+   git add .
+
+3. Commit with a comprehensive message:
+   git commit -m "Initial commit: Replit Accommodation Engine
+
+- AI-powered educational accessibility platform
+- K-12 and post-secondary assessment analysis
+- Advanced OpenAI integration with function calling
+- Cascade inference system for comprehensive content generation
+- Database-driven template flexibility
+- Complete documentation and setup guide"
+
+4. Change the remote URL to point to your new repository:
+   git remote set-url origin https://github.com/Eric-Thrive/replit-accommodation-engine.git
+
+5. Push to your new repository:
+   git push origin development:main
+
+Alternative approach if the above doesn't work:
+- Use git remote remove origin
+- Then git remote add origin https://github.com/Eric-Thrive/replit-accommodation-engine.git
+- Then git push origin development:main
+
+Your new repository will be available at:
+https://github.com/Eric-Thrive/replit-accommodation-engine

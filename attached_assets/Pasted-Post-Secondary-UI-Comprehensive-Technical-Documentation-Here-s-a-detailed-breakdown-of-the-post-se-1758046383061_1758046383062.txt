@@ -1,0 +1,154 @@
+Post-Secondary UI - Comprehensive Technical Documentation
+Here's a detailed breakdown of the post-secondary UI system for an agent to locate and implement:
+
+Main Entry Points
+Primary Components Location
+client/src/components/
+├── PostSecondaryReportGenerator.tsx     // Main wrapper component
+├── FigmaEnhancedReportViewer.tsx       // Core UI component (2000+ lines)
+├── BaseReportGenerator.tsx             // Base report system
+└── report/
+    ├── ReportHeader.tsx                // Header with case selection/downloads
+    ├── ReportContent.tsx               // Content renderer
+    └── EmptyStates.tsx                 // Loading/no-data states
+Page Route
+client/src/pages/PostSecondaryReportsPage.tsx  // Route entry point
+client/src/App.tsx                              // Route definition: '/post-secondary-reports'
+Core UI Component: FigmaEnhancedReportViewer.tsx
+Location: client/src/components/FigmaEnhancedReportViewer.tsx
+
+Key Features:
+
+Multi-section navigation (Student Info, Document Review, Functional Impact, Accommodations)
+Custom Figma-designed icons imported from attached_assets/
+THRIVE brand color palette (Navy #1297D2, Sky Blue #96D7E1, Orange #F89E54)
+URL parameter handling for direct section linking and demo mode
+Responsive design with mobile-first approach
+Auto-loading and view state management
+Props Interface:
+
+interface FigmaEnhancedReportViewerProps {
+  currentCase: any;                    // Assessment case data
+  markdownReport: string | null;       // Generated report content
+  hasAnalysisResult: boolean;          // Whether analysis is complete
+  children?: React.ReactNode;
+  initialViewMode?: 'standard' | 'figma';
+  autoload?: boolean;                  // Auto-advance through sections
+}
+Asset Dependencies
+Custom Icons (Required)
+Located in attached_assets/ directory:
+
+├── icon7.4_1754492758374.png          // Student Information icon
+├── icon6.4_1754492792573.png          // Document Review icon  
+├── icon6.6_1754497844296.png          // Document Review header
+├── icon4.4_1754492982304.png          // Functional Impact icon
+├── icon4.2_1754532094463.png          // Functional Impact header
+├── icon2.4_1754493001138.png          // Accommodations icon
+├── icon2.6_1755100497953.png          // Accommodations header
+├── icon7.7_1755100209288.png          // Student header icon
+├── isotype Y-NB_1754494460165.png     // THRIVE logo
+├── image_1754498028324.png            // Barrier illustration
+└── ChatGPT Image Aug 6, 2025, 03_51_54 PM_1754509933318.png  // Completion background
+Import Pattern in Component:
+import StudentInfoIcon from '@assets/icon7.4_1754492758374.png';
+import DocumentReviewIcon from '@assets/icon6.4_1754492792573.png';
+// ... etc for all icons
+Data Layer Integration
+Hooks Used:
+client/src/hooks/
+├── useModuleAssessmentData.ts         // Fetches post-secondary cases
+├── useModuleReportCase.ts             // Manages case selection
+├── useMarkdownReport.ts               // Extracts markdown content
+├── usePostSecondaryAssessmentData.ts  // Post-secondary specific data
+├── usePostSecondaryAssessmentCases.ts // Case management
+└── useReportDownloads.ts              // Export functionality
+API Endpoints:
+/api/assessment-cases-direct/post_secondary    // Fetches reports list
+/api/analyze-assessment                        // Generates new reports
+Database Table:
+post_secondary_reports                         // Isolated from K-12 system
+├── id (UUID primary key)
+├── case_id (unique)
+├── status ('pending'|'completed')
+├── display_name
+├── markdown_report                            // Main content
+├── analysis_result (JSONB)
+├── functional_barriers (JSONB)
+└── accommodations (JSONB)
+Styling System
+CSS Classes and Brand Colors:
+Located in client/src/index.css:
+
+/* THRIVE Brand Colors */
+--navy-blue: #1297D2
+--sky-blue: #96D7E1  
+--orange: #F89E54
+--yellow: #FDE677
+Key CSS Classes:
+.figma-enhanced-report - Main container
+Custom gradient backgrounds for each section
+Mobile-responsive breakpoints
+Custom navigation styling
+Configuration System
+Module Configuration:
+// Located in: client/src/types/moduleConfig.ts or constants
+const MODULE_CONFIGS = {
+  post_secondary: {
+    moduleType: 'post_secondary',
+    title: 'Post-Secondary Educational Support Plan',
+    // ... other config options
+  }
+}
+Navigation and URL Handling
+URL Parameters Supported:
+?case={caseId} - Auto-select specific case
+&view=figma - Force enhanced view mode
+&autoload=true - Enable auto-advancing sections
+Demo URL format: /post-secondary-reports?case={caseId}&view=figma&autoload=true
+Navigation States:
+const viewStates = [
+  'student-information',    // Section 1
+  'document-review',       // Section 2
+  'functional-impact',     // Section 3 
+  'accommodations',        // Section 4
+  'report-complete'        // Final summary
+];
+Integration Steps for Another Agent
+1. Copy Core Files:
+# Main components
+cp client/src/components/FigmaEnhancedReportViewer.tsx [target]/
+cp client/src/components/PostSecondaryReportGenerator.tsx [target]/
+# Supporting infrastructure
+cp -r client/src/hooks/usePostSecondary* [target]/hooks/
+cp -r client/src/hooks/useModuleReport* [target]/hooks/
+2. Copy Assets:
+cp attached_assets/icon*.png [target]/assets/
+cp attached_assets/isotype*.png [target]/assets/  
+cp attached_assets/image*.png [target]/assets/
+3. Dependencies Required:
+{
+  "@radix-ui/react-*": "latest",
+  "react-markdown": "^8.0.0",
+  "remark-gfm": "^3.0.0",
+  "lucide-react": "latest",
+  "tailwindcss": "latest"
+}
+4. Vite Configuration:
+Ensure vite.config.ts has asset alias:
+
+resolve: {
+  alias: {
+    '@assets': path.resolve(__dirname, './attached_assets')
+  }
+}
+5. Database Schema:
+The agent will need to create the post_secondary_reports table using the schema from shared/schema.ts lines 107-121.
+
+Key Architecture Decisions
+Complete K-12 Isolation: Post-secondary data routes to separate post_secondary_reports table
+Self-Contained UI: All styling and assets are internal, no external API dependencies
+URL-Driven Navigation: Direct linkable sections for demo/sharing purposes
+Mobile-First Design: Responsive across all device sizes
+Brand Consistency: Official THRIVE color palette and iconography
+This system is designed to be portable while maintaining full functionality and brand consistency.

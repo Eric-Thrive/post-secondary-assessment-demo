@@ -1,0 +1,190 @@
+/* THRIVE Post-Secondary UI Styles */
+
+/* THRIVE Brand Color Palette */
+:root {
+  /* Primary Brand Colors - Official THRIVE Sunwashed Palette */
+  --thrive-navy: #1297D2;         /* Navy Blue - Primary */
+  --thrive-sky-blue: #96D7E1;     /* Sky Blue - Secondary */
+  --thrive-orange: #F89E54;       /* Orange - Accent */
+  --thrive-yellow: #FDE677;       /* Yellow - Highlight */
+  
+  /* Semantic Color Mapping */
+  --primary: var(--thrive-navy);
+  --secondary: var(--thrive-sky-blue);
+  --accent: var(--thrive-orange);
+  --highlight: var(--thrive-yellow);
+  
+  /* UI Colors */
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+}
+
+/* Dark Mode Support */
+.dark {
+  --background: #0f172a;
+  --surface: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+}
+
+/* Figma Enhanced Report Viewer Styles */
+.figma-enhanced-report {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--background);
+  min-height: 100vh;
+}
+
+.figma-enhanced-report .sidebar {
+  border-right: 2px solid var(--thrive-sky-blue);
+  background: var(--background);
+}
+
+.figma-enhanced-report .nav-button {
+  transition: all 0.2s ease;
+}
+
+.figma-enhanced-report .nav-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.figma-enhanced-report .nav-button.active {
+  background-color: var(--thrive-yellow);
+  border-color: var(--thrive-orange);
+  color: #000000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.figma-enhanced-report .header {
+  background: linear-gradient(to right, var(--thrive-navy), var(--thrive-sky-blue));
+}
+
+/* Navigation Icons */
+.figma-enhanced-report .nav-icon {
+  width: 20px;
+  height: 20px;
+  filter: none;
+}
+
+.figma-enhanced-report .nav-icon.selected {
+  filter: hue-rotate(0deg) saturate(1) brightness(1);
+}
+
+/* Section Backgrounds */
+.section-student-info {
+  background: linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1));
+}
+
+.section-document-review {
+  background: linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1));
+}
+
+.section-functional-impact {
+  background: linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1));
+}
+
+.section-accommodations {
+  background: linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1));
+}
+
+.section-complete {
+  background: #FEF9F0;
+}
+
+/* Content Area Styling */
+.content-area {
+  padding: 2rem;
+  background: var(--background);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .figma-enhanced-report .sidebar {
+    width: 280px;
+  }
+  
+  .figma-enhanced-report .header {
+    left: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .figma-enhanced-report .sidebar {
+    position: fixed;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 50;
+  }
+  
+  .figma-enhanced-report .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .figma-enhanced-report .header {
+    left: 0;
+  }
+}
+
+/* Animation Utilities */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Bottom Navigation Layout */
+.bottom-navigation {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.page-counter {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Accommodation Subsection Styling */
+.accommodation-subsection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border-radius: 8px;
+  border-left: 4px solid var(--thrive-navy);
+}
+
+.accommodation-item {
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: var(--background);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.accommodation-item:hover {
+  border-color: var(--thrive-sky-blue);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

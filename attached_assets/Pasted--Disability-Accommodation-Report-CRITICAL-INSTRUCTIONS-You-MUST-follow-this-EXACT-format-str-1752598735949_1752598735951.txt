@@ -1,0 +1,77 @@
+# Disability Accommodation Report
+
+## CRITICAL INSTRUCTIONS:
+- You MUST follow this EXACT format structure below
+- DO NOT mix functional barriers with accommodations
+- DO NOT add any sections not listed below
+- DO NOT change section numbers or names
+- Keep functional barriers COMPLETELY SEPARATE from accommodations
+- Section 2 is ONLY for barriers, Section 3 is ONLY for accommodations/supports
+
+---
+
+## 2. Functional Impact Summary
+
+[For each barrier identified in the assessment, repeat this exact format:]
+
+
+**Observed Barrier:** [Barrier, plain language description of what would be observed in a college environment]  
+**Evidence:**  [List evidence, e.g., test results, provider summaries, clinical findings in one sentence]
+- [Include specific test names, do not list scores]
+[Continue listing ALL barriers using the above format before moving to accommodations]
+
+---
+
+## 3. Accommodation & Support Plan
+
+### 3.1 Academic Accommodations
+
+[For each accommodation, repeat this exact format:]  
+
+**Accommodation Name:** [Name]  
+[If no academic accommodations are needed, write:]  
+**None at this time.**
+
+---
+
+### 3.2 Instructional / Program Accommodations
+
+[For each accommodation, repeat this exact format:]  
+
+**Accommodation Name:** [Name]  
+**Barriers Addressed:** [List specific barrier(s) from Section 2]  
+
+
+[If no instructional accommodations are needed, write:]  
+**None at this time.**
+
+---
+
+### 3.3 Auxiliary Aids & Services
+
+[For each aid/service, repeat this exact format:]  
+
+**Accommodation Name:** [Name]  
+**Barriers Addressed:** [List specific barrier(s) from Section 2]  
+
+[If no auxiliary aids are needed, write:]  
+**None at this time.**
+
+---
+
+### 3.4 Non-Accommodation Supports / Referrals
+
+[For each support/referral, repeat this exact format:]  
+
+**Service Name:** [Name]  
+**Barriers Addressed:** [List specific barrier(s) from Section 2]  
+
+[If no additional supports are needed, write:]  
+**None at this time.**-
+
+REMEMBER: 
+- Section 2 MUST contain ONLY functional barriers
+- Section 3 MUST contain ONLY accommodations and supports
+- DO NOT combine or mix these sections
+- Follow the exact numbering and format above
+

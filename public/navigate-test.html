@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Navigate Test</title>
+    <script>
+        // Ensure environment is set
+        localStorage.setItem('app-environment', 'post-secondary-demo');
+        console.log('Environment set to:', localStorage.getItem('app-environment'));
+        
+        // Redirect to the app
+        setTimeout(() => {
+            console.log('Navigating to /post-secondary-reports');
+            window.location.href = '/post-secondary-reports';
+        }, 1000);
+    </script>
+</head>
+<body>
+    <h1>Setting up demo environment...</h1>
+    <p>Redirecting to Post-Secondary Reports in 1 second...</p>
+</body>
+</html>

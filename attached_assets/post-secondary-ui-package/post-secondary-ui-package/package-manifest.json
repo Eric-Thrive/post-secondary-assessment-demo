@@ -1,0 +1,140 @@
+{
+  "packageName": "THRIVE Post-Secondary UI Package",
+  "version": "1.0.0",
+  "uploadedAt": "2025-09-16T18:41:31.056Z",
+  "totalFiles": 26,
+  "bucket": "replit-objstore-90ecb71c-6429-43df-9144-bbdfa17007ec",
+  "basePath": "public/post-secondary-ui-package",
+  "files": [
+    {
+      "originalPath": "post-secondary-ui-package/PACKAGE-SUMMARY.md",
+      "storagePath": "public/post-secondary-ui-package/PACKAGE-SUMMARY.md",
+      "mimeType": "text/markdown"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/README-INTEGRATION.md",
+      "storagePath": "public/post-secondary-ui-package/README-INTEGRATION.md",
+      "mimeType": "text/markdown"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/ChatGPT Image Aug 6, 2025, 03_51_54 PM_1754509933318.png",
+      "storagePath": "public/post-secondary-ui-package/assets/ChatGPT Image Aug 6, 2025, 03_51_54 PM_1754509933318.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon2.4_1754493001138.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon2.4_1754493001138.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon2.6_1755100497953.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon2.6_1755100497953.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon4.2_1754532094463.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon4.2_1754532094463.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon4.4_1754492982304.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon4.4_1754492982304.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon6.4_1754492792573.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon6.4_1754492792573.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon6.6_1754497844296.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon6.6_1754497844296.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon7.4_1754492758374.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon7.4_1754492758374.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/icon7.7_1755100209288.png",
+      "storagePath": "public/post-secondary-ui-package/assets/icon7.7_1755100209288.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/image_1754498028324.png",
+      "storagePath": "public/post-secondary-ui-package/assets/image_1754498028324.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/assets/isotype Y-NB_1754494460165.png",
+      "storagePath": "public/post-secondary-ui-package/assets/isotype Y-NB_1754494460165.png",
+      "mimeType": "image/png"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/components/BaseReportGenerator.tsx",
+      "storagePath": "public/post-secondary-ui-package/components/BaseReportGenerator.tsx",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/components/FigmaEnhancedReportViewer.tsx",
+      "storagePath": "public/post-secondary-ui-package/components/FigmaEnhancedReportViewer.tsx",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/components/PostSecondaryReportGenerator.tsx",
+      "storagePath": "public/post-secondary-ui-package/components/PostSecondaryReportGenerator.tsx",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/components/report/ReportContent.tsx",
+      "storagePath": "public/post-secondary-ui-package/components/report/ReportContent.tsx",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/components/report/ReportHeader.tsx",
+      "storagePath": "public/post-secondary-ui-package/components/report/ReportHeader.tsx",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/hooks/useMarkdownReport.ts",
+      "storagePath": "public/post-secondary-ui-package/hooks/useMarkdownReport.ts",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/hooks/useModuleAssessmentData.ts",
+      "storagePath": "public/post-secondary-ui-package/hooks/useModuleAssessmentData.ts",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/hooks/usePostSecondaryAssessmentData.ts",
+      "storagePath": "public/post-secondary-ui-package/hooks/usePostSecondaryAssessmentData.ts",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/pages/PostSecondaryReportsPage.tsx",
+      "storagePath": "public/post-secondary-ui-package/pages/PostSecondaryReportsPage.tsx",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/schema/postSecondaryReports.sql",
+      "storagePath": "public/post-secondary-ui-package/schema/postSecondaryReports.sql",
+      "mimeType": "text/sql"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/styles/post-secondary.css",
+      "storagePath": "public/post-secondary-ui-package/styles/post-secondary.css",
+      "mimeType": "text/css"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/types/assessmentCase.ts",
+      "storagePath": "public/post-secondary-ui-package/types/assessmentCase.ts",
+      "mimeType": "text/typescript"
+    },
+    {
+      "originalPath": "post-secondary-ui-package/types/moduleConfig.ts",
+      "storagePath": "public/post-secondary-ui-package/types/moduleConfig.ts",
+      "mimeType": "text/typescript"
+    }
+  ]
+}

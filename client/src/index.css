@@ -1,0 +1,283 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* K-12 Report Specific Styles */
+.k12-report-content table {
+  @apply w-full border-collapse;
+}
+
+.k12-report-content th {
+  @apply bg-gray-50 text-left text-sm font-semibold text-gray-700 p-3 border-b border-gray-200;
+}
+
+.k12-report-content td {
+  @apply p-3 text-sm text-gray-600 align-top border-b border-gray-100;
+}
+
+.k12-report-content table tr:hover {
+  @apply bg-gray-50/50;
+}
+
+/* Hide horizontal rules in K-12 reports */
+.k12-report-content hr {
+  @apply hidden;
+}
+
+/* ContentEditable styling for rich text editing */
+.k12-report-content[contenteditable="true"] {
+  @apply outline-none;
+}
+
+.k12-report-content[contenteditable="true"] table {
+  @apply border border-gray-300;
+}
+
+.k12-report-content[contenteditable="true"] th,
+.k12-report-content[contenteditable="true"] td {
+  @apply border border-gray-200;
+}
+
+.k12-report-content[contenteditable="true"] p {
+  @apply mb-2;
+}
+
+.k12-report-content[contenteditable="true"] ul {
+  @apply list-disc pl-5 mb-2;
+}
+
+.k12-report-content[contenteditable="true"] strong {
+  @apply font-semibold;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* THRIVE Post-Secondary UI Styles */
+
+/* THRIVE Brand Color Palette */
+:root {
+  /* Primary Brand Colors - Official THRIVE Sunwashed Palette */
+  --thrive-navy: #1297D2;         /* Navy Blue - Primary */
+  --thrive-sky-blue: #96D7E1;     /* Sky Blue - Secondary */
+  --thrive-orange: #F89E54;       /* Orange - Accent */
+  --thrive-yellow: #FDE677;       /* Yellow - Highlight */
+  
+  /* Semantic Color Mapping for THRIVE */
+  --thrive-primary: var(--thrive-navy);
+  --thrive-secondary: var(--thrive-sky-blue);
+  --thrive-accent: var(--thrive-orange);
+  --thrive-highlight: var(--thrive-yellow);
+  
+  /* UI Colors for Post-Secondary */
+  --ps-background: #ffffff;
+  --ps-surface: #f8fafc;
+  --ps-text-primary: #1e293b;
+  --ps-text-secondary: #64748b;
+  --ps-border: #e2e8f0;
+}
+
+/* Figma Enhanced Report Viewer Styles */
+.figma-enhanced-report {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--ps-background);
+  min-height: 100vh;
+}
+
+.figma-enhanced-report .sidebar {
+  border-right: 2px solid var(--thrive-sky-blue);
+  background: var(--ps-background);
+}
+
+.figma-enhanced-report .nav-button {
+  transition: all 0.2s ease;
+}
+
+.figma-enhanced-report .nav-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.figma-enhanced-report .nav-button.active {
+  background-color: var(--thrive-yellow);
+  border-color: var(--thrive-orange);
+  color: #000000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.figma-enhanced-report .header {
+  background: linear-gradient(to right, var(--thrive-navy), var(--thrive-sky-blue));
+}
+
+/* Navigation Icons */
+.figma-enhanced-report .nav-icon {
+  width: 20px;
+  height: 20px;
+  filter: none;
+}
+
+/* Section Backgrounds */
+.section-student-info {
+  background: linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1));
+}
+
+.section-document-review {
+  background: linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1));
+}
+
+.section-functional-impact {
+  background: linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1));
+}
+
+.section-accommodations {
+  background: linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1));
+}
+
+.section-complete {
+  background: #FEF9F0;
+}
+
+/* Content Area Styling */
+.content-area {
+  padding: 2rem;
+  background: var(--ps-background);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin: 1rem;
+}
+
+/* Bottom Navigation Layout */
+.bottom-navigation {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.page-counter {
+  color: var(--ps-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Accommodation Subsection Styling */
+.accommodation-subsection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--ps-surface);
+  border-radius: 8px;
+  border-left: 4px solid var(--thrive-navy);
+}
+
+.accommodation-item {
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: var(--ps-background);
+  border-radius: 6px;
+  border: 1px solid var(--ps-border);
+  transition: all 0.2s ease;
+}
+
+.accommodation-item:hover {
+  border-color: var(--thrive-sky-blue);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
