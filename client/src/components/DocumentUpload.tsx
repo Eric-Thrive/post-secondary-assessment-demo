@@ -23,7 +23,6 @@ const DocumentUpload = ({
 }: DocumentUploadProps) => {
   const { toast } = useToast();
   const [allFiles, setAllFiles] = React.useState<FileList | null>(null);
-  const [privacyCertified, setPrivacyCertified] = React.useState(false);
   const [waitingForRedactor, setWaitingForRedactor] = React.useState(false);
   const redactorWindowRef = React.useRef<Window | null>(null);
 
@@ -148,15 +147,6 @@ const DocumentUpload = ({
   }, [documents.length, allFiles, onFilesChange, setDocuments, toast]);
 
   const handleOpenRedactor = () => {
-    if (!privacyCertified) {
-      toast({
-        title: "Certification Required",
-        description: "Please certify that you will de-identify documents before using the redactor tool.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     const redactorUrl = import.meta.env.VITE_PI_REDACTOR_URL;
     if (!redactorUrl) {
       toast({
@@ -207,16 +197,6 @@ const DocumentUpload = ({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, docType: string) => {
     const files = event.target.files;
     if (!files) return;
-
-    if (!privacyCertified) {
-      toast({
-        title: "Certification Required",
-        description: "Please certify that documents have been de-identified before uploading.",
-        variant: "destructive"
-      });
-      event.target.value = '';
-      return;
-    }
 
     const currentDocCount = documents.length;
     const newFileCount = files.length;
@@ -286,8 +266,6 @@ const DocumentUpload = ({
   return (
     <div className="space-y-6">
       <PrivacyNotice
-        certified={privacyCertified}
-        onCertificationChange={setPrivacyCertified}
         onOpenRedactor={handleOpenRedactor}
       />
 
@@ -312,17 +290,12 @@ const DocumentUpload = ({
       <Card>
         <CardHeader>
           <CardTitle 
-            className={`transition-colors ${isAtLimit || !privacyCertified ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer hover:text-blue-600'}`}
-            onClick={() => !isAtLimit && privacyCertified && document.getElementById('file-upload')?.click()}
+            className={`transition-colors ${isAtLimit ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer hover:text-blue-600'}`}
+            onClick={() => !isAtLimit && document.getElementById('file-upload')?.click()}
           >Upload Documents</CardTitle>
           {isAtLimit && (
             <p className="text-sm text-gray-500 mt-2">
               Document limit reached (4/4). Remove a document to upload more.
-            </p>
-          )}
-          {!privacyCertified && !isAtLimit && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-              Please certify document de-identification above before uploading.
             </p>
           )}
           <input
@@ -332,7 +305,7 @@ const DocumentUpload = ({
             accept=".pdf,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.txt"
             onChange={(e) => handleFileUpload(e, 'other')}
             className="hidden"
-            disabled={isAtLimit || !privacyCertified}
+            disabled={isAtLimit}
             data-testid="input-file-upload"
           />
         </CardHeader>
