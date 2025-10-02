@@ -42,8 +42,9 @@ const PrivacyNotice = ({ onCertificationChange, certified, onOpenRedactor }: Pri
             <Button
               onClick={onOpenRedactor}
               variant="outline"
-              className="w-full justify-between border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+              className="w-full justify-between border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="button-open-redactor"
+              disabled={!certified}
             >
               <span className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />

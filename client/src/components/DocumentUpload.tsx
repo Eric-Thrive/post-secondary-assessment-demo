@@ -148,6 +148,15 @@ const DocumentUpload = ({
   }, [documents.length, allFiles, onFilesChange, setDocuments, toast]);
 
   const handleOpenRedactor = () => {
+    if (!privacyCertified) {
+      toast({
+        title: "Certification Required",
+        description: "Please certify that you will de-identify documents before using the redactor tool.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const redactorUrl = import.meta.env.VITE_PI_REDACTOR_URL;
     if (!redactorUrl) {
       toast({
@@ -321,7 +330,7 @@ const DocumentUpload = ({
             type="file"
             multiple
             accept=".pdf,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.txt"
-            onChange={(e) => handleFileUpload(e, 'assessment_report')}
+            onChange={(e) => handleFileUpload(e, 'other')}
             className="hidden"
             disabled={isAtLimit || !privacyCertified}
             data-testid="input-file-upload"
