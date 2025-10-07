@@ -37,15 +37,18 @@ export const PostSecondaryReviewEditReports: React.FC = () => {
     ? '/api/demo-assessment-cases/post_secondary'
     : '/api/assessment-cases-direct/post_secondary';
 
-  // Check for cached case data from navigation
-  const getCachedCase = () => {
+  // Check for cached case data from navigation for optimistic loading
+  const getCachedCaseForInitialData = () => {
     const cached = sessionStorage.getItem('cached-review-case');
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
         // Only use cache if less than 5 seconds old
         if (Date.now() - parsed.timestamp < 5000) {
-          return parsed.case;
+          console.log('✨ Using cached case data as initial data for instant display');
+          // Clear cache after reading (will be used as initialData)
+          sessionStorage.removeItem('cached-review-case');
+          return [parsed.case];
         }
       } catch (e) {
         console.error('Error parsing cached case:', e);
@@ -53,23 +56,15 @@ export const PostSecondaryReviewEditReports: React.FC = () => {
       // Clear expired or invalid cache
       sessionStorage.removeItem('cached-review-case');
     }
-    return null;
+    return undefined; // Return undefined to let React Query fetch normally
   };
 
   // Fetch assessment cases - using environment-appropriate endpoint
   const { data: cases = [], isLoading: isLoadingCases, refetch } = useQuery<AssessmentCase[]>({
     queryKey: [endpoint],
+    initialData: getCachedCaseForInitialData(), // Use cached data for instant display
     queryFn: async () => {
-      // Check for cached data first
-      const cachedCase = getCachedCase();
-      if (cachedCase) {
-        console.log('✨ Using cached case data, skipping API call');
-        // Clear cache after use
-        sessionStorage.removeItem('cached-review-case');
-        // Return array with cached case for immediate display
-        return [cachedCase];
-      }
-      
+      // Always fetch the full list from the API
       const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error('Failed to fetch cases');
