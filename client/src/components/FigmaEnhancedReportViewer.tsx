@@ -58,6 +58,16 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
   // Navigation function to Review & Edit section
   const handleEditClick = (sectionId: string) => {
     console.log('🔄 Navigating to Review & Edit section for:', sectionId, 'Case ID:', currentCase?.id);
+    
+    // Cache the current case data to avoid refetching
+    if (currentCase) {
+      sessionStorage.setItem('cached-review-case', JSON.stringify({
+        case: currentCase,
+        timestamp: Date.now(),
+        module: currentCase.module_type || 'post_secondary'
+      }));
+    }
+    
     // Navigate to the Review & Edit page with the current case ID as a parameter
     // Using window.location for now as this needs to work with query params
     if (currentCase?.id) {
