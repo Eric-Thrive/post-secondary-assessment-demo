@@ -30,11 +30,18 @@ export const PostSecondaryReviewEditReports: React.FC = () => {
   const [changes, setChanges] = useState<any[]>([]);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Fetch assessment cases - using direct endpoint with inline fetcher
+  // Detect demo environment and use appropriate endpoint
+  const environment = localStorage.getItem('app-environment') || 'replit-prod';
+  const isDemoEnvironment = environment.includes('demo');
+  const endpoint = isDemoEnvironment 
+    ? '/api/demo-assessment-cases/post_secondary'
+    : '/api/assessment-cases-direct/post_secondary';
+
+  // Fetch assessment cases - using environment-appropriate endpoint
   const { data: cases = [], isLoading: isLoadingCases, refetch } = useQuery<AssessmentCase[]>({
-    queryKey: ['/api/assessment-cases-direct/post_secondary'],
+    queryKey: [endpoint],
     queryFn: async () => {
-      const response = await fetch('/api/assessment-cases-direct/post_secondary');
+      const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error('Failed to fetch cases');
       }
