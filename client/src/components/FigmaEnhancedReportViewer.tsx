@@ -414,6 +414,29 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                 </div>
               </button>
 
+              {/* Review */}
+              <button
+                onClick={() => handleEditClick('review')}
+                className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{
+                  backgroundColor: '#f3f4f6',
+                  borderColor: '#d1d5db',
+                  color: '#374151'
+                }}
+                data-testid="button-review"
+              >
+                <div className="flex items-center gap-3">
+                  <Edit2 
+                    className="h-5 w-5"
+                    style={{ color: '#6b7280' }}
+                  />
+                  <div className="font-bold text-left" 
+                       style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+                    Review
+                  </div>
+                </div>
+              </button>
+
               {/* Go Home */}
               <Link to="/" className="block">
                 <button
