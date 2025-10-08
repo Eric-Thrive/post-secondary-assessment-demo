@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -61,7 +60,25 @@ const AssessmentRouteHandler = () => {
   }
 };
 
-const App = () => (
+// Customer Experience Shell - Locked Environment
+const CustomerExperienceShell = ({ children, forcedEnvironment }: { children: React.ReactNode; forcedEnvironment: any }) => (
+  <QueryClientProvider client={queryClient}>
+    <EnvironmentProvider forcedEnvironment={forcedEnvironment}>
+      <AuthProvider>
+        <ModuleProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            {children}
+          </TooltipProvider>
+        </ModuleProvider>
+      </AuthProvider>
+    </EnvironmentProvider>
+  </QueryClientProvider>
+);
+
+// Developer Shell - Full Environment Switching
+const DeveloperShell = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={queryClient}>
     <EnvironmentProvider>
       <AuthProvider>
@@ -69,42 +86,87 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                <Route path="/new-assessment" element={<ProtectedRoute><AssessmentRouteHandler /></ProtectedRoute>} />
-                <Route path="/new-k12-assessment" element={<ProtectedRoute><NewK12AssessmentPage /></ProtectedRoute>} />
-                <Route path="/new-k12-complex-assessment" element={<ProtectedRoute><NewK12ComplexAssessmentPage /></ProtectedRoute>} />
-                <Route path="/new-post-secondary-assessment" element={<ProtectedRoute><NewPostSecondaryAssessmentPage /></ProtectedRoute>} />
-                <Route path="/new-tutoring-assessment" element={<ProtectedRoute><NewTutoringAssessmentPage /></ProtectedRoute>} />
-                <Route path="/reports" element={<ProtectedRoute><ReportRouteHandler /></ProtectedRoute>} />
-                <Route path="/post-secondary-reports" element={<ProtectedRoute><PostSecondaryReportsPage /></ProtectedRoute>} />
-                <Route path="/k12-reports" element={<ProtectedRoute><K12ReportsPage /></ProtectedRoute>} />
-                <Route path="/tutoring-reports" element={<ProtectedRoute><TutoringReportsPage /></ProtectedRoute>} />
-                <Route path="/post-secondary-review-edit" element={<ProtectedRoute><PostSecondaryReviewEditPage /></ProtectedRoute>} />
-                <Route path="/k12-review-edit" element={<ProtectedRoute><K12ReviewEditPage /></ProtectedRoute>} />
-                <Route path="/tutoring-review-edit" element={<ProtectedRoute><TutoringReviewEditPage /></ProtectedRoute>} />
-                <Route path="/prompts" element={<ProtectedRoute><PromptsPage /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
-                <Route path="/tutoring-demo" element={<TutoringDemoPage />} />
-                
-                {/* Demo Landing Pages (Authentication Required) */}
-                <Route path="/login" element={<PostSecondaryDemoLandingPage />} />
-                <Route path="/register" element={<PostSecondaryDemoLandingPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/post-secondary-demo-login" element={<PostSecondaryDemoLandingPage />} />
-                <Route path="/k12-demo-login" element={<K12DemoLandingPage />} />
-                <Route path="/tutoring-demo-login" element={<TutoringDemoLandingPage />} />
-                
-                <Route path="/shared/:shareToken" element={<SharedReport />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            {children}
           </TooltipProvider>
         </ModuleProvider>
       </AuthProvider>
     </EnvironmentProvider>
   </QueryClientProvider>
+);
+
+const App = () => (
+  <BrowserRouter>
+    <Routes>
+      {/* Customer-Facing Demo Routes (Locked Environments) */}
+      <Route path="/post-secondary-demo/*" element={
+        <CustomerExperienceShell forcedEnvironment="post-secondary-demo">
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/assessment" element={<ProtectedRoute><NewPostSecondaryAssessmentPage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><PostSecondaryReportsPage /></ProtectedRoute>} />
+            <Route path="/review-edit" element={<ProtectedRoute><PostSecondaryReviewEditPage /></ProtectedRoute>} />
+          </Routes>
+        </CustomerExperienceShell>
+      } />
+      
+      <Route path="/k12-demo/*" element={
+        <CustomerExperienceShell forcedEnvironment="k12-demo">
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/assessment" element={<ProtectedRoute><NewK12AssessmentPage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><K12ReportsPage /></ProtectedRoute>} />
+            <Route path="/review-edit" element={<ProtectedRoute><K12ReviewEditPage /></ProtectedRoute>} />
+          </Routes>
+        </CustomerExperienceShell>
+      } />
+      
+      <Route path="/tutoring-demo/*" element={
+        <CustomerExperienceShell forcedEnvironment="tutoring-demo">
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/assessment" element={<ProtectedRoute><NewTutoringAssessmentPage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><TutoringReportsPage /></ProtectedRoute>} />
+            <Route path="/review-edit" element={<ProtectedRoute><TutoringReviewEditPage /></ProtectedRoute>} />
+          </Routes>
+        </CustomerExperienceShell>
+      } />
+
+      {/* Developer/Integrated App Routes (Full Environment Switching) */}
+      <Route path="/*" element={
+        <DeveloperShell>
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/new-assessment" element={<ProtectedRoute><AssessmentRouteHandler /></ProtectedRoute>} />
+            <Route path="/new-k12-assessment" element={<ProtectedRoute><NewK12AssessmentPage /></ProtectedRoute>} />
+            <Route path="/new-k12-complex-assessment" element={<ProtectedRoute><NewK12ComplexAssessmentPage /></ProtectedRoute>} />
+            <Route path="/new-post-secondary-assessment" element={<ProtectedRoute><NewPostSecondaryAssessmentPage /></ProtectedRoute>} />
+            <Route path="/new-tutoring-assessment" element={<ProtectedRoute><NewTutoringAssessmentPage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><ReportRouteHandler /></ProtectedRoute>} />
+            <Route path="/post-secondary-reports" element={<ProtectedRoute><PostSecondaryReportsPage /></ProtectedRoute>} />
+            <Route path="/k12-reports" element={<ProtectedRoute><K12ReportsPage /></ProtectedRoute>} />
+            <Route path="/tutoring-reports" element={<ProtectedRoute><TutoringReportsPage /></ProtectedRoute>} />
+            <Route path="/post-secondary-review-edit" element={<ProtectedRoute><PostSecondaryReviewEditPage /></ProtectedRoute>} />
+            <Route path="/k12-review-edit" element={<ProtectedRoute><K12ReviewEditPage /></ProtectedRoute>} />
+            <Route path="/tutoring-review-edit" element={<ProtectedRoute><TutoringReviewEditPage /></ProtectedRoute>} />
+            <Route path="/prompts" element={<ProtectedRoute><PromptsPage /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+            <Route path="/tutoring-demo" element={<TutoringDemoPage />} />
+            
+            {/* Demo Landing Pages (Authentication Required) */}
+            <Route path="/login" element={<PostSecondaryDemoLandingPage />} />
+            <Route path="/register" element={<PostSecondaryDemoLandingPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/post-secondary-demo-login" element={<PostSecondaryDemoLandingPage />} />
+            <Route path="/k12-demo-login" element={<K12DemoLandingPage />} />
+            <Route path="/tutoring-demo-login" element={<TutoringDemoLandingPage />} />
+            
+            <Route path="/shared/:shareToken" element={<SharedReport />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </DeveloperShell>
+      } />
+    </Routes>
+  </BrowserRouter>
 );
 
 export default App;

@@ -27,7 +27,12 @@ const iconMap: Record<string, typeof Database> = {
 };
 
 export function EnvironmentSwitcher() {
-  const { currentEnvironment, setEnvironment, isLoading, availableEnvironments } = useEnvironment();
+  const { currentEnvironment, setEnvironment, isLoading, availableEnvironments, isCustomerMode } = useEnvironment();
+  
+  // Hide switcher in customer mode - they can't change environments
+  if (isCustomerMode) {
+    return null;
+  }
   
   const currentEnv = availableEnvironments.find(env => env.id === currentEnvironment);
   const Icon = iconMap[currentEnvironment] || Server; // Fallback to Server icon if not found

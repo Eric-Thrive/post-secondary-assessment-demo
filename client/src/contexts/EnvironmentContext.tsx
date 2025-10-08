@@ -7,76 +7,121 @@ interface EnvironmentContextType {
   setEnvironment: (env: EnvironmentType) => Promise<void>;
   isLoading: boolean;
   availableEnvironments: typeof environments;
+  isCustomerMode: boolean; // True when environment is forced/locked for customers
+  isDeveloperMode: boolean; // True when full environment switching is allowed
 }
 
 const EnvironmentContext = createContext<EnvironmentContextType | undefined>(undefined);
 
 const ENVIRONMENT_KEY = 'app-environment';
 
-export function EnvironmentProvider({ children }: { children: ReactNode }) {
-  const [currentEnvironment, setCurrentEnvironment] = useState<EnvironmentType>('replit-prod');
+interface EnvironmentProviderProps {
+  children: ReactNode;
+  forcedEnvironment?: EnvironmentType; // For customer-facing locked URLs
+}
+
+export function EnvironmentProvider({ children, forcedEnvironment }: EnvironmentProviderProps) {
+  const [currentEnvironment, setCurrentEnvironment] = useState<EnvironmentType>(
+    forcedEnvironment || 'replit-prod'
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  // Determine if we're in customer or developer mode
+  const isCustomerMode = !!forcedEnvironment;
+  const isDeveloperMode = !forcedEnvironment;
 
-  // Load saved environment on mount
+  // Load saved environment on mount (unless forced for customer mode)
   useEffect(() => {
+    if (forcedEnvironment) {
+      // Customer mode: Force the environment and lock the module
+      console.log(`EnvironmentProvider: Customer mode - forcing environment: ${forcedEnvironment}`);
+      localStorage.setItem(ENVIRONMENT_KEY, forcedEnvironment);
+      
+      // Lock module for demo environments
+      if (forcedEnvironment === 'post-secondary-demo') {
+        localStorage.setItem('activeModule', 'post_secondary');
+      } else if (forcedEnvironment === 'k12-demo') {
+        localStorage.setItem('activeModule', 'k12');
+      } else if (forcedEnvironment === 'tutoring-demo' || forcedEnvironment === 'tutoring') {
+        localStorage.setItem('activeModule', 'tutoring');
+      }
+      return;
+    }
+    
+    // Developer mode: Load from localStorage
     const saved = localStorage.getItem(ENVIRONMENT_KEY);
-    if (saved && ['replit-prod', 'replit-dev', 'post-secondary-demo', 'k12-demo', 'tutoring-demo', 'tutoring'].includes(saved)) {
-      console.log(`EnvironmentProvider: Loading saved environment: ${saved}`);
+    const validEnvironments = ['production', 'development', 'replit-prod', 'replit-dev', 
+                              'post-secondary-demo', 'k12-demo', 'tutoring-demo', 'tutoring',
+                              'post-secondary-dev', 'k12-dev', 'tutoring-dev'];
+                              
+    if (saved && validEnvironments.includes(saved)) {
+      console.log(`EnvironmentProvider: Developer mode - loading saved environment: ${saved}`);
       setCurrentEnvironment(saved as EnvironmentType);
       
       // Ensure module consistency for demo modes
-      if (saved === 'post-secondary-demo') {
+      if (saved === 'post-secondary-demo' || saved === 'post-secondary-dev') {
         const currentModule = localStorage.getItem('activeModule');
         if (currentModule !== 'post_secondary') {
-          console.log('EnvironmentProvider: Fixing module for post-secondary demo');
+          console.log('EnvironmentProvider: Fixing module for post-secondary');
           localStorage.setItem('activeModule', 'post_secondary');
         }
-      } else if (saved === 'k12-demo') {
+      } else if (saved === 'k12-demo' || saved === 'k12-dev') {
         const currentModule = localStorage.getItem('activeModule');
         if (currentModule !== 'k12') {
-          console.log('EnvironmentProvider: Fixing module for k12 demo');
+          console.log('EnvironmentProvider: Fixing module for k12');
           localStorage.setItem('activeModule', 'k12');
         }
-      } else if (saved === 'tutoring-demo') {
+      } else if (saved === 'tutoring-demo' || saved === 'tutoring-dev' || saved === 'tutoring') {
         const currentModule = localStorage.getItem('activeModule');
         if (currentModule !== 'tutoring') {
-          console.log('EnvironmentProvider: Fixing module for tutoring demo');
+          console.log('EnvironmentProvider: Fixing module for tutoring');
           localStorage.setItem('activeModule', 'tutoring');
         }
       }
     } else {
       console.log('EnvironmentProvider: No saved environment, using default: replit-prod');
     }
-  }, []);
+  }, [forcedEnvironment]);
 
   const setEnvironment = async (env: EnvironmentType) => {
     if (env === currentEnvironment) return;
     
+    // Block environment switching in customer mode
+    if (isCustomerMode) {
+      console.log('Environment switching is disabled in customer mode');
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      // Notify the server about environment change
-      const response = await fetch('/api/environment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ environment: env })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to switch environment');
+      // In developer mode, try to notify backend but don't fail if it's blocked
+      if (isDeveloperMode) {
+        try {
+          const response = await fetch('/api/environment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ environment: env })
+          });
+          
+          if (!response.ok) {
+            console.log(`Backend environment switch failed (${response.status}), continuing with client-only switch`);
+          }
+        } catch (fetchError) {
+          // Ignore backend errors in developer mode
+          console.log('Backend environment notification failed, continuing with client-only switch:', fetchError);
+        }
       }
 
-      // Save to localStorage first
+      // Always update localStorage and state regardless of backend response
       localStorage.setItem(ENVIRONMENT_KEY, env);
       
-      // Clear any conflicting module settings for demo modes
-      if (env === 'post-secondary-demo') {
+      // Update module settings for environment-specific modes
+      if (env === 'post-secondary-demo' || env === 'post-secondary-dev') {
         localStorage.setItem('activeModule', 'post_secondary');
-      } else if (env === 'k12-demo') {
+      } else if (env === 'k12-demo' || env === 'k12-dev') {
         localStorage.setItem('activeModule', 'k12');
-      } else if (env === 'tutoring-demo') {
-        localStorage.setItem('activeModule', 'tutoring');
-      } else if (env === 'tutoring') {
+      } else if (env === 'tutoring-demo' || env === 'tutoring-dev' || env === 'tutoring') {
         localStorage.setItem('activeModule', 'tutoring');
       }
       
@@ -92,11 +137,18 @@ export function EnvironmentProvider({ children }: { children: ReactNode }) {
         window.location.reload();
       }, 1000);
     } catch (error) {
+      // This should rarely happen now since we handle backend errors above
+      console.error('Unexpected error switching environment:', error);
       toast({
-        title: "Error",
-        description: "Failed to switch environment. Please try again.",
+        title: "Warning",
+        description: "Environment switch may be incomplete. Refreshing page...",
         variant: "destructive",
       });
+      
+      // Still reload to apply the change
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +160,9 @@ export function EnvironmentProvider({ children }: { children: ReactNode }) {
         currentEnvironment, 
         setEnvironment, 
         isLoading,
-        availableEnvironments: environments 
+        availableEnvironments: environments,
+        isCustomerMode,
+        isDeveloperMode
       }}
     >
       {children}
