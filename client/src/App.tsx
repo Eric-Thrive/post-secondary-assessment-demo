@@ -101,10 +101,10 @@ const App = () => (
       <Route path="/post-secondary-demo/*" element={
         <CustomerExperienceShell forcedEnvironment="post-secondary-demo">
           <Routes>
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/assessment" element={<ProtectedRoute><NewPostSecondaryAssessmentPage /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><PostSecondaryReportsPage /></ProtectedRoute>} />
-            <Route path="/review-edit" element={<ProtectedRoute><PostSecondaryReviewEditPage /></ProtectedRoute>} />
+            <Route index element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="assessment" element={<ProtectedRoute><NewPostSecondaryAssessmentPage /></ProtectedRoute>} />
+            <Route path="reports" element={<ProtectedRoute><PostSecondaryReportsPage /></ProtectedRoute>} />
+            <Route path="review-edit" element={<ProtectedRoute><PostSecondaryReviewEditPage /></ProtectedRoute>} />
           </Routes>
         </CustomerExperienceShell>
       } />
@@ -112,10 +112,10 @@ const App = () => (
       <Route path="/k12-demo/*" element={
         <CustomerExperienceShell forcedEnvironment="k12-demo">
           <Routes>
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/assessment" element={<ProtectedRoute><NewK12AssessmentPage /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><K12ReportsPage /></ProtectedRoute>} />
-            <Route path="/review-edit" element={<ProtectedRoute><K12ReviewEditPage /></ProtectedRoute>} />
+            <Route index element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="assessment" element={<ProtectedRoute><NewK12AssessmentPage /></ProtectedRoute>} />
+            <Route path="reports" element={<ProtectedRoute><K12ReportsPage /></ProtectedRoute>} />
+            <Route path="review-edit" element={<ProtectedRoute><K12ReviewEditPage /></ProtectedRoute>} />
           </Routes>
         </CustomerExperienceShell>
       } />
@@ -123,10 +123,10 @@ const App = () => (
       <Route path="/tutoring-demo/*" element={
         <CustomerExperienceShell forcedEnvironment="tutoring-demo">
           <Routes>
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/assessment" element={<ProtectedRoute><NewTutoringAssessmentPage /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><TutoringReportsPage /></ProtectedRoute>} />
-            <Route path="/review-edit" element={<ProtectedRoute><TutoringReviewEditPage /></ProtectedRoute>} />
+            <Route index element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="assessment" element={<ProtectedRoute><NewTutoringAssessmentPage /></ProtectedRoute>} />
+            <Route path="reports" element={<ProtectedRoute><TutoringReportsPage /></ProtectedRoute>} />
+            <Route path="review-edit" element={<ProtectedRoute><TutoringReviewEditPage /></ProtectedRoute>} />
           </Routes>
         </CustomerExperienceShell>
       } />

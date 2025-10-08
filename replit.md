@@ -3,6 +3,28 @@
 ## Overview
 This project is an AI-powered educational assessment application that generates comprehensive accommodation reports for K-12 and post-secondary educational contexts. It analyzes uploaded documents using advanced AI function calling to produce structured reports, including barrier identification, accommodation mappings, and evidence-based recommendations. The system aims to streamline assessment processes and provide tailored support plans for students.
 
+## Recent Changes (October 8, 2025)
+- **Dual-Access Architecture Implementation**: Established separate customer and developer access modes for improved user experience
+  - **Customer Experience Shell**: Created dedicated routes at `/post-secondary-demo/*`, `/k12-demo/*`, `/tutoring-demo/*`
+    - Environment locked to respective demo modes with no switching capability
+    - Environment switcher component automatically hidden
+    - Backend API errors handled gracefully without disrupting user experience
+    - Module automatically locked based on demo type (post-secondary, k12, or tutoring)
+  - **Developer Shell**: Maintained full functionality at standard routes (`/`, `/reports`, etc.)
+    - Complete environment switching capability preserved
+    - Environment switcher visible with all demo and production options
+    - Backend environment API called with graceful failure handling
+    - Module switching remains flexible for development and testing
+  - **EnvironmentContext Enhancements**: Updated context to support forced environments
+    - Added `forcedEnvironment` prop for customer-facing routes
+    - Implemented `isCustomerMode` and `isDeveloperMode` properties
+    - Backend `/api/environment` errors now handled gracefully with fallback to client-side switching
+    - Client-side environment switching works even when backend is unavailable
+  - **Performance Optimizations**: Resolved page reload issues with React Router navigation
+    - Replaced `window.location.href` with `useNavigate` for client-side routing
+    - Implemented sessionStorage caching for instant report display when navigating
+    - Eliminated full page reloads when switching between Report Viewer and Review & Edit pages
+
 ## Recent Changes (September 19, 2025)
 - **Centralized Post-Secondary Report Parsing**: Created dedicated parsing utility for post-secondary reports at `client/src/utils/postSecondaryReportParser.ts`
   - Extracted all markdown parsing logic from FigmaEnhancedReportViewer into reusable functions
