@@ -8,7 +8,7 @@ import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, 
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 
 import { unsplashImages, navigationIcons } from '@/utils/unsplashImages';
@@ -54,6 +54,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
 
   // Always use enhanced view - removed standard view option
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Navigation function to Review & Edit section
   const handleEditClick = (sectionId: string) => {
@@ -66,14 +67,15 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
         timestamp: Date.now(),
         module: currentCase.module_type || 'post_secondary'
       }));
+      console.log('✨ Cached case data for instant loading');
     }
     
     // Navigate to the Review & Edit page with the current case ID as a parameter
-    // Using window.location for now as this needs to work with query params
+    // Using client-side navigation for instant transition (no page reload)
     if (currentCase?.id) {
-      window.location.href = `/post-secondary-review-edit?caseId=${currentCase.id}`;
+      navigate(`/post-secondary-review-edit?caseId=${currentCase.id}`);
     } else {
-      window.location.href = '/post-secondary-review-edit';
+      navigate('/post-secondary-review-edit');
     }
   };
   
