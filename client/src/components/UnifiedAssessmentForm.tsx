@@ -30,7 +30,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   const [gradeError, setGradeError] = useState<string>('');
   const [uniqueId, setUniqueId] = useState<string>('');
   const [uniqueIdError, setUniqueIdError] = useState<string>('');
-  const [programMajor, setProgramMajor] = useState<string>('');
   const [reportAuthor, setReportAuthor] = useState<string>('');
   const [reportAuthorError, setReportAuthorError] = useState<string>('');
 
@@ -105,7 +104,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       console.log(`Creating ${moduleType} ${pathway} assessment case...`);
       console.log('Unique ID:', uniqueId);
       console.log('Report Author:', reportAuthor);
-      console.log('Program/Major:', programMajor);
       console.log('Selected grade:', selectedGrade);
       console.log('Documents to process:', documentFiles.length);
 
@@ -153,7 +151,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
           moduleType,
           pathway, // This is the key new parameter
           uniqueId: uniqueId.trim(),
-          programMajor: programMajor.trim(),
           reportAuthor: reportAuthor.trim(),
           studentGrade: selectedGrade,
           environment
@@ -178,7 +175,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       
       // Reset form
       setUniqueId('');
-      setProgramMajor('');
       setReportAuthor('');
       setSelectedGrade('');
       setUniqueIdError('');
@@ -234,18 +230,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
             </div>
           </div>
           {uniqueIdError && <p className="text-sm text-red-500">{uniqueIdError}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="programMajor">Program/Major</Label>
-          <Input
-            id="programMajor"
-            type="text"
-            placeholder="Enter student's program or major"
-            value={programMajor}
-            onChange={(e) => setProgramMajor(e.target.value)}
-            data-testid="input-program-major"
-          />
         </div>
 
         <div className="space-y-2">
