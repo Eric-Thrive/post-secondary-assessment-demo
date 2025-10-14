@@ -1,8 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Upload, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentFile, DocumentType } from "@/types/assessment";
 import DocumentList from './DocumentList';
@@ -194,50 +192,6 @@ const DocumentUpload = ({
     });
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, docType: string) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    const currentDocCount = documents.length;
-    const newFileCount = files.length;
-    const totalAfterUpload = currentDocCount + newFileCount;
-
-    if (totalAfterUpload > 4) {
-      const remainingSlots = 4 - currentDocCount;
-      toast({
-        title: "Document Limit Reached",
-        description: `You can only upload up to 4 documents. You have ${remainingSlots} slot${remainingSlots !== 1 ? 's' : ''} remaining.`,
-        variant: "destructive"
-      });
-      event.target.value = '';
-      return;
-    }
-
-    const dataTransfer = new DataTransfer();
-
-    if (allFiles) {
-      for (let i = 0; i < allFiles.length; i++) {
-        dataTransfer.items.add(allFiles[i]);
-      }
-    }
-
-    Array.from(files).forEach(file => {
-      dataTransfer.items.add(file);
-      const newDoc: DocumentFile = {
-        id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: file.name,
-        type: docType as DocumentFile['type'],
-        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-        uploadDate: new Date().toISOString().split('T')[0],
-        status: 'uploaded'
-      };
-      setDocuments(prev => [...prev, newDoc]);
-    });
-
-    const newFileList = dataTransfer.files;
-    setAllFiles(newFileList);
-    onFilesChange?.(newFileList);
-  };
 
   const removeDocument = (docId: string) => {
     const docToRemove = documents.find(doc => doc.id === docId);
@@ -260,8 +214,6 @@ const DocumentUpload = ({
       onFilesChange?.(newFileList.length > 0 ? newFileList : null);
     }
   };
-
-  const isAtLimit = documents.length >= 4;
 
   return (
     <div className="space-y-6">
@@ -287,36 +239,20 @@ const DocumentUpload = ({
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle 
-            className={`transition-colors ${isAtLimit ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer hover:text-blue-600'}`}
-            onClick={() => !isAtLimit && document.getElementById('file-upload')?.click()}
-          >Upload Documents</CardTitle>
-          {isAtLimit && (
-            <p className="text-sm text-gray-500 mt-2">
-              Document limit reached (4/4). Remove a document to upload more.
-            </p>
-          )}
-          <input
-            id="file-upload"
-            type="file"
-            multiple
-            accept=".pdf,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.txt"
-            onChange={(e) => handleFileUpload(e, 'other')}
-            className="hidden"
-            disabled={isAtLimit}
-            data-testid="input-file-upload"
-          />
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <DocumentList 
-            documents={documents} 
-            onRemoveDocument={removeDocument} 
-            documentTypes={documentTypes} 
-          />
-        </CardContent>
-      </Card>
+      {documents.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Uploaded Documents</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <DocumentList 
+              documents={documents} 
+              onRemoveDocument={removeDocument} 
+              documentTypes={documentTypes} 
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
