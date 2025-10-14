@@ -204,20 +204,14 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center space-x-4 mb-6">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Change Analysis Method
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">
-            {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
-          </h1>
-          <p className="text-muted-foreground">
-            Using {pathway} analysis pathway
-          </p>
-        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">
+          {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
+        </h1>
+        <p className="text-muted-foreground">
+          Using {pathway} analysis pathway
+        </p>
       </div>
 
       {/* Assessment Information */}
