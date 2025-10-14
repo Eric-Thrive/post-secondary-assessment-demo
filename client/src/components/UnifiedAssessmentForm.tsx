@@ -209,9 +209,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
         <h1 className="text-2xl font-bold">
           {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
         </h1>
-        <p className="text-muted-foreground">
-          Using {pathway} analysis pathway
-        </p>
       </div>
 
       {/* Assessment Information */}
