@@ -68,6 +68,7 @@ This sophisticated assessment report generator creates comprehensive accommodati
    ```bash
    cp .env.example .env
    # Add your DATABASE_URL and OPENAI_API_KEY
+   # Add your VITE_PI_REDACTOR_URL (PI Redactor tool URL)
    ```
 
 4. Run database migrations:
