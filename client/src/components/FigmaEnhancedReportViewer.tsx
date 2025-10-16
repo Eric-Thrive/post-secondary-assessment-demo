@@ -4,12 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, PenTool, Info, Lock, GraduationCap, Brain, MessageSquare, Headphones, UserPlus, Phone, ChevronRight, ChevronDown, ChevronLeft, Edit, Home, Edit2, Save, X } from "lucide-react";
+import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, PenTool, Info, Lock, GraduationCap, Brain, MessageSquare, Headphones, UserPlus, Phone, ChevronRight, ChevronDown, ChevronLeft, Edit, Home, Edit2, Save, X, Plus, LogOut } from "lucide-react";
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
+import { useAuth } from '@/contexts/AuthContext';
+import { useModule } from '@/contexts/ModuleContext';
 
 import { unsplashImages, navigationIcons } from '@/utils/unsplashImages';
 import { 
@@ -55,6 +57,8 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
   // Always use enhanced view - removed standard view option
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { activeModule } = useModule();
+  const { logout, isAuthenticated } = useAuth();
   
   // Navigation function to Review & Edit section
   const handleEditClick = (sectionId: string) => {
@@ -76,6 +80,32 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
       navigate(`/post-secondary-review-edit?caseId=${currentCase.id}`);
     } else {
       navigate('/post-secondary-review-edit');
+    }
+  };
+
+  // Get assessment route based on active module
+  const getNewReportRoute = () => {
+    if (activeModule === 'k12') {
+      return '/new-k12-assessment';
+    } else if (activeModule === 'tutoring') {
+      return '/new-tutoring-assessment';
+    } else {
+      return '/new-post-secondary-assessment';
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to logout. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -449,28 +479,54 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                 </div>
               </button>
 
-              {/* Go Home */}
-              <Link to="/" className="block">
+              {/* New Report */}
+              <Link to={getNewReportRoute()} className="block">
                 <button
                   className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{
-                  backgroundColor: '#f3f4f6',
-                  borderColor: '#d1d5db',
-                  color: '#374151'
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <Home 
-                    className="h-5 w-5"
-                    style={{ color: '#6b7280' }}
-                  />
-                  <div className="font-bold text-left" 
-                       style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
-                    Go Home
+                  style={{
+                    backgroundColor: brandColors.primary,
+                    borderColor: brandColors.primary,
+                    color: '#ffffff'
+                  }}
+                  data-testid="button-new-report"
+                >
+                  <div className="flex items-center gap-3">
+                    <Plus 
+                      className="h-5 w-5"
+                      style={{ color: '#ffffff' }}
+                    />
+                    <div className="font-bold text-left" 
+                         style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+                      New Report
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
               </Link>
+
+              {/* Logout */}
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    borderColor: '#d1d5db',
+                    color: '#374151'
+                  }}
+                  data-testid="button-logout"
+                >
+                  <div className="flex items-center gap-3">
+                    <LogOut 
+                      className="h-5 w-5"
+                      style={{ color: '#6b7280' }}
+                    />
+                    <div className="font-bold text-left" 
+                         style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+                      Logout
+                    </div>
+                  </div>
+                </button>
+              )}
             </nav>
           </div>
         </aside>
