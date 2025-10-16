@@ -75,11 +75,18 @@ export const K12ReviewEditReports: React.FC = () => {
   const [versionInfo, setVersionInfo] = useState<any>({ versions: [], currentVersion: '1.0', isFinalized: false });
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
 
+  // Detect demo environment and use appropriate endpoint
+  const environment = localStorage.getItem('app-environment') || 'replit-prod';
+  const isDemoEnvironment = environment.includes('demo');
+  const endpoint = isDemoEnvironment 
+    ? '/api/demo-assessment-cases/k12'
+    : '/api/assessment-cases-direct/k12';
+
   // Fetch K-12 assessment cases with inline fetcher
   const { data: cases = [], isLoading: isLoadingCases } = useQuery<K12AssessmentCase[]>({
-    queryKey: ['/api/assessment-cases-direct/k12'],
+    queryKey: [endpoint],
     queryFn: async () => {
-      const response = await fetch('/api/assessment-cases-direct/k12');
+      const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error('Failed to fetch cases');
       }

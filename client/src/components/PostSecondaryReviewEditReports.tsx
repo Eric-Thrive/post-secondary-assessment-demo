@@ -30,11 +30,42 @@ export const PostSecondaryReviewEditReports: React.FC = () => {
   const [changes, setChanges] = useState<any[]>([]);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Fetch assessment cases - using direct endpoint with inline fetcher
+  // Detect demo environment and use appropriate endpoint
+  const environment = localStorage.getItem('app-environment') || 'replit-prod';
+  const isDemoEnvironment = environment.includes('demo');
+  const endpoint = isDemoEnvironment 
+    ? '/api/demo-assessment-cases/post_secondary'
+    : '/api/assessment-cases-direct/post_secondary';
+
+  // Check for cached case data from navigation for optimistic loading
+  const getCachedCaseForInitialData = () => {
+    const cached = sessionStorage.getItem('cached-review-case');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        // Only use cache if less than 5 seconds old
+        if (Date.now() - parsed.timestamp < 5000) {
+          console.log('✨ Using cached case data as initial data for instant display');
+          // Clear cache after reading (will be used as initialData)
+          sessionStorage.removeItem('cached-review-case');
+          return [parsed.case];
+        }
+      } catch (e) {
+        console.error('Error parsing cached case:', e);
+      }
+      // Clear expired or invalid cache
+      sessionStorage.removeItem('cached-review-case');
+    }
+    return undefined; // Return undefined to let React Query fetch normally
+  };
+
+  // Fetch assessment cases - using environment-appropriate endpoint
   const { data: cases = [], isLoading: isLoadingCases, refetch } = useQuery<AssessmentCase[]>({
-    queryKey: ['/api/assessment-cases-direct/post_secondary'],
+    queryKey: [endpoint],
+    initialData: getCachedCaseForInitialData(), // Use cached data for instant display
     queryFn: async () => {
-      const response = await fetch('/api/assessment-cases-direct/post_secondary');
+      // Always fetch the full list from the API
+      const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error('Failed to fetch cases');
       }
@@ -54,6 +85,24 @@ export const PostSecondaryReviewEditReports: React.FC = () => {
 
   console.log('Review & Edit - Completed cases:', completedCases);
   console.log('Review & Edit - Completed count:', completedCases.length);
+
+  // Auto-select case from URL parameter or first available case
+  useEffect(() => {
+    if (completedCases.length > 0 && !selectedCaseId) {
+      // Check URL parameters for caseId
+      const urlParams = new URLSearchParams(window.location.search);
+      const caseIdFromUrl = urlParams.get('caseId');
+      
+      if (caseIdFromUrl && completedCases.find(c => c.id === caseIdFromUrl)) {
+        console.log('✅ Auto-selecting case from URL:', caseIdFromUrl);
+        setSelectedCaseId(caseIdFromUrl);
+      } else if (completedCases.length > 0) {
+        // Auto-select first case
+        console.log('✅ Auto-selecting first case:', completedCases[0].id);
+        setSelectedCaseId(completedCases[0].id);
+      }
+    }
+  }, [completedCases, selectedCaseId]);
 
   // Get selected case
   const selectedCase = completedCases.find(c => c.id === selectedCaseId);

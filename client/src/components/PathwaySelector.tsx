@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Settings, Clock, Database, Brain, FileText } from 'lucide-react';
+import { useModule } from '@/contexts/ModuleContext';
 
 interface PathwaySelectorProps {
   onSelectPathway: (pathway: 'simple' | 'complex') => void;
@@ -10,8 +11,11 @@ interface PathwaySelectorProps {
 }
 
 export const PathwaySelector: React.FC<PathwaySelectorProps> = ({ onSelectPathway, moduleType }) => {
-  // Tutoring module only supports simple pathway
-  if (moduleType === 'tutoring') {
+  const { isDemoMode } = useModule();
+  
+  // Auto-skip pathway selection for tutoring module or demo environments
+  // Demo mode always uses simple pathway
+  if (moduleType === 'tutoring' || isDemoMode) {
     React.useEffect(() => {
       onSelectPathway('simple');
     }, [onSelectPathway]);

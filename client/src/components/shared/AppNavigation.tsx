@@ -16,7 +16,7 @@ export const AppNavigation: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { currentEnvironment } = useEnvironment();
 
-  const showLogout = (currentEnvironment === 'tutoring' || isDemoMode) && isAuthenticated;
+  const showLogout = isAuthenticated;
 
   const isActive = (path: string) => {
     return location.pathname === path;

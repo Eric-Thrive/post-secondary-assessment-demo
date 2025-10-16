@@ -132,7 +132,9 @@ const databaseConfigs: Record<string, DatabaseConfig> = {
   'post-secondary-dev': {
     url: process.env.DEV_DATABASE_URL || process.env.DATABASE_URL || '',
     name: 'Post-Secondary Development PostgreSQL',
-    description: 'Development database for post-secondary module testing'
+    description: 'Development database for post-secondary module testing',
+    readOnly: false, // Allow all operations in development
+    isDemoEnvironment: false // Not a demo, so no restrictions applied
   },
   'k12-dev': {
     url: process.env.DEV_DATABASE_URL || process.env.DATABASE_URL || '',

@@ -8,7 +8,7 @@ import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, 
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 
 import { unsplashImages, navigationIcons } from '@/utils/unsplashImages';
@@ -54,16 +54,28 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
 
   // Always use enhanced view - removed standard view option
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Navigation function to Review & Edit section
   const handleEditClick = (sectionId: string) => {
     console.log('🔄 Navigating to Review & Edit section for:', sectionId, 'Case ID:', currentCase?.id);
+    
+    // Cache the current case data to avoid refetching
+    if (currentCase) {
+      sessionStorage.setItem('cached-review-case', JSON.stringify({
+        case: currentCase,
+        timestamp: Date.now(),
+        module: currentCase.module_type || 'post_secondary'
+      }));
+      console.log('✨ Cached case data for instant loading');
+    }
+    
     // Navigate to the Review & Edit page with the current case ID as a parameter
-    // Using window.location for now as this needs to work with query params
+    // Using client-side navigation for instant transition (no page reload)
     if (currentCase?.id) {
-      window.location.href = `/post-secondary-review-edit?caseId=${currentCase.id}`;
+      navigate(`/post-secondary-review-edit?caseId=${currentCase.id}`);
     } else {
-      window.location.href = '/post-secondary-review-edit';
+      navigate('/post-secondary-review-edit');
     }
   };
   
@@ -410,6 +422,29 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                   <div className="font-bold text-left" 
                        style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
                     Report Complete
+                  </div>
+                </div>
+              </button>
+
+              {/* Review */}
+              <button
+                onClick={() => handleEditClick('review')}
+                className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{
+                  backgroundColor: '#f3f4f6',
+                  borderColor: '#d1d5db',
+                  color: '#374151'
+                }}
+                data-testid="button-review"
+              >
+                <div className="flex items-center gap-3">
+                  <Edit2 
+                    className="h-5 w-5"
+                    style={{ color: '#6b7280' }}
+                  />
+                  <div className="font-bold text-left" 
+                       style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+                    Review
                   </div>
                 </div>
               </button>

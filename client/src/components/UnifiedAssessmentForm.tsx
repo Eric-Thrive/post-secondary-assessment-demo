@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentFile } from "@/types/assessment";
 import DocumentUpload from './DocumentUpload';
 import { GradeSelection } from './GradeSelection';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 
 interface UnifiedAssessmentFormProps {
   moduleType: 'k12' | 'post_secondary';
@@ -30,7 +30,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   const [gradeError, setGradeError] = useState<string>('');
   const [uniqueId, setUniqueId] = useState<string>('');
   const [uniqueIdError, setUniqueIdError] = useState<string>('');
-  const [programMajor, setProgramMajor] = useState<string>('');
   const [reportAuthor, setReportAuthor] = useState<string>('');
   const [reportAuthorError, setReportAuthorError] = useState<string>('');
 
@@ -49,7 +48,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   };
 
   const handleSubmit = async () => {
-    console.log(`=== Starting ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment Submission ===`);
+    console.log(`=== Preparing ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment for Review ===`);
 
     // Validate unique ID
     if (!uniqueId.trim()) {
@@ -72,7 +71,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       });
       return;
     }
-
 
     // Validate grade selection for K-12
     if (moduleType === 'k12' && !selectedGrade) {
@@ -100,124 +98,31 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       return;
     }
 
-    try {
-      setIsProcessing(true);
-      console.log(`Creating ${moduleType} ${pathway} assessment case...`);
-      console.log('Unique ID:', uniqueId);
-      console.log('Report Author:', reportAuthor);
-      console.log('Program/Major:', programMajor);
-      console.log('Selected grade:', selectedGrade);
-      console.log('Documents to process:', documentFiles.length);
-
-      // Extract text from all documents using proper document processor
-      const extractedDocs = [];
-      for (let i = 0; i < documentFiles.length; i++) {
-        const file = documentFiles[i];
-        console.log(`Extracting text from ${file.name}...`);
-        
-        const { documentProcessor } = await import('@/services/document/documentProcessor');
-        const text = await documentProcessor.extractTextFromFile(file);
-        extractedDocs.push({
-          filename: file.name,
-          content: text
-        });
+    // Convert FileList to array for serialization
+    const filesArray = Array.from(documentFiles);
+    
+    // Navigate to review page with all assessment data
+    console.log('Navigating to review page with documents:', documents.length);
+    navigate('/review-documents', {
+      state: {
+        moduleType,
+        pathway,
+        uniqueId: uniqueId.trim(),
+        reportAuthor: reportAuthor.trim(),
+        selectedGrade,
+        documents,
+        filesArray
       }
-
-      // Generate proper UUID for case ID
-      const caseId = crypto.randomUUID();
-
-      toast({
-        title: "Processing Started",
-        description: `${moduleType.toUpperCase()} AI analysis using ${pathway} pathway is running. This may take a few minutes...`
-      });
-      
-      console.log(`Starting ${moduleType} AI processing using ${pathway} pathway...`);
-
-      // Determine which endpoint to use based on environment
-      const environment = localStorage.getItem('app-environment') || 'replit-prod';
-      const isDemoEnvironment = environment.includes('demo');
-      const endpoint = isDemoEnvironment ? '/api/demo-analyze-assessment' : '/api/analyze-assessment';
-      
-      console.log(`Using endpoint: ${endpoint} (environment: ${environment}, isDemo: ${isDemoEnvironment})`);
-
-      // Call the appropriate analysis endpoint
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Environment': environment
-        },
-        body: JSON.stringify({
-          caseId,
-          documents: extractedDocs,
-          moduleType,
-          pathway, // This is the key new parameter
-          uniqueId: uniqueId.trim(),
-          programMajor: programMajor.trim(),
-          reportAuthor: reportAuthor.trim(),
-          studentGrade: selectedGrade,
-          environment
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || `${moduleType.toUpperCase()} analysis failed`);
-      }
-
-      const result = await response.json();
-      console.log(`✅ ${moduleType.toUpperCase()} ${pathway} analysis completed:`, result);
-      
-      toast({
-        title: "Analysis Completed",
-        description: `Documents have been processed and cleaned up. Redirecting to your ${moduleType.toUpperCase()} report...`
-      });
-
-      // Clear all file inputs and document state after successful processing
-      clearAllFileInputs();
-      
-      // Reset form
-      setUniqueId('');
-      setProgramMajor('');
-      setReportAuthor('');
-      setSelectedGrade('');
-      setUniqueIdError('');
-      setReportAuthorError('');
-      setGradeError('');
-      
-      // Navigate to appropriate reports page
-      const reportsPath = moduleType === 'k12' ? '/k12-reports' : '/post-secondary-reports';
-      console.log(`Navigating to ${reportsPath}...`);
-      navigate(reportsPath);
-      
-    } catch (error) {
-      console.error(`${moduleType.toUpperCase()} ${pathway} Assessment submission failed:`, error);
-      toast({
-        title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred during analysis.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+    });
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center space-x-4 mb-6">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Change Analysis Method
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">
-            {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
-          </h1>
-          <p className="text-muted-foreground">
-            Using {pathway} analysis pathway
-          </p>
-        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">
+          {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
+        </h1>
       </div>
 
       {/* Assessment Information */}
@@ -229,25 +134,20 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
           <Input
             id="uniqueId"
             type="text"
-            placeholder="Enter student's unique ID"
+            placeholder="e.g., STU-2025-001, CASE-12345, or any custom code"
             value={uniqueId}
             onChange={(e) => setUniqueId(e.target.value)}
             className={uniqueIdError ? 'border-red-500' : ''}
             data-testid="input-unique-id"
           />
+          <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-amber-800 dark:text-amber-200">
+              <strong className="font-semibold">Privacy Notice:</strong> Do NOT use real names or personally identifiable information. 
+              Create your own unique identifier (e.g., STU-2025-001, CASE-12345, Student-A).
+            </div>
+          </div>
           {uniqueIdError && <p className="text-sm text-red-500">{uniqueIdError}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="programMajor">Program/Major</Label>
-          <Input
-            id="programMajor"
-            type="text"
-            placeholder="Enter student's program or major"
-            value={programMajor}
-            onChange={(e) => setProgramMajor(e.target.value)}
-            data-testid="input-program-major"
-          />
         </div>
 
         <div className="space-y-2">

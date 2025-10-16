@@ -76,11 +76,18 @@ export const TutoringReviewEditReports: React.FC = () => {
   const [versionInfo, setVersionInfo] = useState<any>({ versions: [], currentVersion: 'Original', isFinalized: false });
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
 
+  // Detect demo environment and use appropriate endpoint
+  const environment = localStorage.getItem('app-environment') || 'replit-prod';
+  const isDemoEnvironment = environment.includes('demo');
+  const endpoint = isDemoEnvironment 
+    ? '/api/demo-assessment-cases/tutoring'
+    : '/api/assessment-cases/tutoring';
+
   // Fetch tutoring assessment cases with inline fetcher
   const { data: cases = [], isLoading: isLoadingCases } = useQuery<TutoringAssessmentCase[]>({
-    queryKey: ['/api/assessment-cases', 'tutoring'],
+    queryKey: [endpoint],
     queryFn: async () => {
-      const response = await fetch('/api/assessment-cases/tutoring');
+      const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error('Failed to fetch cases');
       }
