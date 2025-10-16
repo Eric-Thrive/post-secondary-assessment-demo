@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { useAuth } from '@/contexts/AuthContext';
 import { useModule } from '@/contexts/ModuleContext';
+import { useEnvironment } from '@/contexts/EnvironmentContext';
 
 import { unsplashImages, navigationIcons } from '@/utils/unsplashImages';
 import { 
@@ -59,9 +60,24 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
   const navigate = useNavigate();
   const { activeModule } = useModule();
   const { logout, isAuthenticated } = useAuth();
+  const { currentEnvironment, isCustomerMode } = useEnvironment();
+  
+  // Check if current environment is a demo mode (only demo environments, not development)
+  const isDemoMode = currentEnvironment.endsWith('-demo') || 
+                     ['post-secondary-demo', 'k12-demo', 'tutoring-demo'].includes(currentEnvironment);
   
   // Navigation function to Review & Edit section
   const handleEditClick = (sectionId: string) => {
+    // Block Review & Edit in demo mode - show upgrade message
+    if (isDemoMode) {
+      toast({
+        title: "Premium Feature",
+        description: "Review & Edit is only available on paid plans. Upgrade to access this feature.",
+        variant: "default"
+      });
+      return;
+    }
+    
     console.log('🔄 Navigating to Review & Edit section for:', sectionId, 'Case ID:', currentCase?.id);
     
     // Cache the current case data to avoid refetching
@@ -461,20 +477,29 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                 onClick={() => handleEditClick('review')}
                 className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: '#f3f4f6',
-                  borderColor: '#d1d5db',
-                  color: '#374151'
+                  backgroundColor: isDemoMode ? '#e5e7eb' : '#f3f4f6',
+                  borderColor: isDemoMode ? '#9ca3af' : '#d1d5db',
+                  color: isDemoMode ? '#9ca3af' : '#374151',
+                  opacity: isDemoMode ? 0.6 : 1,
+                  cursor: isDemoMode ? 'not-allowed' : 'pointer'
                 }}
                 data-testid="button-review"
               >
                 <div className="flex items-center gap-3">
-                  <Edit2 
-                    className="h-5 w-5"
-                    style={{ color: '#6b7280' }}
-                  />
+                  {isDemoMode ? (
+                    <Lock 
+                      className="h-5 w-5"
+                      style={{ color: '#9ca3af' }}
+                    />
+                  ) : (
+                    <Edit2 
+                      className="h-5 w-5"
+                      style={{ color: '#6b7280' }}
+                    />
+                  )}
                   <div className="font-bold text-left" 
                        style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
-                    Review
+                    Review {isDemoMode && '(Paid Plans)'}
                   </div>
                 </div>
               </button>
