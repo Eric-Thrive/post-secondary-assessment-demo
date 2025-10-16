@@ -3,6 +3,27 @@
 ## Overview
 This project is an AI-powered educational assessment application that generates comprehensive accommodation reports for K-12 and post-secondary educational contexts. It analyzes uploaded documents using advanced AI function calling to produce structured reports, including barrier identification, accommodation mappings, and evidence-based recommendations. The system aims to streamline assessment processes and provide tailored support plans for students.
 
+## Recent Changes (October 16, 2025)
+- **Finalized Document Review Workflow**: Implemented document review page for pre-analysis validation
+  - **Document Finalization Detection**: Automatic detection of finalized documents via filename pattern `_FINALIZED_YYYYMMDD_HHMM`
+    - DocumentUpload component now checks for `_FINALIZED_` pattern in filenames from PI Redactor
+    - Documents marked with `finalized: true` flag in DocumentFile type
+    - Only finalized documents are processed by AI analysis
+  - **Review Page Component**: New ReviewDocumentsPage displays finalized documents before analysis
+    - Shows assessment information (unique ID, report author, grade level)
+    - Lists only documents marked as finalized with timestamp parsing
+    - "Proceed to Analysis" button enabled only when finalized documents exist
+    - Pathway-aware back navigation (K12 simple vs complex pathways)
+    - Clear visual indicators (checkmarks, badges) for finalized status
+  - **Updated Assessment Workflow**: Modified flow to include review step
+    - Assessment form → Review finalized documents → AI analysis → Reports
+    - FileList converted to File array for proper state serialization
+    - No breaking changes to existing analysis functionality
+  - **PI Redactor Integration**: Full integration with new redactor version
+    - Environment variable `VITE_PI_REDACTOR_URL` configured for redactor popup
+    - PostMessage API receives redacted files with finalized naming convention
+    - Security validation ensures messages only accepted from configured redactor origin
+
 ## Recent Changes (October 8, 2025)
 - **Dual-Access Architecture Implementation**: Established separate customer and developer access modes for improved user experience
   - **Customer Experience Shell**: Created dedicated routes at `/post-secondary-demo/*`, `/k12-demo/*`, `/tutoring-demo/*`
