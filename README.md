@@ -70,6 +70,8 @@ This sophisticated assessment report generator creates comprehensive accommodati
    # Add your DATABASE_URL and OPENAI_API_KEY
    # Add your VITE_PI_REDACTOR_URL (PI Redactor tool URL)
    ```
+   
+   **Note for Replit Users**: Use the Replit Secrets manager (Tools → Secrets) to add environment variables instead of editing `.env` files directly. See [PI_REDACTOR_SETUP.md](PI_REDACTOR_SETUP.md) for detailed PI Redactor integration instructions.
 
 4. Run database migrations:
    ```bash
