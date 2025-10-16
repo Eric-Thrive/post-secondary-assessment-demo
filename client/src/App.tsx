@@ -27,6 +27,7 @@ import PostSecondaryDemoLandingPage from "./pages/PostSecondaryDemoLandingPage";
 import K12DemoLandingPage from "./pages/K12DemoLandingPage";
 import TutoringDemoLandingPage from "./pages/TutoringDemoLandingPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ReviewDocumentsPage from "./pages/ReviewDocumentsPage";
 import { SharedReport } from "./pages/SharedReport";
 import NotFound from "./pages/NotFound";
 
@@ -103,6 +104,7 @@ const App = () => (
           <Routes>
             <Route index element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="assessment" element={<ProtectedRoute><NewPostSecondaryAssessmentPage /></ProtectedRoute>} />
+            <Route path="review-documents" element={<ProtectedRoute><ReviewDocumentsPage /></ProtectedRoute>} />
             <Route path="reports" element={<ProtectedRoute><PostSecondaryReportsPage /></ProtectedRoute>} />
             <Route path="review-edit" element={<ProtectedRoute><PostSecondaryReviewEditPage /></ProtectedRoute>} />
           </Routes>
@@ -114,6 +116,7 @@ const App = () => (
           <Routes>
             <Route index element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="assessment" element={<ProtectedRoute><NewK12AssessmentPage /></ProtectedRoute>} />
+            <Route path="review-documents" element={<ProtectedRoute><ReviewDocumentsPage /></ProtectedRoute>} />
             <Route path="reports" element={<ProtectedRoute><K12ReportsPage /></ProtectedRoute>} />
             <Route path="review-edit" element={<ProtectedRoute><K12ReviewEditPage /></ProtectedRoute>} />
           </Routes>
@@ -125,6 +128,7 @@ const App = () => (
           <Routes>
             <Route index element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="assessment" element={<ProtectedRoute><NewTutoringAssessmentPage /></ProtectedRoute>} />
+            <Route path="review-documents" element={<ProtectedRoute><ReviewDocumentsPage /></ProtectedRoute>} />
             <Route path="reports" element={<ProtectedRoute><TutoringReportsPage /></ProtectedRoute>} />
             <Route path="review-edit" element={<ProtectedRoute><TutoringReviewEditPage /></ProtectedRoute>} />
           </Routes>
@@ -141,6 +145,7 @@ const App = () => (
             <Route path="/new-k12-complex-assessment" element={<ProtectedRoute><NewK12ComplexAssessmentPage /></ProtectedRoute>} />
             <Route path="/new-post-secondary-assessment" element={<ProtectedRoute><NewPostSecondaryAssessmentPage /></ProtectedRoute>} />
             <Route path="/new-tutoring-assessment" element={<ProtectedRoute><NewTutoringAssessmentPage /></ProtectedRoute>} />
+            <Route path="/review-documents" element={<ProtectedRoute><ReviewDocumentsPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportRouteHandler /></ProtectedRoute>} />
             <Route path="/post-secondary-reports" element={<ProtectedRoute><PostSecondaryReportsPage /></ProtectedRoute>} />
             <Route path="/k12-reports" element={<ProtectedRoute><K12ReportsPage /></ProtectedRoute>} />

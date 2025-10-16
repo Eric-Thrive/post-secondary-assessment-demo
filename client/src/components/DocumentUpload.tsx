@@ -109,13 +109,16 @@ const DocumentUpload = ({
             fileObjects.push(file);
             dataTransfer.items.add(file);
 
+            const isFinalized = file.name.includes('_FINALIZED_');
+
             const newDoc: DocumentFile = {
               id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               name: file.name,
               type: 'other',
               size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
               uploadDate: new Date().toISOString().split('T')[0],
-              status: 'uploaded'
+              status: 'uploaded',
+              finalized: isFinalized
             };
             setDocuments(prev => [...prev, newDoc]);
           }

@@ -6,6 +6,7 @@ export interface DocumentFile {
   size: string;
   uploadDate: string;
   status: 'uploaded' | 'processing' | 'analyzed';
+  finalized?: boolean;
 }
 
 export interface DocumentType {
