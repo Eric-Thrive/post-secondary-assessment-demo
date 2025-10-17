@@ -4,23 +4,24 @@ import { Card } from "@/components/ui/card";
 import { Plus, FileText, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useModule } from '@/contexts/ModuleContext';
-import { useEnvironment } from '@/contexts/EnvironmentContext';
 
 export const QuickActions = () => {
   const { activeModule, isK12 } = useModule();
-  const { currentEnvironment } = useEnvironment();
   
-  // Check if we're in a demo environment
-  const isDemoEnv = currentEnvironment.includes('-demo');
+  // Detect demo environment directly from URL pathname (more reliable than context state)
+  const currentPath = window.location.pathname;
+  const demoMatch = currentPath.match(/^\/(post-secondary-demo|k12-demo|tutoring-demo)/);
+  const demoEnvironment = demoMatch ? demoMatch[1] : null;
+  const isDemoEnv = !!demoEnvironment;
   
   // Build environment-aware routes
   let assessmentRoute: string;
   let reportsRoute: string;
   
-  if (isDemoEnv) {
+  if (isDemoEnv && demoEnvironment) {
     // Demo environments use /demo-env-name/assessment pattern
-    assessmentRoute = `/${currentEnvironment}/assessment`;
-    reportsRoute = `/${currentEnvironment}/reports`;
+    assessmentRoute = `/${demoEnvironment}/assessment`;
+    reportsRoute = `/${demoEnvironment}/reports`;
   } else {
     // Developer mode uses traditional routes
     assessmentRoute = isK12 ? '/new-k12-assessment' : 
