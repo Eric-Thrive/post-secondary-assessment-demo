@@ -30,10 +30,15 @@ AI-powered educational accessibility platform that dynamically adapts support re
 - **Google Cloud Storage** for document uploads
 
 ## Database
-- **PostgreSQL 16** (currently Replit-managed)
+- **PostgreSQL 16** (Railway or Replit-managed)
 - **Drizzle ORM** with migrations
 - Multi-tenancy support with customer isolation
 - Session-based authentication
+
+## Deployment & Hosting
+- **Railway** (recommended) - Managed PostgreSQL, auto-deploy from GitHub
+- **Alternative**: Replit (legacy), Neon, Supabase
+- **Local Development**: VS Code with Railway CLI
 
 ## Build & Dev Tools
 - **Vite** (frontend), **esbuild** (backend)
@@ -60,10 +65,18 @@ AI-powered educational accessibility platform that dynamically adapts support re
 
 # Environment Setup
 
+## Quick Start Options
+
+### Option 1: Railway (Recommended)
+See [QUICKSTART_RAILWAY.md](QUICKSTART_RAILWAY.md) for 15-minute setup guide.
+
+### Option 2: Local Development
+
 ## Prerequisites
 - Node.js 20+
-- PostgreSQL 16
+- PostgreSQL 16 (optional if using Railway database)
 - npm or pnpm
+- Railway CLI (optional): `npm install -g @railway/cli`
 
 ## Initial Setup
 ```bash
@@ -78,14 +91,15 @@ npm install
 cp .env.example .env
 
 # Configure .env with your values:
-# - DATABASE_URL (PostgreSQL connection string)
+# - DATABASE_URL (PostgreSQL connection string or Railway database)
 # - OPENAI_API_KEY
 # - SESSION_SECRET (random string)
-# - APP_ENVIRONMENT (replit-dev, replit-prod, neon, supabase)
+# - APP_ENVIRONMENT (local, railway, replit-dev, replit-prod, neon, supabase)
 # - NODE_ENV (development or production)
 
 # Push database schema
 npm run db:push
+# Or use Railway database: railway run npm run db:push
 
 # Start development server
 npm run dev
@@ -97,8 +111,9 @@ Required in `.env`:
 - `DATABASE_URL` - PostgreSQL connection string
 - `OPENAI_API_KEY` - OpenAI API key for GPT-4
 - `SESSION_SECRET` - Random string for session encryption
-- `APP_ENVIRONMENT` - Options: `replit-prod`, `replit-dev`, `neon`, `supabase`
+- `APP_ENVIRONMENT` - Options: `local`, `railway`, `replit-prod`, `replit-dev`, `neon`, `supabase`
 - `NODE_ENV` - `development` or `production`
+- `VITE_PI_REDACTOR_URL` - URL to PI Redactor tool (optional)
 
 Optional for Supabase:
 - `SUPABASE_URL`

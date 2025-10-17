@@ -72,77 +72,77 @@ function getValidDatabaseUrl(primaryVar: string, fallbackVar: string = 'DATABASE
 }
 
 // Environment-specific database configurations
+// ALL environments now use DATABASE_URL for single database connection
 const databaseConfigs: Record<string, DatabaseConfig> = {
   // Primary environments
   'production': {
     url: process.env.DATABASE_URL || '',
-    name: 'Replit Production PostgreSQL',
+    name: 'Production PostgreSQL',
     description: 'Primary production database'
   },
-  'development': {
-    url: process.env.DEV_DATABASE_URL || '',
-    name: 'Replit Development PostgreSQL',
-    description: 'Development database for testing and feature development'
+  'railway': {
+    url: process.env.DATABASE_URL || '',
+    name: 'Railway PostgreSQL',
+    description: 'Railway production database'
   },
-  // Legacy configurations (maintained for compatibility)
+  'development': {
+    url: process.env.DATABASE_URL || '',
+    name: 'Development PostgreSQL',
+    description: 'Development database'
+  },
+  // Legacy configurations (maintained for compatibility) - all use DATABASE_URL
   'database': {
     url: process.env.DATABASE_URL || '',
     name: 'Database PostgreSQL',
-    description: 'Original Database database'
+    description: 'Database connection'
   },
   'replit-prod': {
-    url: process.env.REPLIT_PROD_DATABASE_URL || process.env.DATABASE_URL || '',
+    url: process.env.DATABASE_URL || '',
     name: 'Replit Production PostgreSQL',
     description: 'Production database on Replit'
   },
   'replit-dev': {
-    url: process.env.REPLIT_DEV_DATABASE_URL || process.env.DEV_DATABASE_URL || '',
+    url: process.env.DATABASE_URL || '',
     name: 'Replit Development PostgreSQL',
     description: 'Development database on Replit'
   },
-  // Demo environments - all use the same demo database for consistency
+  // Demo environments - all use DATABASE_URL
   'post-secondary-demo': {
-    // All demo environments share the same demo database
-    // Use helper to handle misconfigured environment variables
-    url: getValidDatabaseUrl('POST_SECONDARY_DEMO_DATABASE_URL', 'DATABASE_URL'),
+    url: process.env.DATABASE_URL || '',
     name: 'Demo PostgreSQL',
     description: 'Shared demo database for post-secondary demonstrations',
-    readOnly: false, // Set to false to allow analysis operations in demo
+    readOnly: false,
     isDemoEnvironment: true
   },
   'k12-demo': {
-    // All demo environments share the same demo database
-    // Use helper to handle misconfigured environment variables
-    url: getValidDatabaseUrl('POST_SECONDARY_DEMO_DATABASE_URL', 'DATABASE_URL'),
+    url: process.env.DATABASE_URL || '',
     name: 'Demo PostgreSQL',
     description: 'Shared demo database for K-12 demonstrations',
-    readOnly: false, // Set to false to allow analysis operations in demo
+    readOnly: false,
     isDemoEnvironment: true
   },
   'tutoring-demo': {
-    // All demo environments share the same demo database
-    // Use helper to handle misconfigured environment variables
-    url: getValidDatabaseUrl('POST_SECONDARY_DEMO_DATABASE_URL', 'DATABASE_URL'),
+    url: process.env.DATABASE_URL || '',
     name: 'Demo PostgreSQL',
     description: 'Shared demo database for tutoring demonstrations',
-    readOnly: false, // Set to false to allow analysis operations in demo
+    readOnly: false,
     isDemoEnvironment: true
   },
-  // Development environments for specific module testing
+  // Development environments - all use DATABASE_URL
   'post-secondary-dev': {
-    url: process.env.DEV_DATABASE_URL || process.env.DATABASE_URL || '',
+    url: process.env.DATABASE_URL || '',
     name: 'Post-Secondary Development PostgreSQL',
     description: 'Development database for post-secondary module testing',
-    readOnly: false, // Allow all operations in development
-    isDemoEnvironment: false // Not a demo, so no restrictions applied
+    readOnly: false,
+    isDemoEnvironment: false
   },
   'k12-dev': {
-    url: process.env.DEV_DATABASE_URL || process.env.DATABASE_URL || '',
+    url: process.env.DATABASE_URL || '',
     name: 'K-12 Development PostgreSQL',
     description: 'Development database for K-12 module testing'
   },
   'tutoring-dev': {
-    url: process.env.DEV_DATABASE_URL || process.env.DATABASE_URL || '',
+    url: process.env.DATABASE_URL || '',
     name: 'Tutoring Development PostgreSQL',
     description: 'Development database for tutoring module testing'
   }

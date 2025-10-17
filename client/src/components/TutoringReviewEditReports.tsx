@@ -514,15 +514,9 @@ export const TutoringReviewEditReports: React.FC = () => {
         
         {selectedCase && (
           <div className="flex gap-4">
-            {/* Debug: Log version info state */}
-            {console.log('🔍 Frontend: Render check - versionInfo:', versionInfo)}
-            {console.log('🔍 Frontend: Render check - versions length:', versionInfo?.versions?.length || 0)}
-            {console.log('🔍 Frontend: Render check - should show picker:', (versionInfo?.versions?.length || 0) > 0)}
-            
             {/* Version Selector */}
             {versionInfo.versions.length > 0 && (
               <div className="flex items-center gap-2">
-                {console.log('🔍 Frontend: Rendering version picker!')}
                 <Clock className="h-4 w-4 text-gray-500" />
                 <Select value={versionInfo.currentVersion} onValueChange={handleVersionSwitch}>
                   <SelectTrigger className="w-32">

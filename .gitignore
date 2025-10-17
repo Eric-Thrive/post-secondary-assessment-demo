@@ -59,5 +59,12 @@ logs/
 *.log
 
 # IDE files
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
 .idea/
+
+# Replit (archived)
+.replit.backup
+.config/
