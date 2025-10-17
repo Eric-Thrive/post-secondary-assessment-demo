@@ -12,9 +12,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const { currentEnvironment } = useEnvironment();
 
-  // Require authentication for all demo environments and tutoring production
+  // Require authentication for all demo environments, dev environments, and tutoring production
   const requiresAuth = currentEnvironment === 'tutoring' || 
                       currentEnvironment === 'post-secondary-demo' ||
+                      currentEnvironment === 'post-secondary-dev' ||
                       currentEnvironment === 'k12-demo' ||
                       currentEnvironment === 'tutoring-demo';
 

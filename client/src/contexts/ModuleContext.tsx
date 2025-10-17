@@ -42,9 +42,9 @@ export const ModuleProvider: React.FC<ModuleProviderProps> = ({ children }) => {
   useEffect(() => {
     console.log(`ModuleProvider useEffect - Environment: ${currentEnvironment}, Locked: ${isModuleLocked}, Demo: ${isDemoMode}`);
     
-    // Force module alignment for demo environments (critical fix)
-    if (currentEnvironment === 'post-secondary-demo') {
-      console.log('FORCING post_secondary module for post-secondary demo');
+    // Force module alignment for demo and dev environments (critical fix)
+    if (currentEnvironment === 'post-secondary-demo' || currentEnvironment === 'post-secondary-dev') {
+      console.log(`FORCING post_secondary module for ${currentEnvironment}`);
       const currentSavedModule = localStorage.getItem('activeModule');
       if (currentSavedModule !== 'post_secondary') {
         console.log(`Correcting module from ${currentSavedModule} to post_secondary`);
