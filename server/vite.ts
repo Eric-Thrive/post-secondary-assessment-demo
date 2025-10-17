@@ -68,7 +68,10 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // Use __dirname equivalent for ESM in production
+  const distPath = import.meta.dirname
+    ? path.resolve(import.meta.dirname, "public")
+    : path.resolve(process.cwd(), "dist", "public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
