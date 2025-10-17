@@ -16,7 +16,7 @@ import ThriveLogo from '@assets/isotype Y-NB_1754494460165.png';
 
 const WelcomeDashboard = () => {
   const navigate = useNavigate();
-  const { logout, isAuthenticated, user } = useAuth();
+  const { logout, isAuthenticated, user, getLogoutRedirectPath } = useAuth();
   const { activeModule } = useModule();
   const { assessmentCases, isLoading } = useModuleAssessmentData(activeModule);
 
@@ -70,7 +70,9 @@ const WelcomeDashboard = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      // Redirect to appropriate path based on current environment
+      const redirectPath = getLogoutRedirectPath();
+      navigate(redirectPath);
     } catch (error) {
       console.error('Logout error:', error);
     }

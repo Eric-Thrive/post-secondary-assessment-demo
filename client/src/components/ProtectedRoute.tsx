@@ -12,8 +12,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const { currentEnvironment } = useEnvironment();
 
-  // Require authentication for tutoring production environment and post-secondary demo environment
-  const requiresAuth = currentEnvironment === 'tutoring' || currentEnvironment === 'post-secondary-demo';
+  // Require authentication for all demo environments and tutoring production
+  const requiresAuth = currentEnvironment === 'tutoring' || 
+                      currentEnvironment === 'post-secondary-demo' ||
+                      currentEnvironment === 'k12-demo' ||
+                      currentEnvironment === 'tutoring-demo';
 
   // Show loading spinner while checking auth status
   if (requiresAuth && isLoading) {

@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (username: string, password: string, environment?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   register: (username: string, password: string, email: string) => Promise<boolean>;
+  getLogoutRedirectPath: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -137,6 +138,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const getLogoutRedirectPath = (): string => {
+    // Detect current path to determine redirect destination
+    const currentPath = window.location.pathname;
+    
+    // Check if we're in a demo environment
+    if (currentPath.startsWith('/post-secondary-demo')) {
+      return '/post-secondary-demo';
+    } else if (currentPath.startsWith('/k12-demo')) {
+      return '/k12-demo';
+    } else if (currentPath.startsWith('/tutoring-demo')) {
+      return '/tutoring-demo';
+    }
+    
+    // Default to root for developer mode
+    return '/';
+  };
+
   const logout = async (): Promise<void> => {
     try {
       await fetch('/api/auth/logout', {
@@ -163,6 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     register,
+    getLogoutRedirectPath,
   };
 
   return (

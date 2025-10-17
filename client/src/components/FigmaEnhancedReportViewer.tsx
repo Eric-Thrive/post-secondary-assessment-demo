@@ -59,7 +59,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const { activeModule } = useModule();
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated, getLogoutRedirectPath } = useAuth();
   const { currentEnvironment, isCustomerMode } = useEnvironment();
   
   // Check if current environment is a demo mode (only demo environments, not development)
@@ -114,7 +114,9 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      // Redirect to appropriate path based on current environment
+      const redirectPath = getLogoutRedirectPath();
+      navigate(redirectPath);
     } catch (error) {
       console.error('Logout error:', error);
       toast({

@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { environments } from '@shared/environment';
+import { useEnvironment } from './EnvironmentContext';
 
 export type ModuleType = 'post_secondary' | 'k12' | 'tutoring';
 
@@ -30,9 +31,9 @@ interface ModuleProviderProps {
 
 export const ModuleProvider: React.FC<ModuleProviderProps> = ({ children }) => {
   const [activeModule, setActiveModuleState] = useState<ModuleType>('post_secondary');
-
-  // Get current environment from localStorage to check for demo mode
-  const currentEnvironment = localStorage.getItem('app-environment') || 'replit-prod';
+  
+  // Use EnvironmentContext to get the correct current environment (respects forcedEnvironment)
+  const { currentEnvironment } = useEnvironment();
   const currentEnvConfig = environments.find(env => env.id === currentEnvironment);
   const isDemoMode = currentEnvConfig?.demoMode || false;
   const isModuleLocked = !!currentEnvConfig?.lockedModule;
