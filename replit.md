@@ -17,7 +17,11 @@ This project is an AI-powered educational assessment application that generates 
     - Respects `forcedEnvironment` prop from EnvironmentProvider in demo routes
     - Resolves issue where PathwaySelector appeared after login due to stale localStorage data
     - Ensures `isDemoMode` accurately reflects forced demo environments throughout the app
-  - **Impact**: Demo environments now maintain locked state through complete logout/login cycles, preventing pathway selector from appearing and ensuring consistent demo UX
+  - **QuickActions URL-Based Navigation**: Fixed "New Report" button to stay within demo route structure
+    - QuickActions now detects demo environment directly from URL pathname instead of relying on EnvironmentContext state
+    - Prevents navigation from leaving demo routes (e.g., `/post-secondary-demo/*`) which would lose forcedEnvironment
+    - Ensures all navigation stays within demo route structure to maintain environment lock
+  - **Impact**: Demo environments now maintain locked state through complete logout/login cycles and navigation flows, preventing pathway selector from appearing and ensuring consistent demo UX
 
 ## Recent Changes (October 16, 2025)
 - **Finalized Document Review Workflow**: Implemented document review page for pre-analysis validation
