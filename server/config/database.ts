@@ -79,6 +79,11 @@ const databaseConfigs: Record<string, DatabaseConfig> = {
     name: 'Replit Production PostgreSQL',
     description: 'Primary production database'
   },
+  'railway': {
+    url: process.env.DATABASE_URL || '',
+    name: 'Railway PostgreSQL',
+    description: 'Railway production database'
+  },
   'development': {
     url: process.env.DEV_DATABASE_URL || '',
     name: 'Replit Development PostgreSQL',
