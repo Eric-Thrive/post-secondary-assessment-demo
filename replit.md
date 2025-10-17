@@ -3,6 +3,22 @@
 ## Overview
 This project is an AI-powered educational assessment application that generates comprehensive accommodation reports for K-12 and post-secondary educational contexts. It analyzes uploaded documents using advanced AI function calling to produce structured reports, including barrier identification, accommodation mappings, and evidence-based recommendations. The system aims to streamline assessment processes and provide tailored support plans for students.
 
+## Recent Changes (October 17, 2025)
+- **Demo Environment Persistence Through Logout/Login Cycle**: Fixed environment locking to persist demo context across authentication flows
+  - **URL-Based Demo Detection**: AuthContext now detects demo environment from URL pathname using regex pattern matching
+    - Added `getLogoutRedirectPath()` helper to extract demo environment from current path
+    - Logout redirects to appropriate demo path (e.g., `/post-secondary-demo`, `/k12-demo`, `/tutoring-demo`)
+    - Prevents loss of demo context when user logs out and back in
+  - **Protected Demo Routes**: Updated ProtectedRoute to require authentication for all demo environments
+    - Demo routes (`/post-secondary-demo`, `/k12-demo`, `/tutoring-demo`) now show LoginForm when unauthenticated
+    - User stays on demo route after successful login (environment persists)
+  - **ModuleContext Environment Detection**: Fixed isDemoMode to use EnvironmentContext instead of localStorage
+    - ModuleContext now imports and uses EnvironmentContext's `currentEnvironment`
+    - Respects `forcedEnvironment` prop from EnvironmentProvider in demo routes
+    - Resolves issue where PathwaySelector appeared after login due to stale localStorage data
+    - Ensures `isDemoMode` accurately reflects forced demo environments throughout the app
+  - **Impact**: Demo environments now maintain locked state through complete logout/login cycles, preventing pathway selector from appearing and ensuring consistent demo UX
+
 ## Recent Changes (October 16, 2025)
 - **Finalized Document Review Workflow**: Implemented document review page for pre-analysis validation
   - **Document Finalization Detection**: Automatic detection of finalized documents via filename pattern `_FINALIZED_YYYYMMDD_HHMM`
