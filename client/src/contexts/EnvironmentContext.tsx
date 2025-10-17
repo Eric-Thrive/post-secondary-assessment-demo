@@ -25,63 +25,93 @@ export function EnvironmentProvider({ children, forcedEnvironment }: Environment
     forcedEnvironment || 'replit-prod'
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isCustomerMode, setIsCustomerMode] = useState(!!forcedEnvironment);
+  const [isDeveloperMode, setIsDeveloperMode] = useState(!forcedEnvironment);
   const { toast } = useToast();
-  
-  // Determine if we're in customer or developer mode
-  const isCustomerMode = !!forcedEnvironment;
-  const isDeveloperMode = !forcedEnvironment;
 
-  // Load saved environment on mount (unless forced for customer mode)
+  // Load environment configuration from server and localStorage
   useEffect(() => {
-    if (forcedEnvironment) {
-      // Customer mode: Force the environment and lock the module
-      console.log(`EnvironmentProvider: Customer mode - forcing environment: ${forcedEnvironment}`);
-      localStorage.setItem(ENVIRONMENT_KEY, forcedEnvironment);
-      
-      // Lock module for demo environments
-      if (forcedEnvironment === 'post-secondary-demo') {
-        localStorage.setItem('activeModule', 'post_secondary');
-      } else if (forcedEnvironment === 'k12-demo') {
-        localStorage.setItem('activeModule', 'k12');
-      } else if (forcedEnvironment === 'tutoring-demo' || forcedEnvironment === 'tutoring') {
-        localStorage.setItem('activeModule', 'tutoring');
-      }
-      return;
-    }
-    
-    // Developer mode: Load from localStorage
-    const saved = localStorage.getItem(ENVIRONMENT_KEY);
-    const validEnvironments = ['production', 'development', 'replit-prod', 'replit-dev', 
-                              'post-secondary-demo', 'k12-demo', 'tutoring-demo', 'tutoring',
-                              'post-secondary-dev', 'k12-dev', 'tutoring-dev'];
-                              
-    if (saved && validEnvironments.includes(saved)) {
-      console.log(`EnvironmentProvider: Developer mode - loading saved environment: ${saved}`);
-      setCurrentEnvironment(saved as EnvironmentType);
-      
-      // Ensure module consistency for demo modes
-      if (saved === 'post-secondary-demo' || saved === 'post-secondary-dev') {
-        const currentModule = localStorage.getItem('activeModule');
-        if (currentModule !== 'post_secondary') {
-          console.log('EnvironmentProvider: Fixing module for post-secondary');
+    const loadEnvironment = async () => {
+      if (forcedEnvironment) {
+        // Customer mode: Force the environment and lock the module
+        console.log(`EnvironmentProvider: Customer mode - forcing environment: ${forcedEnvironment}`);
+        localStorage.setItem(ENVIRONMENT_KEY, forcedEnvironment);
+        
+        // Lock module for demo environments
+        if (forcedEnvironment === 'post-secondary-demo' || forcedEnvironment === 'post-secondary-dev') {
           localStorage.setItem('activeModule', 'post_secondary');
-        }
-      } else if (saved === 'k12-demo' || saved === 'k12-dev') {
-        const currentModule = localStorage.getItem('activeModule');
-        if (currentModule !== 'k12') {
-          console.log('EnvironmentProvider: Fixing module for k12');
+        } else if (forcedEnvironment === 'k12-demo' || forcedEnvironment === 'k12-dev') {
           localStorage.setItem('activeModule', 'k12');
-        }
-      } else if (saved === 'tutoring-demo' || saved === 'tutoring-dev' || saved === 'tutoring') {
-        const currentModule = localStorage.getItem('activeModule');
-        if (currentModule !== 'tutoring') {
-          console.log('EnvironmentProvider: Fixing module for tutoring');
+        } else if (forcedEnvironment === 'tutoring-demo' || forcedEnvironment === 'tutoring-dev' || forcedEnvironment === 'tutoring') {
           localStorage.setItem('activeModule', 'tutoring');
         }
+        return;
       }
-    } else {
-      console.log('EnvironmentProvider: No saved environment, using default: replit-prod');
-    }
+      
+      // Check server configuration first
+      try {
+        const response = await fetch('/api/config/environment');
+        if (response.ok) {
+          const config = await response.json();
+          console.log('Server environment config:', config);
+          
+          // If server has a locked environment, use it
+          if (config.isLocked) {
+            console.log(`EnvironmentProvider: Server has locked environment: ${config.environment}`);
+            setCurrentEnvironment(config.environment as EnvironmentType);
+            localStorage.setItem(ENVIRONMENT_KEY, config.environment);
+            
+            // Set module based on server config
+            if (config.module) {
+              localStorage.setItem('activeModule', config.module);
+            }
+            
+            // Update mode flags
+            setIsCustomerMode(true);
+            setIsDeveloperMode(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('Failed to fetch server environment config:', error);
+      }
+      
+      // Developer mode: Load from localStorage
+      const saved = localStorage.getItem(ENVIRONMENT_KEY);
+      const validEnvironments = ['production', 'development', 'replit-prod', 'replit-dev', 
+                                'post-secondary-demo', 'k12-demo', 'tutoring-demo', 'tutoring',
+                                'post-secondary-dev', 'k12-dev', 'tutoring-dev'];
+                                
+      if (saved && validEnvironments.includes(saved)) {
+        console.log(`EnvironmentProvider: Developer mode - loading saved environment: ${saved}`);
+        setCurrentEnvironment(saved as EnvironmentType);
+        
+        // Ensure module consistency for demo modes
+        if (saved === 'post-secondary-demo' || saved === 'post-secondary-dev') {
+          const currentModule = localStorage.getItem('activeModule');
+          if (currentModule !== 'post_secondary') {
+            console.log('EnvironmentProvider: Fixing module for post-secondary');
+            localStorage.setItem('activeModule', 'post_secondary');
+          }
+        } else if (saved === 'k12-demo' || saved === 'k12-dev') {
+          const currentModule = localStorage.getItem('activeModule');
+          if (currentModule !== 'k12') {
+            console.log('EnvironmentProvider: Fixing module for k12');
+            localStorage.setItem('activeModule', 'k12');
+          }
+        } else if (saved === 'tutoring-demo' || saved === 'tutoring-dev' || saved === 'tutoring') {
+          const currentModule = localStorage.getItem('activeModule');
+          if (currentModule !== 'tutoring') {
+            console.log('EnvironmentProvider: Fixing module for tutoring');
+            localStorage.setItem('activeModule', 'tutoring');
+          }
+        }
+      } else {
+        console.log('EnvironmentProvider: No saved environment, using default: replit-prod');
+      }
+    };
+    
+    loadEnvironment();
   }, [forcedEnvironment]);
 
   const setEnvironment = async (env: EnvironmentType) => {

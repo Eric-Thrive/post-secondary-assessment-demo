@@ -31,6 +31,9 @@ function isDemoOperationAllowed(method: string, path: string): boolean {
     { method: 'POST', path: '/auth/reset-password' },
     { method: 'POST', path: '/auth/forgot-username' },
     
+    // Environment configuration endpoint
+    { method: 'GET', path: '/config/environment' },
+    
     // Demo analysis endpoints
     { method: 'POST', path: '/demo-analyze-assessment' },
     { method: 'GET', path: '/demo-assessment-cases' },
@@ -2526,6 +2529,26 @@ Follow the template EXACTLY as shown above.`
       console.error("Error reverting change:", error);
       res.status(500).json({ error: "Failed to revert change" });
     }
+  });
+
+  // Environment configuration endpoint
+  app.get('/api/config/environment', (req: Request, res: Response) => {
+    console.log(`🌍 Environment config requested`);
+    const currentEnv = process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'production';
+    const normalized = currentEnv.toLowerCase().replace(/_/g, '-').trim();
+    
+    // Determine if this should be a locked environment
+    const lockedEnvironments = ['post-secondary-demo', 'k12-demo', 'tutoring-demo', 'post-secondary-dev'];
+    const isLocked = lockedEnvironments.includes(normalized);
+    
+    res.json({ 
+      environment: normalized,
+      rawEnvironment: currentEnv,
+      isLocked,
+      module: normalized.includes('post-secondary') ? 'post_secondary' : 
+              normalized.includes('k12') ? 'k12' : 
+              normalized.includes('tutoring') ? 'tutoring' : null
+    });
   });
 
   // Register no-cache routes only (alternative routes disabled to use simple pathway)
