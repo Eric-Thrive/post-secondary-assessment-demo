@@ -898,17 +898,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Demo Assessment Cases - for demo environments (no authentication required)
-  app.get("/api/demo-assessment-cases/:moduleType", async (req, res) => {
+  // Demo Assessment Cases - requires authentication to ensure user isolation
+  app.get("/api/demo-assessment-cases/:moduleType", requireAuth, async (req, res) => {
     try {
       const { moduleType } = req.params;
+      const userId = req.user?.id;
+      
+      // In demo mode, userId is MANDATORY for security
+      if (!userId || typeof userId !== 'number') {
+        console.error(`Demo security violation: Missing or invalid userId. User object:`, req.user);
+        return res.status(403).json({ 
+          error: 'Authentication required - invalid user session',
+          demo: true
+        });
+      }
+      
       console.log(`Demo API Route hit: GET /demo-assessment-cases/${moduleType}`);
-      console.log(`Fetching demo assessment cases for module: ${moduleType}`);
+      console.log(`Fetching demo assessment cases for module: ${moduleType}, user: ${userId}`);
       
-      // Get demo cases with demo customer ID
-      const cases = await storage.getAssessmentCases(moduleType, 'demo-customer');
+      // Get demo cases filtered by the current user's ID
+      // This ensures users only see their own assessment cases
+      const cases = await storage.getAssessmentCases(moduleType, 'demo-customer', userId);
       
-      console.log(`Found ${cases.length} demo ${moduleType} cases`);
+      console.log(`Found ${cases.length} demo ${moduleType} cases for user ${userId}`);
       res.json(cases || []);
     } catch (error: any) {
       console.error(`Error fetching demo assessment cases for ${req.params.moduleType}:`, error);
