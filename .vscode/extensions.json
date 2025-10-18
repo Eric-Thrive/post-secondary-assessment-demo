@@ -21,10 +21,11 @@
     "bradgashler.htmltagwrap", // Wrap selection with HTML tags
     "vincaslt.highlight-matching-tag", // Highlight matching HTML tags
 
-    // Database
+    // Database (PostgreSQL + Drizzle ORM)
     "ckolkman.vscode-postgres",
     "mtxr.sqltools",
     "mtxr.sqltools-driver-pg",
+    "bradlc.vscode-tailwindcss", // Drizzle schema autocomplete (uses same engine)
 
     // Git & Version Control
     "eamodio.gitlens",
@@ -92,6 +93,44 @@
     "jock.svg", // SVG preview and editing
 
     // React Developer Tools
-    "skyran.js-jsx-snippets"
+    "skyran.js-jsx-snippets",
+
+    // === PROJECT-SPECIFIC EXTENSIONS (for Claude Code) ===
+
+    // Express.js & Node.js Backend
+    "ms-vscode.vscode-node-azure-pack", // Node.js tools
+    "christian-kohler.npm-intellisense", // NPM package autocomplete
+    "eg2.vscode-npm-script", // NPM script runner
+
+    // API Development & Testing (for AI service routes)
+    "42crunch.vscode-openapi", // OpenAI API schema validation
+    "tamasfe.even-better-toml", // For config files
+    "redhat.vscode-yaml", // YAML support
+
+    // Session & Auth (Passport.js)
+    "davidanson.vscode-markdownlint", // For docs
+
+    // React Query & State Management
+    "styled-components.vscode-styled-components", // For any styled components
+
+    // PDF & Document Processing (PDF.js, Mammoth)
+    "tomoki1207.pdf", // PDF preview
+
+    // Environment Variables (.env files)
+    "mikestead.dotenv", // .env syntax highlighting
+
+    // Code Quality & Performance
+    "dbaeumer.vscode-eslint", // Already have but critical
+    "editorconfig.editorconfig", // EditorConfig support
+
+    // Zod Schema (for validation)
+    "bradlc.vscode-tailwindcss", // Works with Zod too
+
+    // Railway Deployment
+    "ms-azuretools.vscode-docker", // Already listed but important
+
+    // Useful for AI-generated code review
+    "streetsidesoftware.code-spell-checker", // Already listed
+    "wayou.vscode-todo-highlight" // Already listed
   ]
 }

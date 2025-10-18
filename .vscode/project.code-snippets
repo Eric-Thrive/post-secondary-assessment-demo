@@ -322,5 +322,160 @@
       ""
     ],
     "description": "shadcn/ui Input with Label and error"
+  },
+  "OpenAI API Call": {
+    "prefix": "openaiCall",
+    "body": [
+      "const completion = await openai.chat.completions.create({",
+      "  model: '${1:gpt-4o}',",
+      "  messages: [",
+      "    {",
+      "      role: 'system',",
+      "      content: '${2:You are a helpful assistant.}'",
+      "    },",
+      "    {",
+      "      role: 'user',",
+      "      content: ${3:userMessage}",
+      "    }",
+      "  ],",
+      "  temperature: ${4:0.7},",
+      "});",
+      "",
+      "const response = completion.choices[0].message.content;",
+      ""
+    ],
+    "description": "OpenAI API completion call"
+  },
+  "React Query API Hook": {
+    "prefix": "useApiQuery",
+    "body": [
+      "export const use${1:Resource} = (${2:id}: string) => {",
+      "  return useQuery({",
+      "    queryKey: ['${3:resource}', ${2:id}],",
+      "    queryFn: async () => {",
+      "      const response = await fetch(`/api/${3:resource}/${${2:id}}`);",
+      "      if (!response.ok) {",
+      "        throw new Error('Failed to fetch ${3:resource}');",
+      "      }",
+      "      return response.json();",
+      "    },",
+      "  });",
+      "};",
+      ""
+    ],
+    "description": "React Query hook for API endpoint"
+  },
+  "Express Route with Session": {
+    "prefix": "expressSession",
+    "body": [
+      "app.${1:get}('${2:/api/endpoint}', async (req, res) => {",
+      "  if (!req.session?.userId) {",
+      "    return res.status(401).json({ error: 'Not authenticated' });",
+      "  }",
+      "  ",
+      "  const userId = req.session.userId;",
+      "  const customerId = req.session.customerId;",
+      "  ",
+      "  try {",
+      "    ${3:// Your logic here}",
+      "    ",
+      "    res.json({ success: true, data: ${4:result} });",
+      "  } catch (error) {",
+      "    console.error('Error in ${2:/api/endpoint}:', error);",
+      "    res.status(500).json({ error: 'Internal server error' });",
+      "  }",
+      "});",
+      ""
+    ],
+    "description": "Express route with session authentication"
+  },
+  "Drizzle Select with Where": {
+    "prefix": "drizzleSelect",
+    "body": [
+      "const ${1:results} = await db",
+      "  .select()",
+      "  .from(${2:tableName})",
+      "  .where(",
+      "    and(",
+      "      eq(${2:tableName}.customerId, customerId),",
+      "      eq(${2:tableName}.${3:column}, ${4:value})",
+      "    )",
+      "  );",
+      ""
+    ],
+    "description": "Drizzle ORM select with customer isolation"
+  },
+  "shadcn Card with Form": {
+    "prefix": "cardForm",
+    "body": [
+      "<Card>",
+      "  <CardHeader>",
+      "    <CardTitle>${1:Form Title}</CardTitle>",
+      "    <CardDescription>",
+      "      ${2:Form description}",
+      "    </CardDescription>",
+      "  </CardHeader>",
+      "  <CardContent>",
+      "    <form onSubmit={form.handleSubmit(onSubmit)} className=\"space-y-4\">",
+      "      ${3:// Form fields}",
+      "      <Button type=\"submit\">${4:Submit}</Button>",
+      "    </form>",
+      "  </CardContent>",
+      "</Card>",
+      ""
+    ],
+    "description": "shadcn Card with form structure"
+  },
+  "React Query Mutation": {
+    "prefix": "useMutationApi",
+    "body": [
+      "const ${1:mutation} = useMutation({",
+      "  mutationFn: async (data: ${2:DataType}) => {",
+      "    const response = await fetch('${3:/api/endpoint}', {",
+      "      method: '${4:POST}',",
+      "      headers: { 'Content-Type': 'application/json' },",
+      "      body: JSON.stringify(data),",
+      "    });",
+      "    ",
+      "    if (!response.ok) {",
+      "      throw new Error('${5:Operation failed}');",
+      "    }",
+      "    ",
+      "    return response.json();",
+      "  },",
+      "  onSuccess: () => {",
+      "    queryClient.invalidateQueries({ queryKey: ['${6:queryKey}'] });",
+      "    ${7:// Success handling}",
+      "  },",
+      "  onError: (error) => {",
+      "    console.error('Mutation error:', error);",
+      "    ${8:// Error handling}",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "React Query mutation for API calls"
+  },
+  "Zod Form Schema": {
+    "prefix": "zodForm",
+    "body": [
+      "const ${1:formSchema} = z.object({",
+      "  ${2:fieldName}: z.string().min(1, '${3:Field is required}'),",
+      "  ${4:email}: z.string().email('Invalid email address'),",
+      "  $5",
+      "});",
+      "",
+      "type ${6:FormData} = z.infer<typeof ${1:formSchema}>;",
+      "",
+      "const form = useForm<${6:FormData}>({",
+      "  resolver: zodResolver(${1:formSchema}),",
+      "  defaultValues: {",
+      "    ${2:fieldName}: '',",
+      "    ${4:email}: '',",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Zod schema with react-hook-form setup"
   }
 }

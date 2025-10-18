@@ -170,5 +170,51 @@
     "typescript": true,
     "typescriptreact": true,
     "javascriptreact": true
+  },
+
+  // === PROJECT-SPECIFIC SETTINGS ===
+
+  // Files to watch for changes (for Claude Code context)
+  "files.associations": {
+    "*.env*": "dotenv",
+    "*.css": "tailwindcss"
+  },
+
+  // PostgreSQL/Drizzle specific
+  "sqltools.connections": [
+    {
+      "name": "Local PostgreSQL",
+      "driver": "PostgreSQL",
+      "server": "localhost",
+      "port": 5432,
+      "database": "${env:DATABASE_NAME}",
+      "username": "${env:DATABASE_USER}",
+      "password": "${env:DATABASE_PASSWORD}",
+      "previewLimit": 50
+    }
+  ],
+
+  // NPM Script visibility
+  "npm.enableScriptExplorer": true,
+  "npm.scriptExplorerAction": "run",
+
+  // Path aliases (for imports)
+  "path-autocomplete.pathMappings": {
+    "@": "${folder}/client/src",
+    "@shared": "${folder}/shared",
+    "@assets": "${folder}/attached_assets"
+  },
+
+  // TypeScript project references
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+
+  // REST Client environment
+  "rest-client.environmentVariables": {
+    "local": {
+      "baseUrl": "http://localhost:5000"
+    },
+    "production": {
+      "baseUrl": "${env:PRODUCTION_URL}"
+    }
   }
 }

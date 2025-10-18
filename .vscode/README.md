@@ -227,6 +227,79 @@ VS Code will prompt you to install recommended extensions when you open the work
 - 📱 Check responsive breakpoints
 - ✨ Spot visual bugs quickly
 
+## Project-Specific Features for Claude Code 🎯
+
+### Your Tech Stack (What Claude Knows):
+- **Backend**: Express.js + TypeScript + Drizzle ORM
+- **Frontend**: React 18 + Vite + shadcn/ui + Tailwind CSS
+- **Database**: PostgreSQL with Drizzle ORM
+- **AI Integration**: OpenAI API (GPT-4/GPT-4o)
+- **Auth**: Passport.js + express-session
+- **State**: React Query (TanStack Query)
+- **Forms**: react-hook-form + Zod validation
+- **Deployment**: Railway
+
+### Project-Specific Snippets:
+
+**Backend Development:**
+- `openaiCall` - OpenAI API completion
+- `expressSession` - Express route with session auth
+- `drizzleSelect` - Database query with customer isolation
+
+**Frontend Development:**
+- `useApiQuery` - React Query hook for API
+- `useMutationApi` - React Query mutation
+- `zodForm` - Zod schema + react-hook-form
+- `cardForm` - shadcn Card with form
+
+**Example Claude Commands:**
+- "Create an Express route to fetch user assessments with Drizzle"
+- "Build a form with Zod validation for user profile updates"
+- "Add a React Query hook to fetch assessment cases"
+- "Create an OpenAI API call to analyze student data"
+
+### Database Tools:
+
+**Drizzle Studio:**
+- `Cmd+Shift+D` - Open Drizzle Studio
+- Visual database browser
+- Run queries, see data
+
+**PostgreSQL Extension:**
+- Connect to local or Railway database
+- Browse tables, run SQL
+- See schema directly in VS Code
+
+### API Testing (Built-in):
+
+**Thunder Client:**
+- Click Thunder Client icon in sidebar
+- Test your `/api/*` routes
+- Save requests for reuse
+- No need for Postman!
+
+**REST Client:**
+- Create `.http` files
+- Test APIs inline
+- Use environment variables
+
+### Path Aliases (Auto-complete):
+
+Claude Code knows these import paths:
+```typescript
+import { Component } from '@/components/...'  // client/src
+import { schema } from '@shared/...'          // shared
+import { asset } from '@assets/...'           // attached_assets
+```
+
+### NPM Scripts (Quick Access):
+
+Open NPM Scripts panel:
+- `dev` - Start development server
+- `build` - Build for production
+- `check` - TypeScript type checking
+- `db:push` - Push database schema
+
 ## Terminal Experience
 
 Like Replit, the integrated terminal is always accessible:
