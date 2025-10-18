@@ -208,8 +208,12 @@ export class MemStorage implements IStorage {
 
   async getUserByResetToken(token: string): Promise<User | undefined> {
     const now = new Date();
+    // Hash the incoming token to match what's stored in the database
+    const { hashResetToken } = await import('./auth');
+    const hashedToken = hashResetToken(token);
+    
     return Array.from(this.users.values()).find(
-      (user) => user.resetToken === token && 
+      (user) => user.resetToken === hashedToken && 
                 user.resetTokenExpiry && 
                 user.resetTokenExpiry > now
     );
@@ -397,10 +401,14 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByResetToken(token: string): Promise<User | undefined> {
     const now = new Date();
+    // Hash the incoming token to match what's stored in the database
+    const { hashResetToken } = await import('./auth');
+    const hashedToken = hashResetToken(token);
+    
     const result = await db
       .select()
       .from(users)
-      .where(eq(users.resetToken, token));
+      .where(eq(users.resetToken, hashedToken));
     
     const [user] = result;
     
@@ -417,9 +425,11 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUserByResetToken(token);
       if (!user) return false;
 
-      // Import bcrypt for password hashing
+      // Import bcrypt for password hashing and auth utilities
       const bcrypt = await import('bcryptjs');
+      const { hashResetToken } = await import('./auth');
       const hashedPassword = await bcrypt.hash(newPassword, 12);
+      const hashedToken = hashResetToken(token);
 
       const result = await db
         .update(users)
@@ -428,7 +438,7 @@ export class DatabaseStorage implements IStorage {
           resetToken: null,
           resetTokenExpiry: null,
         })
-        .where(eq(users.resetToken, token))
+        .where(eq(users.resetToken, hashedToken))
         .returning();
       
       return result.length > 0;
