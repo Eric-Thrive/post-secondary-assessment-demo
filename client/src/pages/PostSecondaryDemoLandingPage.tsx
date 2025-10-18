@@ -5,8 +5,8 @@ export default function PostSecondaryDemoLandingPage() {
   return (
     <DemoLandingPage
       environment="post-secondary-demo"
-      title="Post-Secondary Demo"
-      description="Experience our AI-powered accommodation assessment system designed for colleges and universities. See how we help students succeed in higher education."
+      title="Post-Secondary Portal"
+      description="Comprehensive assessment and analysis platform for post-secondary education success"
       icon={GraduationCap}
       features={[
         "Comprehensive accommodation analysis",

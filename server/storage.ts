@@ -219,9 +219,13 @@ export class MemStorage implements IStorage {
     const user = await this.getUserByResetToken(token);
     if (!user) return false;
     
+    // Hash password before storing
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    
     const updatedUser = { 
       ...user, 
-      password: newPassword, // Note: This should be hashed in real implementation
+      password: hashedPassword,
       resetToken: null, 
       resetTokenExpiry: null 
     };
@@ -413,10 +417,14 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUserByResetToken(token);
       if (!user) return false;
 
+      // Import bcrypt for password hashing
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
       const result = await db
         .update(users)
         .set({
-          password: newPassword, // Note: Should be hashed
+          password: hashedPassword,
           resetToken: null,
           resetTokenExpiry: null,
         })
