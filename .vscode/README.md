@@ -149,6 +149,84 @@ VS Code will prompt you to install recommended extensions when you open the work
 4. **Save** → Auto-sorts Tailwind classes, formats code
 5. **Preview updates** → See changes instantly in browser
 
+## Working with Claude Code on UI 🤖
+
+### Best Workflow for AI-Assisted UI Development:
+
+**1. Describe What You Want**
+- Tell Claude Code: "Create a user profile card with avatar, name, and bio"
+- Be specific about layout, colors, and interactions
+- Reference existing components: "Make it look like the dashboard card"
+
+**2. Claude Creates the Component**
+- Claude writes the JSX/TSX code
+- Uses your project's patterns (shadcn/ui, Tailwind)
+- Includes TypeScript types
+
+**3. See It Live Immediately**
+- `Cmd+K Cmd+P` - Open preview
+- Auto-saves → Preview updates
+- See exactly what Claude created
+
+**4. Iterate Visually**
+- "Make the avatar larger"
+- "Change the background to blue-500"
+- "Add a hover effect"
+- See color swatches → Know exact values
+
+**5. Refine with Visual Feedback**
+- Use color picker (`Cmd+Shift+C`) to try colors
+- Copy the hex value
+- Tell Claude: "Use #3b82f6 instead"
+
+### Claude Code UI Commands:
+
+**Component Creation:**
+- "Create a responsive navbar with logo and menu"
+- "Build a form with email and password fields"
+- "Make a card grid showing user posts"
+
+**Styling:**
+- "Make this button primary colored with rounded corners"
+- "Add a subtle shadow to the card"
+- "Make the layout responsive for mobile"
+
+**Refactoring:**
+- "Extract this form into a separate component"
+- "Convert these inline styles to Tailwind classes"
+- "Make this component reusable with props"
+
+### Tips for Best Results:
+
+✅ **Be specific**: "Create a blue button" → "Create a primary button with bg-blue-500, white text, rounded-lg, px-4 py-2"
+
+✅ **Reference existing patterns**: "Use the same card style as Dashboard.tsx"
+
+✅ **Describe interactions**: "Button should show loading spinner when clicked"
+
+✅ **Use visual feedback**: See the preview, then ask Claude to adjust
+
+✅ **Leverage snippets**: Ask Claude to use `twcard` or `shadcnDialog` patterns
+
+### What Claude Code Can Do:
+
+- ✅ Write complete React components with TypeScript
+- ✅ Apply Tailwind CSS classes correctly
+- ✅ Use your existing shadcn/ui components
+- ✅ Handle responsive design
+- ✅ Add animations and transitions
+- ✅ Integrate with your API routes
+- ✅ Follow your project's patterns
+- ✅ Refactor and improve existing UI
+
+### What You Do (The Visual Part):
+
+- 🎨 Pick exact colors with color picker
+- 👀 Verify spacing and layout in preview
+- 🖱️ Test interactions (clicks, hovers)
+- 📱 Check responsive breakpoints
+- ✨ Spot visual bugs quickly
+
 ## Terminal Experience
 
 Like Replit, the integrated terminal is always accessible:

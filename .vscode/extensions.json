@@ -47,8 +47,24 @@
     // Component Development & Storybook
     "chromatic.storybook-vscode", // Storybook integration (optional)
 
-    // AI Assistance (optional)
+    // React Component Tools (for Claude Code UI work)
+    "burkeholland.simple-react-snippets", // Additional React snippets
+    "formulahendry.auto-close-tag", // Auto-close JSX tags
+    "wix.glean", // React refactoring tools
+
+    // Design & Prototyping (AI-Assisted UI)
+    "alefragnani.project-manager", // Manage multiple projects
+    "usernamehw.errorlens", // Inline errors (already listed but important)
+
+    // CSS Modules & Styled Components
+    "clinyong.vscode-css-modules", // CSS Modules support
+    "styled-components.vscode-styled-components", // Styled components
+
+    // AI Assistance (optional but recommended for UI)
     "github.copilot",
+
+    // Component Library Reference
+    "antfu.browse-lite", // Browse docs in VS Code
 
     // Docker & Railway
     "ms-azuretools.vscode-docker",

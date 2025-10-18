@@ -137,5 +137,38 @@
 
   // Color Picker Settings
   "colorHelper.disableGPU": false,
-  "colorHelper.storeDir": ".vscode"
+  "colorHelper.storeDir": ".vscode",
+
+  // React/Component Development (optimized for Claude Code)
+  "react.snippets.enable": true,
+  "javascript.preferences.quoteStyle": "double",
+  "typescript.preferences.quoteStyle": "double",
+  "typescript.preferences.importModuleSpecifier": "relative",
+
+  // Better error visibility for UI work
+  "errorLens.enabledDiagnosticLevels": [
+    "error",
+    "warning"
+  ],
+  "errorLens.fontSize": "0.9em",
+
+  // Auto-close tags
+  "auto-close-tag.activationOnLanguage": [
+    "xml",
+    "html",
+    "javascriptreact",
+    "typescriptreact"
+  ],
+
+  // GitHub Copilot settings (if installed)
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": false,
+    "plaintext": false,
+    "markdown": true,
+    "javascript": true,
+    "typescript": true,
+    "typescriptreact": true,
+    "javascriptreact": true
+  }
 }
