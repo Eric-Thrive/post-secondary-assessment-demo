@@ -112,6 +112,16 @@
         "reveal": "always",
         "panel": "shared"
       }
+    },
+    {
+      "label": "Preview: Open in Simple Browser",
+      "type": "shell",
+      "command": "echo 'Opening preview... Make sure dev server is running on port 5000'",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
     }
   ]
 }

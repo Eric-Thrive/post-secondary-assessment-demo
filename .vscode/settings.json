@@ -87,5 +87,13 @@
   "explorer.confirmDragAndDrop": false,
 
   // Problems panel
-  "problems.autoReveal": true
+  "problems.autoReveal": true,
+
+  // Live Preview settings (for embedded browser preview)
+  "livePreview.defaultPreviewPath": "http://localhost:5000",
+  "livePreview.portNumber": 5000,
+  "livePreview.autoRefreshPreview": "onSave",
+
+  // Simple Browser settings
+  "simpleBrowser.focusLockIndicator.enabled": true
 }

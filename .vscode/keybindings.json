@@ -104,5 +104,12 @@
     "key": "cmd+shift+t",
     "command": "workbench.action.tasks.runTask",
     "args": "TypeScript: Check Types"
+  },
+  // Open Preview in Simple Browser (Cmd+Shift+P then type "simple browser")
+  // Or use Cmd+K Cmd+P for quick access
+  {
+    "key": "cmd+k cmd+p",
+    "command": "simpleBrowser.show",
+    "args": "http://localhost:5000"
   }
 ]

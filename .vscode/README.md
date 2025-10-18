@@ -7,6 +7,25 @@ This folder contains VS Code configurations to provide a Replit-like development
 ### 🔄 Auto-Save
 Files automatically save after 1 second of inactivity (just like Replit).
 
+### 🖥️ Live Preview (Replit-like)
+View your app inside VS Code while coding:
+
+**Method 1: Simple Browser (Built-in)**
+- Press `Cmd+K Cmd+P` to open preview
+- Or Command Palette → "Simple Browser: Show" → `http://localhost:5000`
+- Auto-refreshes with Vite HMR
+
+**Method 2: Live Preview Extension (Recommended)**
+- Install the "Live Server" extension (recommended)
+- Click the preview icon in the status bar
+- Or right-click in editor → "Open with Live Server"
+- Embedded browser with better controls
+
+**Method 3: External Browser**
+- Dev server automatically serves frontend on `http://localhost:5000`
+- Changes auto-reload via Vite HMR
+- Open in Chrome/Safari/Firefox
+
 ### ⚡ Quick Tasks
 Access common tasks via:
 - **Command Palette** (`Cmd+Shift+P` → "Tasks: Run Task")
@@ -25,6 +44,7 @@ Available tasks:
 | Shortcut | Action |
 |----------|--------|
 | `Cmd+Enter` | Start dev server (like Replit's Run) |
+| `Cmd+K Cmd+P` | Open preview in Simple Browser |
 | `Cmd+'` | Toggle terminal |
 | `Cmd+Shift+'` | New terminal |
 | `Cmd+J` | Toggle bottom panel |
@@ -55,6 +75,7 @@ VS Code will prompt you to install recommended extensions when you open the work
 - ESLint - Linting
 - Tailwind CSS IntelliSense - Tailwind autocomplete
 - PostgreSQL - Database management
+- **Live Server** - In-editor browser preview (Replit-like)
 
 **Productivity:**
 - Error Lens - Inline error messages
@@ -69,8 +90,9 @@ VS Code will prompt you to install recommended extensions when you open the work
 
 1. **Install recommended extensions** when prompted
 2. Press `Cmd+Enter` to start the dev server
-3. Press `Cmd+'` to open terminal if needed
-4. Start coding - files auto-save!
+3. Press `Cmd+K Cmd+P` to open preview in VS Code
+4. Press `Cmd+'` to open terminal if needed
+5. Start coding - files auto-save and preview auto-updates!
 
 ## Terminal Experience
 
