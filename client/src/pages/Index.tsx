@@ -5,15 +5,7 @@ import { Loader2 } from 'lucide-react';
 import WelcomeDashboard from "@/pages/WelcomeDashboard";
 
 const Index = () => {
-  const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
-
-  useEffect(() => {
-    // Only redirect after loading is complete
-    if (!isLoading && !isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isLoading, isAuthenticated, navigate]);
 
   // Show loading spinner while checking auth status
   if (isLoading) {
@@ -27,11 +19,7 @@ const Index = () => {
     );
   }
 
-  // Show nothing while redirecting
-  if (!isAuthenticated) {
-    return null;
-  }
-
+  // ProtectedRoute will handle showing LoginForm if not authenticated
   return <WelcomeDashboard />;
 };
 

@@ -185,9 +185,7 @@ const App = () => {
               <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
               <Route path="/tutoring-demo" element={<TutoringDemoPage />} />
               
-              {/* Demo Landing Pages (Authentication Required) */}
-              <Route path="/login" element={<PostSecondaryDemoLandingPage />} />
-              <Route path="/register" element={<PostSecondaryDemoLandingPage />} />
+              {/* Password Reset and Demo Landing Pages */}
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/post-secondary-demo-login" element={<PostSecondaryDemoLandingPage />} />
               <Route path="/k12-demo-login" element={<K12DemoLandingPage />} />

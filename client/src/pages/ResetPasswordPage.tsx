@@ -20,6 +20,12 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
 
+  // Helper function to determine the correct login page based on referrer or default
+  const getLoginRedirectPath = (): string => {
+    // Default to post-secondary demo as the primary login page
+    return '/post-secondary-demo';
+  };
+
   useEffect(() => {
     const resetToken = searchParams.get('token');
     if (!resetToken) {
@@ -28,7 +34,7 @@ export default function ResetPasswordPage() {
         description: "The password reset link is invalid or has expired.",
         variant: "destructive",
       });
-      navigate('/login');
+      navigate(getLoginRedirectPath());
       return;
     }
     setToken(resetToken);
@@ -84,7 +90,7 @@ export default function ResetPasswordPage() {
         title: "Password Reset Successful",
         description: "Your password has been updated. You can now log in with your new password.",
       });
-      navigate('/login');
+      navigate(getLoginRedirectPath());
     } catch (error: any) {
       toast({
         title: "Reset Failed",
@@ -191,7 +197,7 @@ export default function ResetPasswordPage() {
             <div className="mt-6 text-center">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate(getLoginRedirectPath())}
                 className="text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
                 data-testid="link-back-to-login"
               >
