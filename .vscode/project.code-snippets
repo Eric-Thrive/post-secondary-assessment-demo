@@ -1,0 +1,226 @@
+{
+  "React Component with TypeScript": {
+    "prefix": "rfc",
+    "body": [
+      "import { FC } from 'react';",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  $2",
+      "}",
+      "",
+      "export const ${1:ComponentName}: FC<${1:ComponentName}Props> = ({ $3 }) => {",
+      "  return (",
+      "    <div>",
+      "      $4",
+      "    </div>",
+      "  );",
+      "};",
+      ""
+    ],
+    "description": "React functional component with TypeScript"
+  },
+  "Express API Route": {
+    "prefix": "apiRoute",
+    "body": [
+      "app.${1:get}('${2:/api/endpoint}', async (req, res) => {",
+      "  try {",
+      "    const { $3 } = req.${4:params};",
+      "    ",
+      "    // TODO: Implement logic",
+      "    $5",
+      "    ",
+      "    res.json({ success: true, data: $6 });",
+      "  } catch (error) {",
+      "    console.error('Error in ${2:/api/endpoint}:', error);",
+      "    res.status(500).json({ error: 'Internal server error' });",
+      "  }",
+      "});",
+      ""
+    ],
+    "description": "Express API route with error handling"
+  },
+  "Drizzle Query": {
+    "prefix": "drizzleQuery",
+    "body": [
+      "const ${1:result} = await db",
+      "  .select()",
+      "  .from(${2:tableName})",
+      "  .where(eq(${2:tableName}.${3:column}, ${4:value}));",
+      ""
+    ],
+    "description": "Drizzle ORM select query"
+  },
+  "Drizzle Insert": {
+    "prefix": "drizzleInsert",
+    "body": [
+      "const [${1:result}] = await db",
+      "  .insert(${2:tableName})",
+      "  .values({",
+      "    ${3:column}: ${4:value},",
+      "  })",
+      "  .returning();",
+      ""
+    ],
+    "description": "Drizzle ORM insert with returning"
+  },
+  "Drizzle Update": {
+    "prefix": "drizzleUpdate",
+    "body": [
+      "const [${1:result}] = await db",
+      "  .update(${2:tableName})",
+      "  .set({",
+      "    ${3:column}: ${4:value},",
+      "  })",
+      "  .where(eq(${2:tableName}.${5:id}, ${6:value}))",
+      "  .returning();",
+      ""
+    ],
+    "description": "Drizzle ORM update with returning"
+  },
+  "React Query Hook": {
+    "prefix": "useQuery",
+    "body": [
+      "const { data: ${1:dataName}, isLoading, error } = useQuery({",
+      "  queryKey: ['${2:queryKey}', ${3:params}],",
+      "  queryFn: async () => {",
+      "    const response = await fetch('${4:/api/endpoint}');",
+      "    if (!response.ok) throw new Error('Failed to fetch');",
+      "    return response.json();",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "React Query useQuery hook"
+  },
+  "React Mutation Hook": {
+    "prefix": "useMutation",
+    "body": [
+      "const ${1:mutation} = useMutation({",
+      "  mutationFn: async (${2:data}: ${3:DataType}) => {",
+      "    const response = await fetch('${4:/api/endpoint}', {",
+      "      method: '${5:POST}',",
+      "      headers: { 'Content-Type': 'application/json' },",
+      "      body: JSON.stringify(${2:data}),",
+      "    });",
+      "    if (!response.ok) throw new Error('Request failed');",
+      "    return response.json();",
+      "  },",
+      "  onSuccess: () => {",
+      "    // Invalidate and refetch",
+      "    queryClient.invalidateQueries({ queryKey: ['${6:queryKey}'] });",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "React Query useMutation hook"
+  },
+  "shadcn Form": {
+    "prefix": "shadcnForm",
+    "body": [
+      "const form = useForm<z.infer<typeof ${1:formSchema}>>({",
+      "  resolver: zodResolver(${1:formSchema}),",
+      "  defaultValues: {",
+      "    ${2:fieldName}: '',",
+      "  },",
+      "});",
+      "",
+      "const onSubmit = async (values: z.infer<typeof ${1:formSchema}>) => {",
+      "  try {",
+      "    $3",
+      "  } catch (error) {",
+      "    console.error('Form submission error:', error);",
+      "  }",
+      "};",
+      ""
+    ],
+    "description": "shadcn/ui form setup with react-hook-form"
+  },
+  "Zod Schema": {
+    "prefix": "zodSchema",
+    "body": [
+      "const ${1:schemaName} = z.object({",
+      "  ${2:fieldName}: z.string().min(1, '${3:Field is required}'),",
+      "  $4",
+      "});",
+      "",
+      "type ${5:TypeName} = z.infer<typeof ${1:schemaName}>;",
+      ""
+    ],
+    "description": "Zod validation schema"
+  },
+  "Try-Catch Block": {
+    "prefix": "tryc",
+    "body": [
+      "try {",
+      "  $1",
+      "} catch (error) {",
+      "  console.error('${2:Error message}:', error);",
+      "  $3",
+      "}",
+      ""
+    ],
+    "description": "Try-catch error handling"
+  },
+  "Console Log": {
+    "prefix": "clg",
+    "body": ["console.log('${1:label}:', ${2:variable});", ""],
+    "description": "Console log with label"
+  },
+  "Customer Isolation Query": {
+    "prefix": "customerQuery",
+    "body": [
+      "const ${1:result} = await db",
+      "  .select()",
+      "  .from(${2:tableName})",
+      "  .where(",
+      "    and(",
+      "      eq(${2:tableName}.customerId, customerId),",
+      "      eq(${2:tableName}.${3:column}, ${4:value})",
+      "    )",
+      "  );",
+      ""
+    ],
+    "description": "Drizzle query with customer isolation"
+  },
+  "AI Function Call": {
+    "prefix": "aiFunction",
+    "body": [
+      "const completion = await openai.chat.completions.create({",
+      "  model: '${1:gpt-4o}',",
+      "  messages: [",
+      "    { role: 'system', content: '${2:System prompt}' },",
+      "    { role: 'user', content: ${3:userMessage} }",
+      "  ],",
+      "  functions: [${4:functionDefinitions}],",
+      "  function_call: 'auto',",
+      "});",
+      "",
+      "const functionCall = completion.choices[0].message.function_call;",
+      ""
+    ],
+    "description": "OpenAI function calling pattern"
+  },
+  "Authenticated Route": {
+    "prefix": "authRoute",
+    "body": [
+      "app.${1:get}('${2:/api/endpoint}', async (req, res) => {",
+      "  if (!req.session?.userId) {",
+      "    return res.status(401).json({ error: 'Not authenticated' });",
+      "  }",
+      "  ",
+      "  try {",
+      "    const customerId = req.session.customerId;",
+      "    ",
+      "    $3",
+      "    ",
+      "    res.json({ success: true, data: $4 });",
+      "  } catch (error) {",
+      "    console.error('Error in ${2:/api/endpoint}:', error);",
+      "    res.status(500).json({ error: 'Internal server error' });",
+      "  }",
+      "});",
+      ""
+    ],
+    "description": "Express route with authentication check"
+  }
+}

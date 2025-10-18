@@ -1,0 +1,108 @@
+[
+  // Quick Run - Like Replit's Run button (Cmd+Enter)
+  {
+    "key": "cmd+enter",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Dev: Start Development Server"
+  },
+  // Stop Running Task (Cmd+.)
+  {
+    "key": "cmd+.",
+    "command": "workbench.action.tasks.terminate"
+  },
+  // Quick Open Terminal (Cmd+')
+  {
+    "key": "cmd+'",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+  // New Terminal (Cmd+Shift+')
+  {
+    "key": "cmd+shift+'",
+    "command": "workbench.action.terminal.new"
+  },
+  // Quick File Search (Cmd+P is default, but ensure it's set)
+  {
+    "key": "cmd+p",
+    "command": "workbench.action.quickOpen"
+  },
+  // Command Palette (Cmd+Shift+P is default)
+  {
+    "key": "cmd+shift+p",
+    "command": "workbench.action.showCommands"
+  },
+  // Toggle Sidebar (Cmd+B is default)
+  {
+    "key": "cmd+b",
+    "command": "workbench.action.toggleSidebarVisibility"
+  },
+  // Build (Cmd+Shift+B)
+  {
+    "key": "cmd+shift+b",
+    "command": "workbench.action.tasks.build"
+  },
+  // Git: Quick Commit
+  {
+    "key": "cmd+shift+g",
+    "command": "workbench.view.scm"
+  },
+  // Format Document (Shift+Alt+F is default, but add Cmd+K Cmd+F)
+  {
+    "key": "cmd+k cmd+f",
+    "command": "editor.action.formatDocument"
+  },
+  // Save All Files (Cmd+Alt+S)
+  {
+    "key": "cmd+alt+s",
+    "command": "workbench.action.files.saveAll"
+  },
+  // Close All Editors (Cmd+K W)
+  {
+    "key": "cmd+k w",
+    "command": "workbench.action.closeAllEditors"
+  },
+  // Split Editor Right (Cmd+\\)
+  {
+    "key": "cmd+\\",
+    "command": "workbench.action.splitEditorRight"
+  },
+  // Toggle Panel (bottom panel with terminal/problems)
+  {
+    "key": "cmd+j",
+    "command": "workbench.action.togglePanel"
+  },
+  // Quick Fix (Cmd+.)
+  {
+    "key": "cmd+.",
+    "command": "editor.action.quickFix",
+    "when": "editorTextFocus"
+  },
+  // Rename Symbol (F2 is default, but add Cmd+R Cmd+R for muscle memory)
+  {
+    "key": "cmd+r cmd+r",
+    "command": "editor.action.rename",
+    "when": "editorTextFocus"
+  },
+  // Go to Definition (F12 is default, but add Cmd+Click alternative)
+  {
+    "key": "f12",
+    "command": "editor.action.revealDefinition",
+    "when": "editorTextFocus"
+  },
+  // Open file in new window (Cmd+Shift+N)
+  {
+    "key": "cmd+shift+n",
+    "command": "workbench.action.files.newUntitledFile"
+  },
+  // Database: Open Drizzle Studio
+  {
+    "key": "cmd+shift+d",
+    "command": "workbench.action.tasks.runTask",
+    "args": "DB: Drizzle Studio"
+  },
+  // TypeScript: Check Types
+  {
+    "key": "cmd+shift+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "TypeScript: Check Types"
+  }
+]

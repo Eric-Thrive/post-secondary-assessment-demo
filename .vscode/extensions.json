@@ -1,13 +1,57 @@
 {
   "recommendations": [
+    // React & TypeScript
     "dsznajder.es7-react-js-snippets",
-    "bradlc.vscode-tailwindcss",
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
+
+    // Tailwind CSS
+    "bradlc.vscode-tailwindcss",
+
+    // Database
     "ckolkman.vscode-postgres",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+
+    // Git & Version Control
     "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Productivity
     "formulahendry.auto-rename-tag",
     "christian-kohler.path-intellisense",
-    "streetsidesoftware.code-spell-checker"
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    "naumovs.color-highlight",
+    "wayou.vscode-todo-highlight",
+
+    // Live Server & Preview
+    "ritwickdey.liveserver",
+    "yzhang.markdown-all-in-one",
+
+    // AI Assistance (optional)
+    "github.copilot",
+
+    // Docker & Railway
+    "ms-azuretools.vscode-docker",
+
+    // Import Cost
+    "wix.vscode-import-cost",
+
+    // REST Client
+    "humao.rest-client",
+
+    // Code Navigation
+    "steoates.autoimport",
+    "visualstudioexptteam.vscodeintellicode",
+
+    // Thunder Client (API testing)
+    "rangav.vscode-thunder-client",
+
+    // Better Comments
+    "aaron-bond.better-comments",
+
+    // Indent Rainbow
+    "oderwat.indent-rainbow"
   ]
 }

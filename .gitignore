@@ -63,6 +63,10 @@ logs/
 !.vscode/settings.json
 !.vscode/extensions.json
 !.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/keybindings.json
+!.vscode/project.code-snippets
+!.vscode/README.md
 .idea/
 
 # Replit (archived)

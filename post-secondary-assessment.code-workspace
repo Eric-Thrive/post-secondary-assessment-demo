@@ -1,0 +1,88 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Post-Secondary Assessment (Root)"
+    },
+    {
+      "path": "client",
+      "name": "Frontend (React)"
+    },
+    {
+      "path": "server",
+      "name": "Backend (Express)"
+    },
+    {
+      "path": "shared",
+      "name": "Shared (Types & Schemas)"
+    }
+  ],
+  "settings": {
+    // Workspace-specific settings (override .vscode/settings.json if needed)
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "editor.formatOnSave": true,
+
+    // Search exclusions
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.git": true,
+      "**/migrations": false
+    },
+
+    // Terminal settings
+    "terminal.integrated.cwd": "${workspaceFolder}",
+
+    // Recommended view
+    "workbench.startupEditor": "readme",
+
+    // File associations
+    "files.associations": {
+      "*.css": "tailwindcss"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "dsznajder.es7-react-js-snippets",
+      "bradlc.vscode-tailwindcss",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "ckolkman.vscode-postgres",
+      "eamodio.gitlens",
+      "usernamehw.errorlens",
+      "rangav.vscode-thunder-client"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🚀 Start Dev Server",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "skipFiles": ["<node_internals>/**"],
+        "envFile": "${workspaceFolder}/.env",
+        "console": "integratedTerminal"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Dev Server",
+        "type": "npm",
+        "script": "dev",
+        "problemMatcher": [],
+        "isBackground": true,
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+      }
+    ]
+  }
+}

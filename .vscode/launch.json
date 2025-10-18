@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Server",
+      "name": "🚀 Start Dev Server",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
@@ -13,7 +13,7 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": "Debug Server (tsx)",
+      "name": "🔍 Debug Server (tsx)",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -24,6 +24,59 @@
       "env": {
         "NODE_ENV": "development"
       }
+    },
+    {
+      "name": "🔧 Debug Current TypeScript File",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "${file}"],
+      "skipFiles": ["<node_internals>/**"],
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🧪 Debug Script",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "${workspaceFolder}/scripts/${input:scriptName}"],
+      "skipFiles": ["<node_internals>/**"],
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🌐 Chrome: Debug Frontend",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5000",
+      "webRoot": "${workspaceFolder}/client",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./~/*": "${webRoot}/node_modules/*",
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///*": "*"
+      }
+    },
+    {
+      "name": "🚂 Railway: Debug with Railway DB",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "railway",
+      "runtimeArgs": ["run", "npx", "tsx", "server/index.ts"],
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "scriptName",
+      "type": "promptString",
+      "description": "Script filename (e.g., migrate-database.ts)",
+      "default": "migrate-database.ts"
     }
   ]
 }
