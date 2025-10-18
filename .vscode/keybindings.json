@@ -111,5 +111,30 @@
     "key": "cmd+k cmd+p",
     "command": "simpleBrowser.show",
     "args": "http://localhost:5000"
+  },
+  // Visual Development Shortcuts
+  // Open color picker (Cmd+Shift+C when on a color)
+  {
+    "key": "cmd+shift+c",
+    "command": "vscode-color.pick",
+    "when": "editorTextFocus"
+  },
+  // Wrap selection with HTML tag (Alt+W)
+  {
+    "key": "alt+w",
+    "command": "htmltagwrap.wrapSelection",
+    "when": "editorTextFocus && editorHasSelection"
+  },
+  // Emmet: Wrap with abbreviation (Ctrl+Shift+W)
+  {
+    "key": "ctrl+shift+w",
+    "command": "editor.emmet.action.wrapWithAbbreviation",
+    "when": "editorTextFocus"
+  },
+  // Peek CSS definition (Alt+F12)
+  {
+    "key": "alt+f12",
+    "command": "cssPeek.peekDefinition",
+    "when": "editorTextFocus"
   }
 ]

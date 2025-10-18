@@ -5,8 +5,21 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
 
-    // Tailwind CSS
+    // Tailwind CSS & Visual Development
     "bradlc.vscode-tailwindcss",
+    "bourhaouta.tailwindshades", // Generate Tailwind color shades
+    "heybourn.headwind", // Tailwind class sorting
+
+    // CSS & Color Tools
+    "naumovs.color-highlight", // Highlight colors in code
+    "anseki.vscode-color", // Advanced color picker
+    "pranaygp.vscode-css-peek", // Peek CSS definitions
+    "zignd.html-css-class-completion", // CSS class autocomplete
+
+    // HTML & Component Tools
+    "formulahendry.auto-rename-tag",
+    "bradgashler.htmltagwrap", // Wrap selection with HTML tags
+    "vincaslt.highlight-matching-tag", // Highlight matching HTML tags
 
     // Database
     "ckolkman.vscode-postgres",
@@ -18,16 +31,21 @@
     "mhutchie.git-graph",
 
     // Productivity
-    "formulahendry.auto-rename-tag",
     "christian-kohler.path-intellisense",
     "streetsidesoftware.code-spell-checker",
     "usernamehw.errorlens",
-    "naumovs.color-highlight",
     "wayou.vscode-todo-highlight",
 
     // Live Preview (Replit-like browser preview in VS Code)
     "ms-vscode.live-server",
     "yzhang.markdown-all-in-one",
+
+    // Image & Asset Tools
+    "kisstkondoros.vscode-gutter-preview", // Show image previews in gutter
+    "meganrogge.template-string-converter", // Auto-convert to template strings
+
+    // Component Development & Storybook
+    "chromatic.storybook-vscode", // Storybook integration (optional)
 
     // AI Assistance (optional)
     "github.copilot",
@@ -52,6 +70,12 @@
     "aaron-bond.better-comments",
 
     // Indent Rainbow
-    "oderwat.indent-rainbow"
+    "oderwat.indent-rainbow",
+
+    // SVG Tools
+    "jock.svg", // SVG preview and editing
+
+    // React Developer Tools
+    "skyran.js-jsx-snippets"
   ]
 }

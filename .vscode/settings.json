@@ -13,11 +13,28 @@
     "source.fixAll.eslint": "explicit"
   },
 
-  // Tailwind CSS IntelliSense
+  // Tailwind CSS IntelliSense - Enhanced Visual Development
   "tailwindCSS.experimental.classRegex": [
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
     ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
   ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.validate": true,
+  "tailwindCSS.lint.cssConflict": "warning",
+  "tailwindCSS.lint.invalidApply": "error",
+  "tailwindCSS.lint.invalidScreen": "error",
+  "tailwindCSS.lint.invalidVariant": "error",
+  "tailwindCSS.lint.invalidConfigPath": "error",
+  "tailwindCSS.lint.invalidTailwindDirective": "error",
+  "tailwindCSS.lint.recommendedVariantOrder": "warning",
+  "tailwindCSS.colorDecorators": true, // Show color swatches inline
+  "tailwindCSS.showPixelEquivalents": true, // Show px values for rem/em
+
+  // Headwind - Auto-sort Tailwind classes
+  "headwind.runOnSave": true,
 
   // File exclusions
   "files.exclude": {
@@ -59,6 +76,9 @@
   "editor.quickSuggestions": {
     "strings": true
   },
+  "editor.linkedEditing": true, // Auto-rename paired HTML/JSX tags
+  "editor.colorDecorators": true, // Show color swatches inline
+  "editor.unicodeHighlight.ambiguousCharacters": false,
 
   // File watcher (like Replit's auto-reload)
   "files.watcherExclude": {
@@ -95,5 +115,27 @@
   "livePreview.autoRefreshPreview": "onSave",
 
   // Simple Browser settings
-  "simpleBrowser.focusLockIndicator.enabled": true
+  "simpleBrowser.focusLockIndicator.enabled": true,
+
+  // CSS Peek - View CSS definitions
+  "css.enabledLanguages": ["html", "typescriptreact", "javascriptreact"],
+
+  // Emmet - Enhanced HTML/JSX shortcuts
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
+  "emmet.triggerExpansionOnTab": true,
+  "emmet.showExpandedAbbreviation": "always",
+
+  // HTML Tag Wrapping
+  "htmltagwrap.tag": "div",
+
+  // Image Preview in Gutter
+  "gutterpreview.imagePreviewMaxHeight": 100,
+  "gutterpreview.showimagepreviewongutter": true,
+
+  // Color Picker Settings
+  "colorHelper.disableGPU": false,
+  "colorHelper.storeDir": ".vscode"
 }

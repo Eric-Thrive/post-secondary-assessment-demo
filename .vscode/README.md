@@ -45,6 +45,10 @@ Available tasks:
 |----------|--------|
 | `Cmd+Enter` | Start dev server (like Replit's Run) |
 | `Cmd+K Cmd+P` | Open preview in Simple Browser |
+| `Cmd+Shift+C` | Open color picker (on color) |
+| `Alt+W` | Wrap selection with HTML tag |
+| `Ctrl+Shift+W` | Emmet wrap with abbreviation |
+| `Alt+F12` | Peek CSS definition |
 | `Cmd+'` | Toggle terminal |
 | `Cmd+Shift+'` | New terminal |
 | `Cmd+J` | Toggle bottom panel |
@@ -93,6 +97,57 @@ VS Code will prompt you to install recommended extensions when you open the work
 3. Press `Cmd+K Cmd+P` to open preview in VS Code
 4. Press `Cmd+'` to open terminal if needed
 5. Start coding - files auto-save and preview auto-updates!
+
+## Visual Development Tools
+
+### 🎨 Color Tools
+- **Color Swatches**: Colors in code show inline previews
+- **Color Picker**: `Cmd+Shift+C` on any color to open picker
+- **Tailwind Colors**: Hover over Tailwind classes to see color values
+- **Color Highlight**: All color formats (hex, rgb, hsl) highlighted
+
+### ✏️ Tailwind CSS Features
+- **IntelliSense**: Auto-complete for all Tailwind classes
+- **Class Sorting**: Auto-sort Tailwind classes on save (Headwind)
+- **Pixel Equivalents**: Hover over `rem`/`em` to see pixel values
+- **Conflict Detection**: Warns about conflicting Tailwind classes
+- **Color Decorators**: See color swatches next to Tailwind color classes
+
+### 🏗️ Component Shortcuts
+
+**Snippets** (type these prefixes and press Tab):
+- `twcard` - Tailwind card component
+- `twbtn` - Tailwind button
+- `twcontainer` - Container with padding
+- `twflex` - Flex container centered
+- `twgrid` - Grid layout
+- `shadcnDialog` - shadcn Dialog
+- `shadcnInput` - shadcn Input with label and error
+- `rfc` - React functional component
+- `useQuery` - React Query hook
+
+**Quick Actions**:
+- `Alt+W` - Wrap selection with HTML tag
+- `Ctrl+Shift+W` - Emmet wrap with abbreviation
+- `Alt+F12` - Peek CSS definition
+- Auto-rename paired HTML/JSX tags
+
+### 🖼️ Asset Preview
+- **Image Gutter Preview**: See images inline in code
+- **SVG Preview**: Click SVG files to preview
+
+### 📐 HTML/JSX Tools
+- **Matching Tag Highlight**: Paired tags highlighted
+- **Auto-Rename Tags**: Edit opening tag, closing tag updates automatically
+- **Emmet in JSX**: Use Emmet shortcuts in React components
+
+## Visual Development Workflow
+
+1. **Type snippet prefix** (e.g., `twcard`) → Press Tab
+2. **Edit Tailwind classes** → See color swatches inline
+3. **Hover classes** → See CSS values and pixel equivalents
+4. **Save** → Auto-sorts Tailwind classes, formats code
+5. **Preview updates** → See changes instantly in browser
 
 ## Terminal Experience
 
