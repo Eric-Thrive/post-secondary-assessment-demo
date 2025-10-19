@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useModule } from '@/contexts/ModuleContext';
 import { useModuleAssessmentData } from '@/hooks/useModuleAssessmentData';
 import { FileText, Plus, Edit2, LogOut, ChevronDown } from 'lucide-react';
-import ThriveLogo from '@assets/primary logo W-SB_1760910658173.png';
+import ThriveLogo from '@assets/primary logo O-W png_1760911234604.png';
 
 const WelcomeDashboard = () => {
   const navigate = useNavigate();
@@ -88,6 +88,13 @@ const WelcomeDashboard = () => {
       <div className="max-w-4xl w-full">
         {/* Welcome Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src={ThriveLogo}
+              alt="THRIVE"
+              className="h-32 w-auto object-contain"
+            />
+          </div>
           <p className="text-gray-600 text-lg">
             {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
           </p>
