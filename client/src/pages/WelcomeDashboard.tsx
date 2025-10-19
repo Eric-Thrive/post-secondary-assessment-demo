@@ -88,22 +88,6 @@ const WelcomeDashboard = () => {
       <div className="max-w-4xl w-full">
         {/* Welcome Header */}
         <div className="text-center mb-12">
-          <div className="flex justify-center mb-6">
-            <img 
-              src={ThriveLogo}
-              alt="THRIVE Logo"
-              className="h-24 w-24 object-contain"
-            />
-          </div>
-          <h1 
-            className="text-4xl font-bold mb-2"
-            style={{ 
-              fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-              color: brandColors.navyBlue
-            }}
-          >
-            Welcome to THRIVE
-          </h1>
           <p className="text-gray-600 text-lg">
             {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
           </p>
