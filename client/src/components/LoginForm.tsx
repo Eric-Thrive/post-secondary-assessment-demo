@@ -138,9 +138,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             <GraduationCap className="h-10 w-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold mb-4">Post-Secondary Portal</h1>
-          <p className="text-xl text-blue-100 mb-8">
-            Comprehensive assessment and analysis platform for post-secondary education success
-          </p>
           
         </div>
       </div>
