@@ -105,26 +105,26 @@ const WelcomeDashboard = () => {
           {/* New Report Card - Now First */}
           <Card
             onClick={() => navigate(getNewReportRoute())}
-            className="p-6 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+            className="p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
             style={{
               backgroundColor: brandColors.navyBlue,
               borderColor: brandColors.navyBlue,
             }}
             data-testid="card-new-report"
           >
-            <div className="flex flex-col items-center text-center space-y-3">
+            <div className="flex flex-col items-center text-center space-y-[9px]">
               <div 
-                className="p-3 rounded-full"
+                className="p-[9px] rounded-full"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
               >
                 <Plus 
-                  className="h-10 w-10"
+                  className="h-7.5 w-7.5"
                   style={{ color: '#ffffff' }}
                 />
               </div>
               <div>
                 <h3 
-                  className="text-lg font-bold mb-1 text-white"
+                  className="text-base font-bold mb-1 text-white"
                   style={{ 
                     fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
                   }}
@@ -142,26 +142,26 @@ const WelcomeDashboard = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Card
-                className="p-6 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+                className="p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
                 style={{
                   backgroundColor: brandColors.orange,
                   borderColor: brandColors.orange,
                 }}
                 data-testid="card-view-reports"
               >
-                <div className="flex flex-col items-center text-center space-y-3">
+                <div className="flex flex-col items-center text-center space-y-[9px]">
                   <div 
-                    className="p-3 rounded-full"
+                    className="p-[9px] rounded-full"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <FileText 
-                      className="h-10 w-10"
+                      className="h-7.5 w-7.5"
                       style={{ color: '#ffffff' }}
                     />
                   </div>
                   <div>
                     <h3 
-                      className="text-lg font-bold mb-1 text-white"
+                      className="text-base font-bold mb-1 text-white"
                       style={{ 
                         fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
                       }}
@@ -172,7 +172,7 @@ const WelcomeDashboard = () => {
                       {completedReports.length} report{completedReports.length !== 1 ? 's' : ''} available
                     </p>
                   </div>
-                  <ChevronDown className="h-5 w-5 text-white text-opacity-70" />
+                  <ChevronDown className="h-4 w-4 text-white text-opacity-70" />
                 </div>
               </Card>
             </DropdownMenuTrigger>
@@ -212,26 +212,26 @@ const WelcomeDashboard = () => {
               e.preventDefault();
               alert('Review and edit only available with paid plan');
             }}
-            className="p-6 cursor-not-allowed transition-all duration-200 border-2 opacity-50"
+            className="p-[18px] cursor-not-allowed transition-all duration-200 border-2 opacity-50"
             style={{
               backgroundColor: brandColors.yellow,
               borderColor: brandColors.yellow,
             }}
             data-testid="card-review-edit"
           >
-            <div className="flex flex-col items-center text-center space-y-3">
+            <div className="flex flex-col items-center text-center space-y-[9px]">
               <div 
-                className="p-3 rounded-full"
+                className="p-[9px] rounded-full"
                 style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
               >
                 <Edit2 
-                  className="h-10 w-10"
+                  className="h-7.5 w-7.5"
                   style={{ color: '#374151' }}
                 />
               </div>
               <div>
                 <h3 
-                  className="text-lg font-bold mb-1"
+                  className="text-base font-bold mb-1"
                   style={{ 
                     fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
                     color: '#374151'
@@ -250,26 +250,26 @@ const WelcomeDashboard = () => {
           {isAuthenticated && (
             <Card
               onClick={handleLogout}
-              className="p-6 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+              className="p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
               style={{
                 backgroundColor: '#ffffff',
                 borderColor: '#d1d5db',
               }}
               data-testid="card-logout"
             >
-              <div className="flex flex-col items-center text-center space-y-3">
+              <div className="flex flex-col items-center text-center space-y-[9px]">
                 <div 
-                  className="p-3 rounded-full"
+                  className="p-[9px] rounded-full"
                   style={{ backgroundColor: '#f3f4f6' }}
                 >
                   <LogOut 
-                    className="h-10 w-10"
+                    className="h-7.5 w-7.5"
                     style={{ color: '#6b7280' }}
                   />
                 </div>
                 <div>
                   <h3 
-                    className="text-lg font-bold mb-1"
+                    className="text-base font-bold mb-1"
                     style={{ 
                       fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
                       color: '#374151'
