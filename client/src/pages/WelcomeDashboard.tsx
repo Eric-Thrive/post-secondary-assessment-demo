@@ -11,12 +11,12 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useModule } from '@/contexts/ModuleContext';
 import { useModuleAssessmentData } from '@/hooks/useModuleAssessmentData';
-import { FileText, Plus, Edit2, LogOut, ChevronDown } from 'lucide-react';
+import { FileText, Plus, ChevronDown } from 'lucide-react';
 import ThriveLogo from '@assets/primary logo O-W png_1760911234604.png';
 
 const WelcomeDashboard = () => {
   const navigate = useNavigate();
-  const { logout, isAuthenticated, user, getLogoutRedirectPath } = useAuth();
+  const { user } = useAuth();
   const { activeModule } = useModule();
   const { assessmentCases, isLoading } = useModuleAssessmentData(activeModule);
 
@@ -44,17 +44,6 @@ const WelcomeDashboard = () => {
     }
   };
 
-  // Get review edit route based on module
-  const getReviewEditRoute = () => {
-    if (activeModule === 'k12') {
-      return '/k12-review-edit';
-    } else if (activeModule === 'tutoring') {
-      return '/tutoring-review-edit';
-    } else {
-      return '/post-secondary-review-edit';
-    }
-  };
-
   // Get reports route based on module
   const getReportsRoute = (reportId: string) => {
     if (activeModule === 'k12') {
@@ -63,18 +52,6 @@ const WelcomeDashboard = () => {
       return `/tutoring-reports?caseId=${reportId}`;
     } else {
       return `/post-secondary-reports?caseId=${reportId}`;
-    }
-  };
-
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await logout();
-      // Redirect to appropriate path based on current environment
-      const redirectPath = getLogoutRedirectPath();
-      navigate(redirectPath);
-    } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 
@@ -209,85 +186,6 @@ const WelcomeDashboard = () => {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Review & Edit Card - Disabled with Yellow Styling */}
-          <Card
-            onClick={(e) => {
-              e.preventDefault();
-              alert('Review and edit only available with paid plan');
-            }}
-            className="p-12 cursor-not-allowed transition-all duration-200 border-2 opacity-50"
-            style={{
-              backgroundColor: brandColors.yellow,
-              borderColor: brandColors.yellow,
-            }}
-            data-testid="card-review-edit"
-          >
-            <div className="flex flex-col items-center justify-center text-center space-y-4">
-              <div 
-                className="p-4 rounded-full"
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
-              >
-                <Edit2 
-                  className="h-12 w-12"
-                  style={{ color: '#374151' }}
-                />
-              </div>
-              <div>
-                <h3 
-                  className="text-lg font-bold mb-2"
-                  style={{ 
-                    fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-                    color: '#374151'
-                  }}
-                >
-                  Review & Edit
-                </h3>
-                <p className="text-base" style={{ color: '#4b5563' }}>
-                  Modify existing reports
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Logout Card */}
-          {isAuthenticated && (
-            <Card
-              onClick={handleLogout}
-              className="p-12 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
-              style={{
-                backgroundColor: '#ffffff',
-                borderColor: '#d1d5db',
-              }}
-              data-testid="card-logout"
-            >
-              <div className="flex flex-col items-center justify-center text-center space-y-4">
-                <div 
-                  className="p-4 rounded-full"
-                  style={{ backgroundColor: '#f3f4f6' }}
-                >
-                  <LogOut 
-                    className="h-12 w-12"
-                    style={{ color: '#6b7280' }}
-                  />
-                </div>
-                <div>
-                  <h3 
-                    className="text-lg font-bold mb-2"
-                    style={{ 
-                      fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-                      color: '#374151'
-                    }}
-                  >
-                    Logout
-                  </h3>
-                  <p className="text-gray-600 text-base">
-                    Sign out of your account
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
           </div>
         </div>
       </div>
