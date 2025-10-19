@@ -419,25 +419,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { username, password } = req.body;
+      
+      console.log('🔐 LOGIN ATTEMPT DEBUG:');
+      console.log('  Username received:', username);
+      console.log('  Username length:', username?.length);
+      console.log('  Password received length:', password?.length);
+      console.log('  Username trimmed:', username?.trim());
+      console.log('  Username trimmed length:', username?.trim().length);
 
       if (!username || !password) {
+        console.log('  ❌ Missing username or password');
         return res.status(400).json({ error: 'Username and password are required' });
       }
 
-      // Find user
+      // Find user - trim username to handle potential whitespace
+      const trimmedUsername = username.trim();
+      console.log('  🔍 Looking up user with username:', trimmedUsername);
+      
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username));
+        .where(eq(users.username, trimmedUsername));
+
+      console.log('  📊 User lookup result:', {
+        found: !!user,
+        isActive: user?.isActive,
+        userId: user?.id,
+        storedUsername: user?.username,
+        storedUsernameLength: user?.username?.length,
+        hashedPasswordLength: user?.password?.length
+      });
 
       if (!user || !user.isActive) {
+        console.log('  ❌ User not found or inactive');
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       // Verify password
+      console.log('  🔑 Verifying password...');
       const isValidPassword = await verifyPassword(password, user.password);
+      console.log('  ✅ Password verification result:', isValidPassword);
       
       if (!isValidPassword) {
+        console.log('  ❌ Password verification FAILED');
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
@@ -449,6 +473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set session
       req.session.userId = user.id;
+      
+      console.log('  ✅ LOGIN SUCCESSFUL for user:', user.username);
 
       res.json({
         message: 'Login successful',
