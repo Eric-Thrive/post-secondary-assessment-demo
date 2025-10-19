@@ -1111,6 +1111,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Save the demo analysis result to database so reports page can find it
           console.log('💾 Saving demo analysis result to database...');
+          
+          // Capture user ID from session if user is logged in
+          const userId = req.session?.userId;
+          console.log(`🔑 Demo analysis - User ID from session: ${userId || 'none (anonymous)'}`);
+          
           const caseData = {
             id: caseId,
             moduleType: moduleType, // Fixed: camelCase
@@ -1123,6 +1128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             analysisDate: result.analysis_date || new Date().toISOString(), // Fixed: camelCase
             itemMasterData: JSON.stringify(result.item_master_data || []), // Fixed: camelCase
             customerId: 'demo-customer', // Fixed: camelCase - Special demo customer ID
+            createdByUserId: userId, // Link to logged-in user if available
             environment: 'post-secondary-demo', // More specific environment
             // Add the missing new fields
             uniqueId: uniqueId?.trim() || null,
