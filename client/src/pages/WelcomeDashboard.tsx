@@ -118,7 +118,7 @@ const WelcomeDashboard = () => {
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
               >
                 <Plus 
-                  className="h-7.5 w-7.5"
+                  className="h-[30px] w-[30px]"
                   style={{ color: '#ffffff' }}
                 />
               </div>
@@ -155,7 +155,7 @@ const WelcomeDashboard = () => {
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <FileText 
-                      className="h-7.5 w-7.5"
+                      className="h-[30px] w-[30px]"
                       style={{ color: '#ffffff' }}
                     />
                   </div>
@@ -225,7 +225,7 @@ const WelcomeDashboard = () => {
                 style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
               >
                 <Edit2 
-                  className="h-7.5 w-7.5"
+                  className="h-[30px] w-[30px]"
                   style={{ color: '#374151' }}
                 />
               </div>
@@ -263,7 +263,7 @@ const WelcomeDashboard = () => {
                   style={{ backgroundColor: '#f3f4f6' }}
                 >
                   <LogOut 
-                    className="h-7.5 w-7.5"
+                    className="h-[30px] w-[30px]"
                     style={{ color: '#6b7280' }}
                   />
                 </div>
