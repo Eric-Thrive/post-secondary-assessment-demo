@@ -80,24 +80,24 @@ const WelcomeDashboard = () => {
 
   return (
     <div 
-      className="min-h-screen w-full flex items-center justify-center p-6"
+      className="min-h-screen w-full p-6"
       style={{
         background: `linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1))`
       }}
     >
-      <div className="max-w-4xl w-full">
+      <div className="max-w-6xl mx-auto">
         {/* Welcome Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
             <img 
               src={ThriveLogo}
               alt="THRIVE"
-              className="h-32 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
+            <p className="text-gray-600 text-lg">
+              {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
+            </p>
           </div>
-          <p className="text-gray-600 text-lg">
-            {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
-          </p>
         </div>
 
         {/* Action Cards Grid */}
