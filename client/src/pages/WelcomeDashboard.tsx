@@ -80,30 +80,32 @@ const WelcomeDashboard = () => {
 
   return (
     <div 
-      className="min-h-screen w-full p-6"
+      className="min-h-screen w-full relative"
       style={{
         background: `linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1))`
       }}
     >
-      <div className="max-w-3xl mx-auto">
-        {/* Logo - Upper Left */}
-        <div className="mb-4">
-          <img 
-            src={ThriveLogo}
-            alt="THRIVE"
-            className="h-32 w-auto object-contain"
-          />
-        </div>
+      {/* Logo - Fixed at Absolute Top Left */}
+      <div className="absolute top-6 left-6 z-10">
+        <img 
+          src={ThriveLogo}
+          alt="THRIVE"
+          className="h-32 w-auto object-contain"
+        />
+      </div>
 
-        {/* Welcome Message */}
-        <div className="mb-8">
-          <p className="text-gray-600 text-xl">
-            {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
-          </p>
-        </div>
+      {/* Centered Content Container */}
+      <div className="min-h-screen w-full flex items-center justify-center p-6">
+        <div className="max-w-3xl w-full">
+          {/* Welcome Message */}
+          <div className="mb-8 text-center">
+            <p className="text-gray-600 text-xl">
+              {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
+            </p>
+          </div>
 
-        {/* Action Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Action Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* New Report Card - Now First */}
           <Card
             onClick={() => navigate(getNewReportRoute())}
@@ -286,6 +288,7 @@ const WelcomeDashboard = () => {
               </div>
             </Card>
           )}
+          </div>
         </div>
       </div>
     </div>
