@@ -85,53 +85,53 @@ const WelcomeDashboard = () => {
         background: `linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1))`
       }}
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {/* Welcome Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
             <img 
               src={ThriveLogo}
               alt="THRIVE"
-              className="h-20 w-auto object-contain"
+              className="h-16 w-auto object-contain"
             />
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-base">
               {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
             </p>
           </div>
         </div>
 
         {/* Action Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* New Report Card - Now First */}
           <Card
             onClick={() => navigate(getNewReportRoute())}
-            className="aspect-square p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+            className="aspect-square p-[9px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
             style={{
               backgroundColor: brandColors.navyBlue,
               borderColor: brandColors.navyBlue,
             }}
             data-testid="card-new-report"
           >
-            <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+            <div className="flex flex-col items-center justify-center text-center h-full space-y-[4px]">
               <div 
-                className="p-[9px] rounded-full"
+                className="p-[4px] rounded-full"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
               >
                 <Plus 
-                  className="h-[30px] w-[30px]"
+                  className="h-[15px] w-[15px]"
                   style={{ color: '#ffffff' }}
                 />
               </div>
               <div>
                 <h3 
-                  className="text-base font-bold mb-1 text-white"
+                  className="text-sm font-bold mb-0.5 text-white"
                   style={{ 
                     fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
                   }}
                 >
                   New Report
                 </h3>
-                <p className="text-white text-opacity-90 text-sm">
+                <p className="text-white text-opacity-90 text-xs">
                   Start a new assessment
                 </p>
               </div>
@@ -142,37 +142,37 @@ const WelcomeDashboard = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Card
-                className="aspect-square p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+                className="aspect-square p-[9px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
                 style={{
                   backgroundColor: brandColors.orange,
                   borderColor: brandColors.orange,
                 }}
                 data-testid="card-view-reports"
               >
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+                <div className="flex flex-col items-center justify-center text-center h-full space-y-[4px]">
                   <div 
-                    className="p-[9px] rounded-full"
+                    className="p-[4px] rounded-full"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <FileText 
-                      className="h-[30px] w-[30px]"
+                      className="h-[15px] w-[15px]"
                       style={{ color: '#ffffff' }}
                     />
                   </div>
                   <div>
                     <h3 
-                      className="text-base font-bold mb-1 text-white"
+                      className="text-sm font-bold mb-0.5 text-white"
                       style={{ 
                         fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
                       }}
                     >
                       View Reports
                     </h3>
-                    <p className="text-white text-opacity-90 text-sm">
+                    <p className="text-white text-opacity-90 text-xs">
                       {completedReports.length} report{completedReports.length !== 1 ? 's' : ''} available
                     </p>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-white text-opacity-70" />
+                  <ChevronDown className="h-3 w-3 text-white text-opacity-70" />
                 </div>
               </Card>
             </DropdownMenuTrigger>
@@ -212,26 +212,26 @@ const WelcomeDashboard = () => {
               e.preventDefault();
               alert('Review and edit only available with paid plan');
             }}
-            className="aspect-square p-[18px] cursor-not-allowed transition-all duration-200 border-2 opacity-50"
+            className="aspect-square p-[9px] cursor-not-allowed transition-all duration-200 border-2 opacity-50"
             style={{
               backgroundColor: brandColors.yellow,
               borderColor: brandColors.yellow,
             }}
             data-testid="card-review-edit"
           >
-            <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+            <div className="flex flex-col items-center justify-center text-center h-full space-y-[4px]">
               <div 
-                className="p-[9px] rounded-full"
+                className="p-[4px] rounded-full"
                 style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
               >
                 <Edit2 
-                  className="h-[30px] w-[30px]"
+                  className="h-[15px] w-[15px]"
                   style={{ color: '#374151' }}
                 />
               </div>
               <div>
                 <h3 
-                  className="text-base font-bold mb-1"
+                  className="text-sm font-bold mb-0.5"
                   style={{ 
                     fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
                     color: '#374151'
@@ -239,7 +239,7 @@ const WelcomeDashboard = () => {
                 >
                   Review & Edit
                 </h3>
-                <p className="text-sm" style={{ color: '#4b5563' }}>
+                <p className="text-xs" style={{ color: '#4b5563' }}>
                   Modify existing reports
                 </p>
               </div>
@@ -250,26 +250,26 @@ const WelcomeDashboard = () => {
           {isAuthenticated && (
             <Card
               onClick={handleLogout}
-              className="aspect-square p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+              className="aspect-square p-[9px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
               style={{
                 backgroundColor: '#ffffff',
                 borderColor: '#d1d5db',
               }}
               data-testid="card-logout"
             >
-              <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+              <div className="flex flex-col items-center justify-center text-center h-full space-y-[4px]">
                 <div 
-                  className="p-[9px] rounded-full"
+                  className="p-[4px] rounded-full"
                   style={{ backgroundColor: '#f3f4f6' }}
                 >
                   <LogOut 
-                    className="h-[30px] w-[30px]"
+                    className="h-[15px] w-[15px]"
                     style={{ color: '#6b7280' }}
                   />
                 </div>
                 <div>
                   <h3 
-                    className="text-base font-bold mb-1"
+                    className="text-sm font-bold mb-0.5"
                     style={{ 
                       fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
                       color: '#374151'
@@ -277,7 +277,7 @@ const WelcomeDashboard = () => {
                   >
                     Logout
                   </h3>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-600 text-xs">
                     Sign out of your account
                   </p>
                 </div>
