@@ -111,7 +111,43 @@ const WelcomeDashboard = () => {
 
         {/* Action Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* View Reports Card with Dropdown */}
+          {/* New Report Card - Now First */}
+          <Card
+            onClick={() => navigate(getNewReportRoute())}
+            className="p-8 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+            style={{
+              backgroundColor: brandColors.navyBlue,
+              borderColor: brandColors.navyBlue,
+            }}
+            data-testid="card-new-report"
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div 
+                className="p-4 rounded-full"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+              >
+                <Plus 
+                  className="h-12 w-12"
+                  style={{ color: '#ffffff' }}
+                />
+              </div>
+              <div>
+                <h3 
+                  className="text-xl font-bold mb-2 text-white"
+                  style={{ 
+                    fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
+                  }}
+                >
+                  New Report
+                </h3>
+                <p className="text-white text-opacity-90 text-sm">
+                  Start a new assessment
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* View Reports Card with Dropdown - Now Second */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Card
@@ -180,60 +216,27 @@ const WelcomeDashboard = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* New Report Card */}
+          {/* Review & Edit Card - Disabled with Grey Styling */}
           <Card
-            onClick={() => navigate(getNewReportRoute())}
-            className="p-8 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
-            style={{
-              backgroundColor: brandColors.navyBlue,
-              borderColor: brandColors.navyBlue,
+            onClick={(e) => {
+              e.preventDefault();
+              alert('Review and edit only available with paid plan');
             }}
-            data-testid="card-new-report"
-          >
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div 
-                className="p-4 rounded-full"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-              >
-                <Plus 
-                  className="h-12 w-12"
-                  style={{ color: '#ffffff' }}
-                />
-              </div>
-              <div>
-                <h3 
-                  className="text-xl font-bold mb-2 text-white"
-                  style={{ 
-                    fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
-                  }}
-                >
-                  New Report
-                </h3>
-                <p className="text-white text-opacity-90 text-sm">
-                  Start a new assessment
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Review & Edit Card */}
-          <Card
-            onClick={() => navigate(getReviewEditRoute())}
-            className="p-8 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+            className="p-8 cursor-not-allowed transition-all duration-200 border-2 opacity-50"
             style={{
-              backgroundColor: '#ffffff',
-              borderColor: brandColors.orange,
+              backgroundColor: '#f3f4f6',
+              borderColor: '#d1d5db',
             }}
             data-testid="card-review-edit"
           >
             <div className="flex flex-col items-center text-center space-y-4">
               <div 
                 className="p-4 rounded-full"
-                style={{ backgroundColor: `${brandColors.orange}40` }}
+                style={{ backgroundColor: '#e5e7eb' }}
               >
                 <Edit2 
                   className="h-12 w-12"
-                  style={{ color: brandColors.orange }}
+                  style={{ color: '#9ca3af' }}
                 />
               </div>
               <div>
@@ -241,12 +244,12 @@ const WelcomeDashboard = () => {
                   className="text-xl font-bold mb-2"
                   style={{ 
                     fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-                    color: brandColors.navyBlue
+                    color: '#6b7280'
                   }}
                 >
                   Review & Edit
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-500 text-sm">
                   Modify existing reports
                 </p>
               </div>
