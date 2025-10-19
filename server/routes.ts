@@ -432,22 +432,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Normalize username by trimming whitespace
       const trimmedUsername = username.trim();
       
+      console.log(`🔐 Login attempt for username: "${trimmedUsername}"`);
+      
       // Find user
       const [user] = await db
         .select()
         .from(users)
         .where(eq(users.username, trimmedUsername));
 
-      if (!user || !user.isActive) {
+      if (!user) {
+        console.log(`❌ User "${trimmedUsername}" not found in database`);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
+
+      if (!user.isActive) {
+        console.log(`❌ User "${trimmedUsername}" is not active`);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      console.log(`✓ User "${trimmedUsername}" found and active`);
 
       // Verify password
       const isValidPassword = await verifyPassword(password, user.password);
       
       if (!isValidPassword) {
+        console.log(`❌ Password verification failed for user "${trimmedUsername}"`);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
+
+      console.log(`✅ Login successful for user "${trimmedUsername}"`);
 
       // Update last login
       await db
