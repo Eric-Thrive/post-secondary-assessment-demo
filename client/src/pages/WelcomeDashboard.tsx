@@ -25,7 +25,7 @@ const WelcomeDashboard = () => {
     navyBlue: '#1297D2',
     skyBlue: '#96D7E1',
     orange: '#F89E54',
-    yellow: '#F5E6A3',
+    yellow: '#FDE677',
   };
 
   // Get completed reports only
@@ -114,26 +114,26 @@ const WelcomeDashboard = () => {
           {/* New Report Card - Now First */}
           <Card
             onClick={() => navigate(getNewReportRoute())}
-            className="p-8 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+            className="p-6 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
             style={{
               backgroundColor: brandColors.navyBlue,
               borderColor: brandColors.navyBlue,
             }}
             data-testid="card-new-report"
           >
-            <div className="flex flex-col items-center text-center space-y-4">
+            <div className="flex flex-col items-center text-center space-y-3">
               <div 
-                className="p-4 rounded-full"
+                className="p-3 rounded-full"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
               >
                 <Plus 
-                  className="h-12 w-12"
+                  className="h-10 w-10"
                   style={{ color: '#ffffff' }}
                 />
               </div>
               <div>
                 <h3 
-                  className="text-xl font-bold mb-2 text-white"
+                  className="text-lg font-bold mb-1 text-white"
                   style={{ 
                     fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
                   }}
@@ -151,38 +151,37 @@ const WelcomeDashboard = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Card
-                className="p-8 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+                className="p-6 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
                 style={{
-                  backgroundColor: '#ffffff',
-                  borderColor: brandColors.skyBlue,
+                  backgroundColor: brandColors.orange,
+                  borderColor: brandColors.orange,
                 }}
                 data-testid="card-view-reports"
               >
-                <div className="flex flex-col items-center text-center space-y-4">
+                <div className="flex flex-col items-center text-center space-y-3">
                   <div 
-                    className="p-4 rounded-full"
-                    style={{ backgroundColor: `${brandColors.skyBlue}40` }}
+                    className="p-3 rounded-full"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <FileText 
-                      className="h-12 w-12"
-                      style={{ color: brandColors.navyBlue }}
+                      className="h-10 w-10"
+                      style={{ color: '#ffffff' }}
                     />
                   </div>
                   <div>
                     <h3 
-                      className="text-xl font-bold mb-2"
+                      className="text-lg font-bold mb-1 text-white"
                       style={{ 
-                        fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-                        color: brandColors.navyBlue
+                        fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif'
                       }}
                     >
                       View Reports
                     </h3>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-white text-opacity-90 text-sm">
                       {completedReports.length} report{completedReports.length !== 1 ? 's' : ''} available
                     </p>
                   </div>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                  <ChevronDown className="h-5 w-5 text-white text-opacity-70" />
                 </div>
               </Card>
             </DropdownMenuTrigger>
@@ -216,40 +215,40 @@ const WelcomeDashboard = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Review & Edit Card - Disabled with Grey Styling */}
+          {/* Review & Edit Card - Disabled with Yellow Styling */}
           <Card
             onClick={(e) => {
               e.preventDefault();
               alert('Review and edit only available with paid plan');
             }}
-            className="p-8 cursor-not-allowed transition-all duration-200 border-2 opacity-50"
+            className="p-6 cursor-not-allowed transition-all duration-200 border-2 opacity-50"
             style={{
-              backgroundColor: '#f3f4f6',
-              borderColor: '#d1d5db',
+              backgroundColor: brandColors.yellow,
+              borderColor: brandColors.yellow,
             }}
             data-testid="card-review-edit"
           >
-            <div className="flex flex-col items-center text-center space-y-4">
+            <div className="flex flex-col items-center text-center space-y-3">
               <div 
-                className="p-4 rounded-full"
-                style={{ backgroundColor: '#e5e7eb' }}
+                className="p-3 rounded-full"
+                style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
               >
                 <Edit2 
-                  className="h-12 w-12"
-                  style={{ color: '#9ca3af' }}
+                  className="h-10 w-10"
+                  style={{ color: '#374151' }}
                 />
               </div>
               <div>
                 <h3 
-                  className="text-xl font-bold mb-2"
+                  className="text-lg font-bold mb-1"
                   style={{ 
                     fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-                    color: '#6b7280'
+                    color: '#374151'
                   }}
                 >
                   Review & Edit
                 </h3>
-                <p className="text-gray-500 text-sm">
+                <p className="text-sm" style={{ color: '#4b5563' }}>
                   Modify existing reports
                 </p>
               </div>
@@ -260,26 +259,26 @@ const WelcomeDashboard = () => {
           {isAuthenticated && (
             <Card
               onClick={handleLogout}
-              className="p-8 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+              className="p-6 cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
               style={{
                 backgroundColor: '#ffffff',
                 borderColor: '#d1d5db',
               }}
               data-testid="card-logout"
             >
-              <div className="flex flex-col items-center text-center space-y-4">
+              <div className="flex flex-col items-center text-center space-y-3">
                 <div 
-                  className="p-4 rounded-full"
+                  className="p-3 rounded-full"
                   style={{ backgroundColor: '#f3f4f6' }}
                 >
                   <LogOut 
-                    className="h-12 w-12"
+                    className="h-10 w-10"
                     style={{ color: '#6b7280' }}
                   />
                 </div>
                 <div>
                   <h3 
-                    className="text-xl font-bold mb-2"
+                    className="text-lg font-bold mb-1"
                     style={{ 
                       fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
                       color: '#374151'
