@@ -288,20 +288,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post('/api/auth/register', async (req, res) => {
     try {
-      console.log('🔍 Registration request body:', JSON.stringify(req.body, null, 2));
       const { username, password, email, customerId, customerName, role } = req.body;
-      console.log('🔍 Extracted fields:', { 
-        username: !!username, 
-        password: !!password, 
-        email: !!email,
-        usernameVal: username,
-        emailVal: email 
-      });
       
       // Validate required fields
       if (!username || !password || !email) {
-        console.log('❌ Validation failed - missing fields:', { username: !!username, password: !!password, email: !!email });
         return res.status(400).json({ error: 'Username, password, and email are required' });
+      }
+
+      // Normalize username and email by trimming whitespace
+      const trimmedUsername = username.trim();
+      const trimmedEmail = email.trim();
+
+      // Validate that username is not empty after trimming
+      if (!trimmedUsername) {
+        return res.status(400).json({ error: 'Username cannot be empty or contain only whitespace' });
+      }
+
+      // Validate that email is not empty after trimming
+      if (!trimmedEmail) {
+        return res.status(400).json({ error: 'Email cannot be empty or contain only whitespace' });
       }
 
       // Validate password security requirements
@@ -313,11 +318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' });
       }
 
-      // Check if user already exists by username or email
+      // Check if user already exists by username or email (using trimmed values)
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username));
+        .where(eq(users.username, trimmedUsername));
 
       if (existingUser) {
         return res.status(409).json({ error: 'Username already exists' });
@@ -326,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [existingEmail] = await db
         .select()
         .from(users)
-        .where(eq(users.email, email));
+        .where(eq(users.email, trimmedEmail));
 
       if (existingEmail) {
         return res.status(409).json({ error: 'Email already exists' });
@@ -363,13 +368,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create user
+      // Create user with normalized (trimmed) username and email
       const [newUser] = await db
         .insert(users)
         .values({
-          username,
+          username: trimmedUsername,
           password: hashedPassword,
-          email,
+          email: trimmedEmail,
           customerId: assignedCustomerId,
           customerName,
           role: assignedRole,
@@ -419,49 +424,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { username, password } = req.body;
-      
-      console.log('🔐 LOGIN ATTEMPT DEBUG:');
-      console.log('  Username received:', username);
-      console.log('  Username length:', username?.length);
-      console.log('  Password received length:', password?.length);
-      console.log('  Username trimmed:', username?.trim());
-      console.log('  Username trimmed length:', username?.trim().length);
 
       if (!username || !password) {
-        console.log('  ❌ Missing username or password');
         return res.status(400).json({ error: 'Username and password are required' });
       }
 
-      // Find user - trim username to handle potential whitespace
+      // Normalize username by trimming whitespace
       const trimmedUsername = username.trim();
-      console.log('  🔍 Looking up user with username:', trimmedUsername);
       
+      // Find user
       const [user] = await db
         .select()
         .from(users)
         .where(eq(users.username, trimmedUsername));
 
-      console.log('  📊 User lookup result:', {
-        found: !!user,
-        isActive: user?.isActive,
-        userId: user?.id,
-        storedUsername: user?.username,
-        storedUsernameLength: user?.username?.length,
-        hashedPasswordLength: user?.password?.length
-      });
-
       if (!user || !user.isActive) {
-        console.log('  ❌ User not found or inactive');
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       // Verify password
-      console.log('  🔑 Verifying password...');
       const isValidPassword = await verifyPassword(password, user.password);
-      console.log('  ✅ Password verification result:', isValidPassword);
       
       if (!isValidPassword) {
-        console.log('  ❌ Password verification FAILED');
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
@@ -473,8 +457,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set session
       req.session.userId = user.id;
-      
-      console.log('  ✅ LOGIN SUCCESSFUL for user:', user.username);
 
       res.json({
         message: 'Login successful',
