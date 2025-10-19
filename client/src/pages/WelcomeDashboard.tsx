@@ -85,16 +85,16 @@ const WelcomeDashboard = () => {
         background: `linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1))`
       }}
     >
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {/* Welcome Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <img 
               src={ThriveLogo}
               alt="THRIVE"
-              className="h-20 w-auto object-contain"
+              className="h-32 w-auto object-contain"
             />
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-xl">
               {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
             </p>
           </div>
