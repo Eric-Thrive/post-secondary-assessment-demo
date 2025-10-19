@@ -107,20 +107,20 @@ const WelcomeDashboard = () => {
           {/* New Report Card - Now First */}
           <Card
             onClick={() => navigate(getNewReportRoute())}
-            className="aspect-square p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+            className="p-[14px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
             style={{
               backgroundColor: brandColors.navyBlue,
               borderColor: brandColors.navyBlue,
             }}
             data-testid="card-new-report"
           >
-            <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+            <div className="flex flex-col items-center justify-center text-center space-y-[7px]">
               <div 
-                className="p-[9px] rounded-full"
+                className="p-[7px] rounded-full"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
               >
                 <Plus 
-                  className="h-[30px] w-[30px]"
+                  className="h-[23px] w-[23px]"
                   style={{ color: '#ffffff' }}
                 />
               </div>
@@ -144,20 +144,20 @@ const WelcomeDashboard = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Card
-                className="aspect-square p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+                className="p-[14px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
                 style={{
                   backgroundColor: brandColors.orange,
                   borderColor: brandColors.orange,
                 }}
                 data-testid="card-view-reports"
               >
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+                <div className="flex flex-col items-center justify-center text-center space-y-[7px]">
                   <div 
-                    className="p-[9px] rounded-full"
+                    className="p-[7px] rounded-full"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <FileText 
-                      className="h-[30px] w-[30px]"
+                      className="h-[23px] w-[23px]"
                       style={{ color: '#ffffff' }}
                     />
                   </div>
@@ -214,20 +214,20 @@ const WelcomeDashboard = () => {
               e.preventDefault();
               alert('Review and edit only available with paid plan');
             }}
-            className="aspect-square p-[18px] cursor-not-allowed transition-all duration-200 border-2 opacity-50"
+            className="p-[14px] cursor-not-allowed transition-all duration-200 border-2 opacity-50"
             style={{
               backgroundColor: brandColors.yellow,
               borderColor: brandColors.yellow,
             }}
             data-testid="card-review-edit"
           >
-            <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+            <div className="flex flex-col items-center justify-center text-center space-y-[7px]">
               <div 
-                className="p-[9px] rounded-full"
+                className="p-[7px] rounded-full"
                 style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
               >
                 <Edit2 
-                  className="h-[30px] w-[30px]"
+                  className="h-[23px] w-[23px]"
                   style={{ color: '#374151' }}
                 />
               </div>
@@ -252,20 +252,20 @@ const WelcomeDashboard = () => {
           {isAuthenticated && (
             <Card
               onClick={handleLogout}
-              className="aspect-square p-[18px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
+              className="p-[14px] cursor-pointer transition-all duration-200 hover:shadow-xl border-2"
               style={{
                 backgroundColor: '#ffffff',
                 borderColor: '#d1d5db',
               }}
               data-testid="card-logout"
             >
-              <div className="flex flex-col items-center justify-center text-center h-full space-y-[9px]">
+              <div className="flex flex-col items-center justify-center text-center space-y-[7px]">
                 <div 
-                  className="p-[9px] rounded-full"
+                  className="p-[7px] rounded-full"
                   style={{ backgroundColor: '#f3f4f6' }}
                 >
                   <LogOut 
-                    className="h-[30px] w-[30px]"
+                    className="h-[23px] w-[23px]"
                     style={{ color: '#6b7280' }}
                   />
                 </div>
