@@ -2,6 +2,36 @@
 
 This document provides context and instructions for Claude Code when working on this project.
 
+## Session Documentation (IMPORTANT)
+
+**At the end of each significant session**, you MUST update `.claude/SESSION_HISTORY.md`:
+
+1. **Add a new session entry** using the template at the bottom of SESSION_HISTORY.md
+2. **Document**:
+   - Date and goal of the session
+   - What was accomplished (with ✅ checkmarks)
+   - Key decisions made and rationale
+   - Code changes (files, commits)
+   - Questions answered during session
+   - Next steps or TODOs
+
+3. **Commit the update**:
+   ```bash
+   git add .claude/SESSION_HISTORY.md
+   git commit -m "docs: update session history - [brief description]"
+   ```
+
+**When to update**:
+- After completing a significant feature
+- After making important architectural decisions
+- At the end of a coding session
+- When answering important questions about the project
+
+**Do NOT update** for:
+- Minor bug fixes
+- Trivial changes
+- In-progress work (wait until completion)
+
 ## Project Context
 
 This is an **AI-powered educational accessibility platform** that generates comprehensive accommodation reports for K-12 and post-secondary students. The platform uses GPT-4 to analyze student assessments and recommend evidence-based accommodations.
@@ -426,5 +456,17 @@ When working on this project:
 - ✅ Use React Query for server state
 - ✅ Handle errors properly
 - ✅ Test changes before committing
+- ✅ **Update SESSION_HISTORY.md at end of session**
+
+## End of Session Checklist
+
+Before ending a significant session:
+1. ✅ All changes committed to git
+2. ✅ Documentation updated if needed
+3. ✅ SESSION_HISTORY.md updated with session notes
+4. ✅ Pushed to remote (if appropriate)
+5. ✅ User informed of what was accomplished
+
+This setup provides everything you need to write high-quality, consistent code for this educational platform.
 
 This setup provides everything you need to write high-quality, consistent code for this educational platform.
