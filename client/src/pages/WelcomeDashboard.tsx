@@ -88,13 +88,6 @@ const WelcomeDashboard = () => {
       <div className="max-w-4xl w-full">
         {/* Welcome Header */}
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img 
-              src={ThriveLogo}
-              alt="THRIVE"
-              className="h-16 object-contain"
-            />
-          </div>
           <p className="text-gray-600 text-lg">
             {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
           </p>
