@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentFile } from "@/types/assessment";
 import DocumentUpload from './DocumentUpload';
 import { GradeSelection } from './GradeSelection';
+import { DeidentificationHeroCard } from './DeidentificationHeroCard';
 import { Loader2, FileText, Eye, Zap, GraduationCap } from 'lucide-react';
 import { ProgressSidebar } from './shared/ProgressSidebar';
 import ThriveLogo from "@assets/isotype Y-NB_1754494460165.png";
@@ -351,7 +352,16 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
               background: 'linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1))'
             }}
           >
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* De-identification Hero Card */}
+              <DeidentificationHeroCard 
+                onOpenRedactor={() => {
+                  const redactorUrl = import.meta.env.VITE_PI_REDACTOR_URL || 'https://pi-redactor.replit.app';
+                  window.open(redactorUrl, 'piRedactor', 'width=1200,height=800');
+                }}
+              />
+
+              {/* Document Upload Card */}
               <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
                 <h2 className="text-3xl font-bold text-gray-800 mb-8">Documents Reviewed</h2>
 
