@@ -17,7 +17,7 @@ export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHer
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 via-blue-50/80 to-blue-50/50">
+    <Card className="border border-gray-200">
       <CardHeader className="pb-4">
         <div className="flex items-start gap-3">
           <div className="p-2 bg-blue-100 rounded-lg">
@@ -34,7 +34,7 @@ export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHer
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert className="border-amber-200 bg-amber-50">
+        <Alert className="border-amber-200 bg-gray-50">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-gray-700">
             All documents must be de-identified before uploading to remove any personally 
@@ -49,7 +49,7 @@ export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHer
           </AlertDescription>
         </Alert>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <FileCheck className="h-5 w-5 text-green-600" />
             <span className="font-medium text-gray-800">Secure Browser-Based Processing</span>
@@ -64,7 +64,7 @@ export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHer
           <CollapsibleTrigger asChild>
             <Button 
               variant="ghost" 
-              className="w-full justify-between text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              className="w-full justify-between text-blue-600 hover:text-blue-700 hover:bg-gray-50"
               data-testid="button-toggle-instructions"
             >
               <div className="flex items-center gap-2">
@@ -123,8 +123,8 @@ export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHer
                   </div>
                 </li>
               </ol>
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-700">
                   <strong>Important:</strong> Continue processing documents one at a time until all 
                   required documents have been de-identified and uploaded.
                 </p>
