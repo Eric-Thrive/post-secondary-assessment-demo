@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
 import { DocumentFile } from "@/types/assessment";
 import DocumentUpload from './DocumentUpload';
 import { GradeSelection } from './GradeSelection';
 import { DeidentificationHeroCard } from './DeidentificationHeroCard';
-import { Loader2, FileText, Eye, Zap, GraduationCap } from 'lucide-react';
+import { Loader2, FileText, Eye, Zap, GraduationCap, User, LogOut } from 'lucide-react';
 import { ProgressSidebar } from './shared/ProgressSidebar';
 import ThriveLogo from "@assets/isotype Y-NB_1754494460165.png";
 
@@ -25,6 +26,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, logout } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('assessment-info');
   const [activeDocumentSubSection, setActiveDocumentSubSection] = useState<'deidentification' | 'upload'>('deidentification');
@@ -260,19 +262,40 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       <div className="flex-1 ml-64">
         {/* Blue Header Banner */}
         <div 
-          className="py-8 px-8 flex items-center gap-4"
+          className="py-8 px-8 flex items-center justify-between"
           style={{
             background: `linear-gradient(135deg, ${brandColors.navyBlue} 0%, ${brandColors.skyBlue} 100%)`
           }}
         >
-          <img 
-            src={ThriveLogo}
-            alt="THRIVE"
-            className="h-12 w-auto"
-          />
-          <h1 className="text-3xl font-bold text-white">
-            {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
-          </h1>
+          <div className="flex items-center gap-4">
+            <img 
+              src={ThriveLogo}
+              alt="THRIVE"
+              className="h-12 w-auto"
+            />
+            <h1 className="text-3xl font-bold text-white">
+              {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
+            </h1>
+          </div>
+          
+          {user && (
+            <div className="flex items-center gap-4" data-testid="user-indicator">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                <User className="h-5 w-5 text-white" />
+                <span className="text-white font-medium" data-testid="text-username">{user.username || 'User'}</span>
+              </div>
+              <Button
+                onClick={logout}
+                variant="outline"
+                size="sm"
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
+                data-testid="button-logout-header"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Assessment Information Section */}
