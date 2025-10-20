@@ -59,11 +59,13 @@ app.use((req, res, next) => {
   // Use Railway's PORT environment variable or default to 5000 for local dev
   // Railway assigns a dynamic port via the PORT env var
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+
+  // For local macOS development, use localhost instead of 0.0.0.0
+  // Railway will override this with PORT env var
+  const isLocal = process.env.APP_ENVIRONMENT === 'local';
+  const host = isLocal ? '127.0.0.1' : '0.0.0.0';
+
+  server.listen(port, host, () => {
     log(`serving on port ${port}`);
   });
 })();
