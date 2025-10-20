@@ -365,12 +365,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
                 <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
                   <h2 className="text-3xl font-bold text-gray-800 mb-8">Document De-identification</h2>
                   
-                  <DeidentificationHeroCard 
-                    onOpenRedactor={() => {
-                      const redactorUrl = import.meta.env.VITE_PI_REDACTOR_URL || 'https://pi-redactor.replit.app';
-                      window.open(redactorUrl, 'piRedactor', 'width=1200,height=800');
-                    }}
-                  />
+                  <DeidentificationHeroCard />
                   
                   {/* Navigation Buttons */}
                   <div className="mt-10 flex justify-between">
