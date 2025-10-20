@@ -1,12 +1,6 @@
-# Educational Accessibility Platform
+# Replit Accommodation Engine
 
 An advanced AI-powered educational accessibility platform that dynamically adapts support resources for diverse learning needs through intelligent semantic matching and personalized recommendations.
-
-## Deployment Options
-
-- **Railway** (Recommended) - [15-Minute Quick Start](QUICKSTART_RAILWAY.md)
-- **Replit** (Legacy) - Original deployment platform
-- **Local Development** - VS Code with Railway CLI
 
 ## Overview
 
@@ -41,10 +35,9 @@ This sophisticated assessment report generator creates comprehensive accommodati
 
 ### Backend
 - **Runtime**: Node.js with Express.js
-- **Database**: PostgreSQL (Railway, Replit, Neon, or Supabase)
+- **Database**: Replit PostgreSQL
 - **Authentication**: Session-based with connect-pg-simple
 - **API**: RESTful with `/api` prefix
-- **Deployment**: Railway auto-deploy from GitHub
 
 ### AI Integration
 - **Model**: OpenAI GPT-4 with function calling
@@ -53,22 +46,17 @@ This sophisticated assessment report generator creates comprehensive accommodati
 
 ## Getting Started
 
-### Quick Start (Railway - 15 minutes)
-
-See [QUICKSTART_RAILWAY.md](QUICKSTART_RAILWAY.md) for step-by-step Railway deployment guide.
-
 ### Prerequisites
-- Node.js 20+
-- PostgreSQL database (or use Railway's managed PostgreSQL)
+- Node.js 18+ 
+- PostgreSQL database
 - OpenAI API key
-- Railway CLI (optional): `npm install -g @railway/cli`
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Eric-Thrive/post-secondary-assessment-demo.git
-   cd post-secondary-assessment-demo
+   git clone https://github.com/Eric-Thrive/replit-accommodation-engine.git
+   cd replit-accommodation-engine
    ```
 
 2. Install dependencies:
@@ -79,29 +67,20 @@ See [QUICKSTART_RAILWAY.md](QUICKSTART_RAILWAY.md) for step-by-step Railway depl
 3. Set up environment variables:
    ```bash
    cp .env.example .env
-   # Edit .env with your values:
-   # - DATABASE_URL (PostgreSQL connection string)
-   # - OPENAI_API_KEY
-   # - SESSION_SECRET (generate with: openssl rand -base64 32)
-   # - APP_ENVIRONMENT (local, railway, neon, supabase)
-   # - VITE_PI_REDACTOR_URL (optional PI Redactor tool URL)
+   # Add your DATABASE_URL and OPENAI_API_KEY
+   # Add your VITE_PI_REDACTOR_URL (PI Redactor tool URL)
    ```
-
-   **Deployment Notes**:
-   - **Railway**: Set environment variables in Railway dashboard or via `railway variables set`
-   - **Replit**: Use Replit Secrets manager (Tools → Secrets)
-   - See [PI_REDACTOR_SETUP.md](PI_REDACTOR_SETUP.md) for PI Redactor integration
+   
+   **Note for Replit Users**: Use the Replit Secrets manager (Tools → Secrets) to add environment variables instead of editing `.env` files directly. See [PI_REDACTOR_SETUP.md](PI_REDACTOR_SETUP.md) for detailed PI Redactor integration instructions.
 
 4. Run database migrations:
    ```bash
    npm run db:push
-   # Or with Railway: railway run npm run db:push
    ```
 
 5. Start the development server:
    ```bash
    npm run dev
-   # Runs on http://localhost:5000
    ```
 
 ## Usage
@@ -139,18 +118,10 @@ See [QUICKSTART_RAILWAY.md](QUICKSTART_RAILWAY.md) for step-by-step Railway depl
 ## Development
 
 ### Available Scripts
-- `npm run dev`: Start development server (localhost:5000)
-- `npm run build`: Build for production (Vite + esbuild)
-- `npm run start`: Start production server
-- `npm run check`: TypeScript type checking
-- `npm run db:push`: Push schema changes to database
-- `npx drizzle-kit studio`: Open Drizzle Studio (database GUI)
-
-### Railway Deployment
-- **Auto-deploy**: Push to `main` branch triggers automatic deployment
-- **Manual deploy**: `railway up`
-- **View logs**: `railway logs --follow`
-- **Database access**: `railway run psql $DATABASE_URL`
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run db:push`: Push schema changes
+- `npm run db:studio`: Open database studio
 
 ### Project Structure
 ```
