@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, ExternalLink, Shield } from "lucide-react";
+import { AlertTriangle, ExternalLink } from "lucide-react";
 
 interface PrivacyNoticeProps {
   onOpenRedactor: () => void;
@@ -11,12 +11,6 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
 
   return (
     <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-          <Shield className="h-5 w-5" />
-          Document De-identification
-        </CardTitle>
-      </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-start gap-2 text-sm text-blue-800 dark:text-blue-200">
           <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
@@ -42,7 +36,6 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
               data-testid="button-open-redactor"
             >
               <span className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
                 Open PI Redactor Tool
               </span>
               <ExternalLink className="h-4 w-4" />
