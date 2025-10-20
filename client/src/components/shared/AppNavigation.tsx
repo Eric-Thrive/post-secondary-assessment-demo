@@ -59,84 +59,52 @@ export const AppNavigation: React.FC = () => {
             />
           </Link>
           
+          {showLogout && (
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <User className="h-4 w-4" />
+                <span>{user?.username}</span>
+              </div>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={logout}
+                className="flex items-center space-x-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </Button>
+            </div>
+          )}
+          
           <div className="flex items-center space-x-2 ml-auto">
             <EnvironmentSwitcher />
             <ModuleSwitcher variant="full" />
             
-            <div className="flex space-x-1 ml-2">
-              <Link to={assessmentRoute}>
+            {!isDemoMode && (activeModule !== 'tutoring' || currentEnvironment === 'replit-prod') && (
+              <Link to="/prompts">
                 <Button 
-                  variant={isAssessmentActive ? 'default' : 'ghost'}
+                  variant={isActive('/prompts') ? 'default' : 'ghost'}
                   className="flex items-center space-x-2"
                 >
-                  <Plus className="h-4 w-4" />
-                  <span>New Assessment</span>
+                  <Settings className="h-4 w-4" />
+                  <span>Prompt Manager</span>
                 </Button>
               </Link>
-              
-              <Link to={reportsRoute}>
+            )}
+            
+            {user?.role === 'system_admin' && (
+              <Link to="/admin">
                 <Button 
-                  variant={isReportsActive ? 'default' : 'ghost'}
+                  variant={isActive('/admin') ? 'default' : 'ghost'}
                   className="flex items-center space-x-2"
+                  data-testid="admin-nav-link"
                 >
-                  <FileText className="h-4 w-4" />
-                  <span>Reports</span>
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
                 </Button>
               </Link>
-              
-              <Link to={reviewEditRoute}>
-                <Button 
-                  variant={isReviewEditActive ? 'default' : 'ghost'}
-                  className="flex items-center space-x-2"
-                >
-                  <Edit className="h-4 w-4" />
-                  <span>Review & Edit</span>
-                </Button>
-              </Link>
-              
-              {!isDemoMode && (activeModule !== 'tutoring' || currentEnvironment === 'replit-prod') && (
-                <Link to="/prompts">
-                  <Button 
-                    variant={isActive('/prompts') ? 'default' : 'ghost'}
-                    className="flex items-center space-x-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>Prompt Manager</span>
-                  </Button>
-                </Link>
-              )}
-              
-              {user?.role === 'system_admin' && (
-                <Link to="/admin">
-                  <Button 
-                    variant={isActive('/admin') ? 'default' : 'ghost'}
-                    className="flex items-center space-x-2"
-                    data-testid="admin-nav-link"
-                  >
-                    <Shield className="h-4 w-4" />
-                    <span>Admin</span>
-                  </Button>
-                </Link>
-              )}
-              
-              {showLogout && (
-                <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-gray-200">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <User className="h-4 w-4" />
-                    <span>{user?.username}</span>
-                  </div>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={logout}
-                    className="flex items-center space-x-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
