@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from '@/contexts/AuthContext';
 import { useModule } from '@/contexts/ModuleContext';
 import { useModuleAssessmentData } from '@/hooks/useModuleAssessmentData';
 import { FileText, Plus, ChevronDown } from 'lucide-react';
@@ -16,7 +13,6 @@ import ThriveLogo from '@assets/primary logo O-W png_1760911234604.png';
 
 const WelcomeDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { activeModule } = useModule();
   const { assessmentCases, isLoading } = useModuleAssessmentData(activeModule);
 
