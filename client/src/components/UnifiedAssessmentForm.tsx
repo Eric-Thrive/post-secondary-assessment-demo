@@ -257,7 +257,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
         activeSection={activeSection}
         onSectionClick={handleSectionClick}
       />
-
       {/* Main Content Area */}
       <div className="flex-1 ml-64">
         {/* Blue Header Banner */}
@@ -410,7 +409,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
               {/* Document Upload Sub-section */}
               {activeDocumentSubSection === 'upload' && (
                 <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-8">Documents Reviewed</h2>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-8">Documents Upload</h2>
 
                   <DocumentUpload
                     documents={documents}
