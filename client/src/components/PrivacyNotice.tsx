@@ -12,9 +12,7 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
 
   return (
     <div className="bg-white dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-      <p className="text-base font-medium mb-4 text-gray-900 dark:text-gray-100">
-        Use our secure redactor tool to remove PI from your documents:
-      </p>
+      <p className="text-base font-medium mb-4 text-gray-900 dark:text-gray-100">Use our secure redactor tool to remove PI from your documents and load the for analysis:</p>
       <Button
         onClick={onOpenRedactor}
         className="w-full justify-between text-xl py-6 bg-[#1297D2] hover:bg-[#0F7DB0] text-white font-bold shadow-md rounded-lg focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
@@ -25,7 +23,6 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
         </span>
         <ExternalLink className="h-6 w-6" />
       </Button>
-      
       {/* Privacy & Security Note */}
       <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-md">
         <div className="flex gap-3">
