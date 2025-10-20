@@ -7,7 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentFile } from "@/types/assessment";
 import DocumentUpload from './DocumentUpload';
 import { GradeSelection } from './GradeSelection';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText, Eye, Zap, GraduationCap } from 'lucide-react';
+import { ProgressSidebar } from './shared/ProgressSidebar';
+import ThriveLogo from "@assets/isotype Y-NB_1754494460165.png";
 
 interface UnifiedAssessmentFormProps {
   moduleType: 'k12' | 'post_secondary';
@@ -116,89 +118,183 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
     });
   };
 
+  // Define progress steps
+  const progressSteps = [
+    {
+      id: 'assessment-info',
+      label: 'Assessment Info',
+      icon: GraduationCap,
+      status: 'active' as const
+    },
+    {
+      id: 'document-upload',
+      label: 'Document Upload',
+      icon: FileText,
+      status: 'pending' as const
+    },
+    {
+      id: 'review',
+      label: 'Review',
+      icon: Eye,
+      status: 'pending' as const
+    },
+    {
+      id: 'analysis',
+      label: 'Analysis',
+      icon: Zap,
+      status: 'pending' as const
+    }
+  ];
+
+  // THRIVE brand colors
+  const brandColors = {
+    navyBlue: '#1297D2',
+    skyBlue: '#96D7E1',
+    orange: '#F89E54',
+    yellow: '#FDE677',
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
-          {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
-        </h1>
-      </div>
+    <div className="flex min-h-screen">
+      {/* Progress Sidebar */}
+      <ProgressSidebar steps={progressSteps} />
 
-      {/* Assessment Information */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h3 className="text-lg font-semibold">Assessment Information</h3>
-        
-        <div className="space-y-2">
-          <Label htmlFor="uniqueId">Unique ID *</Label>
-          <Input
-            id="uniqueId"
-            type="text"
-            placeholder="e.g., STU-2025-001, CASE-12345, or any custom code"
-            value={uniqueId}
-            onChange={(e) => setUniqueId(e.target.value)}
-            className={uniqueIdError ? 'border-red-500' : ''}
-            data-testid="input-unique-id"
-          />
-          {uniqueIdError && <p className="text-sm text-red-500">{uniqueIdError}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="reportAuthor">Report Author *</Label>
-          <Input
-            id="reportAuthor"
-            type="text"
-            placeholder="Enter who is creating this report"
-            value={reportAuthor}
-            onChange={(e) => setReportAuthor(e.target.value)}
-            className={reportAuthorError ? 'border-red-500' : ''}
-            data-testid="input-report-author"
-          />
-          {reportAuthorError && <p className="text-sm text-red-500">{reportAuthorError}</p>}
-        </div>
-
-
-        {moduleType === 'k12' && (
-          <div className="space-y-2">
-            <Label>Grade Level *</Label>
-            <GradeSelection
-              selectedGrade={selectedGrade}
-              onGradeChange={setSelectedGrade}
-              error={gradeError}
-            />
-            {gradeError && <p className="text-sm text-red-500">{gradeError}</p>}
-          </div>
-        )}
-      </div>
-
-      {/* Document Upload */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h3 className="text-lg font-semibold">Document Upload</h3>
-        <DocumentUpload
-          documents={documents}
-          setDocuments={setDocuments}
-          onFilesChange={setDocumentFiles}
-          fileInputRefs={fileInputRefs}
-        />
-      </div>
-
-      {/* Submit Button */}
-      <div className="pt-4">
-        <Button
-          onClick={handleSubmit}
-          disabled={isProcessing}
-          className="w-full"
-          size="lg"
+      {/* Main Content Area */}
+      <div className="flex-1 ml-64">
+        {/* Blue Header Banner */}
+        <div 
+          className="py-8 px-8 flex items-center gap-4"
+          style={{
+            background: `linear-gradient(135deg, ${brandColors.navyBlue} 0%, ${brandColors.skyBlue} 100%)`
+          }}
         >
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing {pathway.charAt(0).toUpperCase() + pathway.slice(1)} Analysis...
-            </>
-          ) : (
-            `Start ${pathway.charAt(0).toUpperCase() + pathway.slice(1)} Analysis`
-          )}
-        </Button>
+          <img 
+            src={ThriveLogo}
+            alt="THRIVE"
+            className="h-12 w-auto"
+          />
+          <h1 className="text-3xl font-bold text-white">
+            {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
+          </h1>
+        </div>
+
+        {/* Content with Sky Blue Background */}
+        <div 
+          className="min-h-screen p-8"
+          style={{
+            background: `linear-gradient(to bottom, rgba(150, 215, 225, 0.1), rgba(150, 215, 225, 0.05))`
+          }}
+        >
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Assessment Information Card */}
+            <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div 
+                  className="p-3 rounded-lg"
+                  style={{ backgroundColor: `${brandColors.skyBlue}40` }}
+                >
+                  <GraduationCap 
+                    className="h-6 w-6"
+                    style={{ color: brandColors.navyBlue }}
+                  />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">Assessment Information</h2>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="uniqueId" className="text-base font-semibold">Unique ID *</Label>
+                  <Input
+                    id="uniqueId"
+                    type="text"
+                    placeholder="e.g., STU-2025-001, CASE-12345, or any custom code"
+                    value={uniqueId}
+                    onChange={(e) => setUniqueId(e.target.value)}
+                    className={`h-12 ${uniqueIdError ? 'border-red-500' : ''}`}
+                    data-testid="input-unique-id"
+                  />
+                  {uniqueIdError && <p className="text-sm text-red-500">{uniqueIdError}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reportAuthor" className="text-base font-semibold">Report Author *</Label>
+                  <Input
+                    id="reportAuthor"
+                    type="text"
+                    placeholder="Enter who is creating this report"
+                    value={reportAuthor}
+                    onChange={(e) => setReportAuthor(e.target.value)}
+                    className={`h-12 ${reportAuthorError ? 'border-red-500' : ''}`}
+                    data-testid="input-report-author"
+                  />
+                  {reportAuthorError && <p className="text-sm text-red-500">{reportAuthorError}</p>}
+                </div>
+
+                {moduleType === 'k12' && (
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold">Grade Level *</Label>
+                    <GradeSelection
+                      selectedGrade={selectedGrade}
+                      onGradeChange={setSelectedGrade}
+                      error={gradeError}
+                    />
+                    {gradeError && <p className="text-sm text-red-500">{gradeError}</p>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Document Upload Card */}
+            <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div 
+                  className="p-3 rounded-lg"
+                  style={{ backgroundColor: `${brandColors.orange}40` }}
+                >
+                  <FileText 
+                    className="h-6 w-6"
+                    style={{ color: brandColors.orange }}
+                  />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">Document Upload</h2>
+              </div>
+
+              <DocumentUpload
+                documents={documents}
+                setDocuments={setDocuments}
+                onFilesChange={setDocumentFiles}
+                fileInputRefs={fileInputRefs}
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4 flex justify-end">
+              <Button
+                onClick={handleSubmit}
+                disabled={isProcessing}
+                size="lg"
+                className="px-8 h-14 text-lg font-semibold"
+                style={{
+                  backgroundColor: brandColors.orange,
+                  borderColor: brandColors.orange
+                }}
+                data-testid="button-start-analysis"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="mr-2 h-5 w-5" />
+                    Start Analysis
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
