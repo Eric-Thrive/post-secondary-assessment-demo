@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { User, LogOut, CheckCircle, FileText, Eye, Zap, Home, Plus } from "lucide-react";
+import { LogOut, Home } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -107,10 +107,6 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
   const { logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handleNewReport = () => {
-    navigate('/new-post-secondary-assessment');
-  };
-
   const handleHome = () => {
     navigate('/');
   };
@@ -121,7 +117,7 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
       style={{ position: 'fixed', left: 0, top: 0 }}
     >
       {/* All Buttons Grouped Together - Starting from top with padding to align with header bottom */}
-      <div className="p-4 space-y-3 overflow-y-auto" style={{ paddingTop: '6rem' }}>
+      <div className="p-4 space-y-3 overflow-y-auto" style={{ paddingTop: '7rem' }}>
         {/* Section Buttons */}
         {steps.map((step) => {
           const isActive = activeSection === step.id || step.status === 'active';
@@ -141,15 +137,6 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
         {/* Bottom Action Buttons - Now grouped with section buttons */}
         {isAuthenticated && (
           <>
-            {/* New Report Button */}
-            <SidebarButton
-              icon={Plus}
-              label="New Report"
-              onClick={handleNewReport}
-              variant="primary"
-              testId="button-new-report"
-            />
-
             {/* Home Button */}
             <SidebarButton
               icon={Home}
