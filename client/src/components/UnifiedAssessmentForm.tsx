@@ -366,12 +366,12 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
         {/* Document Upload Section */}
         {activeSection === 'document-upload' && (
           <div 
-            className="min-h-screen p-8 flex items-center justify-center"
+            className="min-h-screen p-8"
             style={{
               background: 'linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1))'
             }}
           >
-            <div className="max-w-4xl w-full">
+            <div className="max-w-4xl mx-auto">
               {/* De-identification Sub-section */}
               {activeDocumentSubSection === 'deidentification' && (
                 <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
