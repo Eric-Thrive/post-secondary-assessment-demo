@@ -9,7 +9,7 @@ import { DocumentFile } from "@/types/assessment";
 import DocumentUpload from './DocumentUpload';
 import { GradeSelection } from './GradeSelection';
 import { DeidentificationHeroCard } from './DeidentificationHeroCard';
-import { Loader2, FileText, Eye, Zap, GraduationCap } from 'lucide-react';
+import { Loader2, FileText, Eye, Zap, GraduationCap, User } from 'lucide-react';
 import { ProgressSidebar } from './shared/ProgressSidebar';
 import ThriveLogo from "@assets/isotype Y-NB_1754494460165.png";
 
@@ -26,7 +26,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { } = useAuth();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('assessment-info');
   const [activeDocumentSubSection, setActiveDocumentSubSection] = useState<'deidentification' | 'upload'>('deidentification');
@@ -277,6 +277,12 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
               {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
             </h1>
           </div>
+          {user && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg backdrop-blur-sm" data-testid="user-indicator">
+              <User className="h-5 w-5 text-white" />
+              <span className="text-white font-medium" data-testid="text-username">{user.username || 'User'}</span>
+            </div>
+          )}
         </div>
 
         {/* Assessment Information Section */}
