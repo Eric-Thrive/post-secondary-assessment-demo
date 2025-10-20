@@ -17,14 +17,13 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
       </p>
       <Button
         onClick={onOpenRedactor}
-        variant="outline"
-        className="w-full justify-between text-base"
+        className="w-full justify-between text-xl py-6 bg-[#1297D2] hover:bg-[#0F7DB0] text-white font-bold shadow-md rounded-lg focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
         data-testid="button-remove-personal-info"
       >
         <span className="flex items-center gap-2">
           Remove Personal Info
         </span>
-        <ExternalLink className="h-5 w-5" />
+        <ExternalLink className="h-6 w-6" />
       </Button>
       
       {/* Privacy & Security Note */}
