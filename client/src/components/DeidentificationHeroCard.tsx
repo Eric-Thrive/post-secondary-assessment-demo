@@ -1,21 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Shield, Info, FileCheck, AlertTriangle, ExternalLink } from "lucide-react";
-import { useState } from "react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Shield, FileCheck, AlertTriangle, ExternalLink } from "lucide-react";
 
 interface DeidentificationHeroCardProps {
   onOpenRedactor?: () => void;
 }
 
 export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHeroCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <Card className="border border-gray-200">
       <CardHeader className="pb-4">
@@ -59,79 +51,6 @@ export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHer
             Redacted files will automatically upload when you're done.
           </p>
         </div>
-
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger asChild>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-between text-blue-600 hover:text-blue-700 hover:bg-gray-50"
-              data-testid="button-toggle-instructions"
-            >
-              <div className="flex items-center gap-2">
-                <Info className="h-4 w-4" />
-                <span>Step-by-Step Instructions</span>
-              </div>
-              <span className="text-sm">{isOpen ? "Hide" : "Show"}</span>
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-4">
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <h4 className="font-semibold text-gray-800 mb-3">How to De-identify Documents:</h4>
-              <ol className="space-y-3">
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                    1
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-800">Open the PI Redactor Tool</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Click the "Open PI Redactor Tool" button below to launch the secure redaction interface
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                    2
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-800">Process Documents One at a Time</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Upload and redact each document individually. The tool will automatically detect and highlight PII for removal
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                    3
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-800">Review and Confirm Redactions</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Carefully review all highlighted areas and confirm that all PII has been properly redacted
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                    4
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-800">Files Upload Automatically</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Once redacted, files are automatically transferred back to this form. Repeat for all documents
-                    </p>
-                  </div>
-                </li>
-              </ol>
-              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <p className="text-sm text-gray-700">
-                  <strong>Important:</strong> Continue processing documents one at a time until all 
-                  required documents have been de-identified and uploaded.
-                </p>
-              </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
 
         <div className="flex justify-center">
           <Button 
