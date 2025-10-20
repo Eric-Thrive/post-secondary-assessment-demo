@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,13 +9,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useModule } from '@/contexts/ModuleContext';
 import { useModuleAssessmentData } from '@/hooks/useModuleAssessmentData';
-import { FileText, Plus, ChevronDown } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { FileText, Plus, ChevronDown, User, LogOut } from 'lucide-react';
 import ThriveLogo from '@assets/primary logo O-W png_1760911234604.png';
 
 const WelcomeDashboard = () => {
   const navigate = useNavigate();
   const { activeModule } = useModule();
   const { assessmentCases, isLoading } = useModuleAssessmentData(activeModule);
+  const { user, logout } = useAuth();
 
   // THRIVE brand colors
   const brandColors = {
@@ -66,6 +69,26 @@ const WelcomeDashboard = () => {
           className="h-32 w-auto object-contain"
         />
       </div>
+
+      {/* User Indicator - Fixed at Absolute Top Right */}
+      {user && (
+        <div className="absolute top-6 right-6 z-10 flex items-center gap-4" data-testid="user-indicator">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-lg backdrop-blur-sm shadow-sm">
+            <User className="h-5 w-5 text-gray-700" />
+            <span className="text-gray-800 font-medium" data-testid="text-username">{user.username || 'User'}</span>
+          </div>
+          <Button
+            onClick={logout}
+            variant="outline"
+            size="sm"
+            className="bg-white/80 border-gray-300 text-gray-700 hover:bg-white hover:text-gray-900 backdrop-blur-sm shadow-sm"
+            data-testid="button-logout-header"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      )}
 
       {/* Centered Content Container */}
       <div className="min-h-screen w-full flex items-center justify-center p-6">
