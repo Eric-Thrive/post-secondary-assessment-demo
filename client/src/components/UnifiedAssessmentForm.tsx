@@ -221,22 +221,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
     });
   };
 
-  // Define progress sections
-  const progressSections = [
-    {
-      id: 'assessment-info',
-      label: 'Assessment Info',
-      icon: GraduationCap,
-      status: 'pending' as const
-    },
-    {
-      id: 'document-upload',
-      label: 'Document Upload',
-      icon: FileText,
-      status: 'pending' as const
-    }
-  ];
-
   // THRIVE brand colors
   const brandColors = {
     navyBlue: '#1297D2',
@@ -244,6 +228,24 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
     orange: '#F89E54',
     yellow: '#FDE677',
   };
+
+  // Define progress sections
+  const progressSections = [
+    {
+      id: 'assessment-info',
+      label: 'Assessment Info',
+      icon: GraduationCap,
+      status: 'pending' as const,
+      iconColor: brandColors.orange
+    },
+    {
+      id: 'document-upload',
+      label: 'Document Upload',
+      icon: FileText,
+      status: 'pending' as const,
+      iconColor: brandColors.navyBlue
+    }
+  ];
 
   return (
     <div className="flex min-h-screen">
