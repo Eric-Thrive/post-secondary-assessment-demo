@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Info } from "lucide-react";
 
 interface PrivacyNoticeProps {
   onOpenRedactor: () => void;
@@ -28,6 +28,21 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
               </span>
               <ExternalLink className="h-4 w-4" />
             </Button>
+            
+            {/* Privacy & Security Note */}
+            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">
+              <div className="flex gap-2">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                    <span className="font-medium">Complete Privacy:</span> The redactor operates entirely in your browser—no documents leave your device until redacted.
+                  </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                    <span className="font-medium">Easy Workflow:</span> Redacted files automatically upload when complete. For multiple documents, simply repeat the process for each one.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
