@@ -34,24 +34,6 @@ export const AppNavigation: React.FC = () => {
             />
           </Link>
           
-          {showLogout && (
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <User className="h-4 w-4" />
-                <span>{user?.username}</span>
-              </div>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={logout}
-                className="flex items-center space-x-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-              </Button>
-            </div>
-          )}
-          
           <div className="flex items-center space-x-2 ml-auto">
             <EnvironmentSwitcher />
             <ModuleSwitcher variant="full" />
@@ -79,6 +61,24 @@ export const AppNavigation: React.FC = () => {
                   <span>Admin</span>
                 </Button>
               </Link>
+            )}
+            
+            {showLogout && (
+              <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-gray-200">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <User className="h-4 w-4" />
+                  <span>{user?.username}</span>
+                </div>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={logout}
+                  className="flex items-center space-x-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </div>
             )}
           </div>
         </div>
