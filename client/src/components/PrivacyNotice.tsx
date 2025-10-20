@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Info } from "lucide-react";
 
@@ -11,9 +11,8 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
 
   return (
     <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-      <CardContent className="space-y-4">
-        {redactorUrl && (
-          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+      {redactorUrl && (
+        <div className="space-y-4 bg-white dark:bg-gray-900 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
             <p className="text-sm font-medium mb-3 text-gray-900 dark:text-gray-100">
               Use our secure redactor tool to remove PI from your documents:
             </p>
@@ -44,8 +43,7 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
               </div>
             </div>
           </div>
-        )}
-      </CardContent>
+      )}
     </Card>
   );
 };
