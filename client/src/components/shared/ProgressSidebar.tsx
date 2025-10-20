@@ -25,9 +25,8 @@ const SidebarButton: React.FC<{
   onClick: () => void;
   isActive?: boolean;
   variant?: 'default' | 'primary';
-  iconColor?: string;
   testId?: string;
-}> = ({ icon: Icon, label, onClick, isActive = false, variant = 'default', iconColor, testId }) => {
+}> = ({ icon: Icon, label, onClick, isActive = false, variant = 'default', testId }) => {
   const brandColors = {
     navyBlue: '#1297D2',
     skyBlue: '#96D7E1',
@@ -39,7 +38,7 @@ const SidebarButton: React.FC<{
     if (variant === 'primary') {
       return {
         backgroundColor: brandColors.navyBlue,
-        borderColor: '#0f7ab8', // Slightly darker for visible border
+        borderColor: '#0f7ab8',
         textColor: '#ffffff',
         iconColor: '#ffffff',
         hoverBg: '#0f7ab8'
@@ -51,7 +50,7 @@ const SidebarButton: React.FC<{
         backgroundColor: brandColors.yellow,
         borderColor: '#fbbf24',
         textColor: '#78350f',
-        iconColor: iconColor || '#78350f',
+        iconColor: '#1f2937',
         hoverBg: '#fde68a'
       };
     }
@@ -60,7 +59,7 @@ const SidebarButton: React.FC<{
       backgroundColor: '#f9fafb',
       borderColor: '#e5e7eb',
       textColor: '#374151',
-      iconColor: iconColor || '#6b7280',
+      iconColor: '#1f2937',
       hoverBg: '#f3f4f6'
     };
   };
@@ -121,8 +120,9 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
       className={`w-64 h-screen bg-white border-r border-gray-200 flex flex-col ${className}`}
       style={{ position: 'fixed', left: 0, top: 0 }}
     >
-      {/* Section Buttons */}
-      <div className="flex-1 p-4 space-y-3 overflow-y-auto pt-6">
+      {/* All Buttons Grouped Together - Starting from top with padding to align with header bottom */}
+      <div className="p-4 space-y-3 overflow-y-auto" style={{ paddingTop: '6rem' }}>
+        {/* Section Buttons */}
         {steps.map((step) => {
           const isActive = activeSection === step.id || step.status === 'active';
           
@@ -133,42 +133,41 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
               label={step.label}
               onClick={() => onSectionClick?.(step.id)}
               isActive={isActive}
-              iconColor={step.iconColor}
               testId={`progress-step-${step.id}`}
             />
           );
         })}
+
+        {/* Bottom Action Buttons - Now grouped with section buttons */}
+        {isAuthenticated && (
+          <>
+            {/* New Report Button */}
+            <SidebarButton
+              icon={Plus}
+              label="New Report"
+              onClick={handleNewReport}
+              variant="primary"
+              testId="button-new-report"
+            />
+
+            {/* Home Button */}
+            <SidebarButton
+              icon={Home}
+              label="Home"
+              onClick={handleHome}
+              testId="button-home"
+            />
+
+            {/* Logout Button */}
+            <SidebarButton
+              icon={LogOut}
+              label="Logout"
+              onClick={logout}
+              testId="button-logout"
+            />
+          </>
+        )}
       </div>
-
-      {/* Bottom Action Buttons */}
-      {isAuthenticated && (
-        <div className="p-4 space-y-3 border-t border-gray-200">
-          {/* New Report Button */}
-          <SidebarButton
-            icon={Plus}
-            label="New Report"
-            onClick={handleNewReport}
-            variant="primary"
-            testId="button-new-report"
-          />
-
-          {/* Home Button */}
-          <SidebarButton
-            icon={Home}
-            label="Home"
-            onClick={handleHome}
-            testId="button-home"
-          />
-
-          {/* Logout Button */}
-          <SidebarButton
-            icon={LogOut}
-            label="Logout"
-            onClick={logout}
-            testId="button-logout"
-          />
-        </div>
-      )}
     </div>
   );
 };
