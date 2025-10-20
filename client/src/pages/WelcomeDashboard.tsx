@@ -74,13 +74,6 @@ const WelcomeDashboard = () => {
       {/* Centered Content Container */}
       <div className="min-h-screen w-full flex items-center justify-center p-6">
         <div className="max-w-5xl w-full">
-          {/* Welcome Message */}
-          <div className="mb-10 text-center">
-            <p className="text-gray-600 text-xl">
-              {user?.username ? `Hello, ${user.username}!` : 'Assessment Portal'}
-            </p>
-          </div>
-
           {/* Action Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* New Report Card - Now First */}
