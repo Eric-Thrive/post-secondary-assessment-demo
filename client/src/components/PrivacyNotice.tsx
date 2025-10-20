@@ -12,7 +12,7 @@ const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
 
   return (
     <div className="bg-white dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-      <p className="text-base font-medium mb-4 text-gray-900 dark:text-gray-100">Use our secure redactor tool to remove PI from your documents and load the for analysis:</p>
+      <p className="text-base font-medium mb-4 text-gray-900 dark:text-gray-100">Click the blue button below to add documents </p>
       <div className="max-w-md mx-auto w-full">
         <Button
           onClick={onOpenRedactor}
