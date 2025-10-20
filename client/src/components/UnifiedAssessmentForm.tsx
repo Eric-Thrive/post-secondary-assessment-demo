@@ -39,8 +39,14 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   const [uniqueIdError, setUniqueIdError] = useState<string>('');
   const [reportAuthor, setReportAuthor] = useState<string>('');
   const [reportAuthorError, setReportAuthorError] = useState<string>('');
+  const [uploadConfirmed, setUploadConfirmed] = useState<boolean>(false);
 
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  // Reset upload confirmation when documents are added or removed
+  React.useEffect(() => {
+    setUploadConfirmed(false);
+  }, [documents.length]);
 
   const clearAllFileInputs = () => {
     console.log('=== Clearing all file inputs after processing ===');
@@ -416,6 +422,8 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
                     setDocuments={setDocuments}
                     onFilesChange={setDocumentFiles}
                     fileInputRefs={fileInputRefs}
+                    uploadConfirmed={uploadConfirmed}
+                    onUploadConfirmedChange={setUploadConfirmed}
                   />
 
                   {/* Navigation Buttons */}
@@ -432,9 +440,9 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
 
                     <Button
                       onClick={handleNextSection}
-                      disabled={isProcessing}
+                      disabled={isProcessing || !uploadConfirmed}
                       size="lg"
-                      className="px-8 h-12 text-base font-semibold"
+                      className="px-8 h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
                         backgroundColor: brandColors.skyBlue,
                         color: '#1e40af'

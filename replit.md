@@ -3,6 +3,27 @@
 ## Overview
 This project is an AI-powered educational assessment application that generates comprehensive accommodation reports for K-12 and post-secondary educational contexts. It analyzes uploaded documents using advanced AI function calling to produce structured reports, including barrier identification, accommodation mappings, and evidence-based recommendations. The system aims to streamline assessment processes and provide tailored support plans for students.
 
+## Recent Changes (October 20, 2025)
+- **Enhanced Document Upload UI and Workflow Controls**: Improved user experience for document upload and analysis workflow
+  - **PI Redactor Button Redesign**: Transformed "Remove Personal Info" button to prominent, centered design
+    - Changed from outline variant to solid #1297D2 background with white text
+    - Centered button with max-w-md constraint and w-full for consistent spacing
+    - Reduced vertical padding (py-3) for more compact appearance while maintaining clickability
+    - Added shadow-md and rounded-lg for visual prominence
+    - WCAG AA compliant via large text criteria (text-xl/20px + font-bold/700 = 3.28:1 contrast ratio)
+    - Accessible focus ring (black in light mode, white in dark mode) with ring-offset for keyboard navigation
+  - **Upload Confirmation Checkbox**: Added mandatory confirmation step before analysis
+    - Checkbox displays below document list with clear label: "I confirm that all documents have been uploaded and are ready for analysis"
+    - Positioned with border-top separator and pt-4 spacing for visual distinction
+    - Includes accessible labeling (Label with htmlFor) and test ID for automation
+    - Auto-resets to unchecked state when documents are added/removed to prevent stale confirmations
+  - **Start Analysis Button Lock**: Implemented workflow control to prevent premature analysis
+    - "Start Analysis" button disabled until upload confirmation checkbox is ticked
+    - Visual feedback via disabled:opacity-50 and disabled:cursor-not-allowed classes
+    - Maintains existing validation for document presence and processing state
+    - Ensures users explicitly confirm readiness before proceeding to analysis phase
+  - **Impact**: Streamlined document upload workflow with clear visual hierarchy, improved accessibility compliance, and explicit user confirmation before analysis to reduce errors
+
 ## Recent Changes (October 17, 2025)
 - **Demo Environment Persistence Through Logout/Login Cycle**: Fixed environment locking to persist demo context across authentication flows
   - **URL-Based Demo Detection**: AuthContext now detects demo environment from URL pathname using regex pattern matching
