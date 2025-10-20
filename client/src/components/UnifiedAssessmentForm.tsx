@@ -268,9 +268,9 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
         {/* Assessment Information Section */}
         {activeSection === 'assessment-info' && (
           <div 
-            className="min-h-screen p-12"
+            className="min-h-screen p-8"
             style={{
-              background: `linear-gradient(to bottom, ${brandColors.yellow}40, ${brandColors.yellow}20)`
+              background: 'linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1))'
             }}
           >
             <div className="max-w-4xl mx-auto">
@@ -346,9 +346,9 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
         {/* Document Upload Section */}
         {activeSection === 'document-upload' && (
           <div 
-            className="min-h-screen p-12"
+            className="min-h-screen p-8"
             style={{
-              background: `linear-gradient(to bottom, ${brandColors.orange}30, ${brandColors.orange}15)`
+              background: 'linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1))'
             }}
           >
             <div className="max-w-4xl mx-auto">
