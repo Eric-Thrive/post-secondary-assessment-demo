@@ -13,10 +13,17 @@ interface ProgressStep {
 
 interface ProgressSidebarProps {
   steps: ProgressStep[];
+  activeSection?: string;
+  onSectionClick?: (sectionId: string) => void;
   className?: string;
 }
 
-export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({ steps, className = '' }) => {
+export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({ 
+  steps, 
+  activeSection,
+  onSectionClick,
+  className = '' 
+}) => {
   const { user, logout, isAuthenticated } = useAuth();
 
   // THRIVE brand colors
@@ -72,16 +79,18 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({ steps, classNa
         </Link>
       </div>
 
-      {/* Progress Steps */}
+      {/* Section Buttons */}
       <div className="flex-1 p-4 space-y-3 overflow-y-auto">
         {steps.map((step, index) => {
-          const style = getStepStyle(step.status);
+          const isActive = activeSection === step.id || step.status === 'active';
+          const style = getStepStyle(isActive ? 'active' : step.status);
           const Icon = step.icon;
           
           return (
-            <div
+            <button
               key={step.id}
-              className="rounded-lg p-4 border-2 transition-all duration-200"
+              onClick={() => onSectionClick?.(step.id)}
+              className="w-full rounded-lg p-4 border-2 transition-all duration-200 hover:shadow-md text-left"
               style={{
                 backgroundColor: style.backgroundColor,
                 borderColor: style.borderColor
@@ -93,7 +102,7 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({ steps, classNa
                   className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
                   style={{
                     backgroundColor: step.status === 'completed' ? '#86efac' : 
-                                   step.status === 'active' ? brandColors.orange : '#e5e7eb'
+                                   isActive ? brandColors.orange : '#e5e7eb'
                   }}
                 >
                   {step.status === 'completed' ? (
@@ -104,7 +113,7 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({ steps, classNa
                   ) : (
                     <Icon 
                       className="w-5 h-5" 
-                      style={{ color: step.status === 'active' ? '#ffffff' : '#9ca3af' }}
+                      style={{ color: isActive ? '#ffffff' : '#9ca3af' }}
                     />
                   )}
                 </div>
@@ -117,7 +126,7 @@ export const ProgressSidebar: React.FC<ProgressSidebarProps> = ({ steps, classNa
                   </p>
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
