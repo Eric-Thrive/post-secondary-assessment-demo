@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, Settings, Edit, LogOut, User, Shield } from "lucide-react";
+import { Settings, LogOut, User, Shield } from "lucide-react";
 import { ModuleSwitcher } from '../ModuleSwitcher';
 import { EnvironmentSwitcher } from '../EnvironmentSwitcher';
 import { useModule } from '@/contexts/ModuleContext';
@@ -12,7 +12,7 @@ import thriveIsotype from "@assets/isotype B-W png_1752593825075.png";
 
 export const AppNavigation: React.FC = () => {
   const location = useLocation();
-  const { activeModule, isK12, isDemoMode, isModuleLocked } = useModule();
+  const { activeModule, isDemoMode } = useModule();
   const { user, logout, isAuthenticated } = useAuth();
   const { currentEnvironment } = useEnvironment();
 
@@ -21,31 +21,6 @@ export const AppNavigation: React.FC = () => {
   const isActive = (path: string) => {
     return location.pathname === path;
   };
-
-  // Determine which assessment and reports routes to use based on active module
-  const assessmentRoute = activeModule === 'k12' ? '/new-k12-assessment' : 
-                         activeModule === 'tutoring' ? '/new-tutoring-assessment' : 
-                         '/new-post-secondary-assessment';
-  const reportsRoute = activeModule === 'k12' ? '/k12-reports' : 
-                      activeModule === 'tutoring' ? '/tutoring-reports' : 
-                      '/post-secondary-reports';
-  const reviewEditRoute = activeModule === 'k12' ? '/k12-review-edit' : 
-                         activeModule === 'tutoring' ? '/tutoring-review-edit' : 
-                         '/post-secondary-review-edit';
-  
-  const isAssessmentActive = location.pathname === '/new-assessment' || 
-                            location.pathname === '/new-k12-assessment' || 
-                            location.pathname === '/new-post-secondary-assessment' ||
-                            location.pathname === '/new-tutoring-assessment';
-  
-  const isReportsActive = location.pathname === '/post-secondary-reports' || 
-                          location.pathname === '/k12-reports' || 
-                          location.pathname === '/tutoring-reports' ||
-                          location.pathname === '/reports';
-  
-  const isReviewEditActive = location.pathname === '/post-secondary-review-edit' || 
-                             location.pathname === '/k12-review-edit' ||
-                             location.pathname === '/tutoring-review-edit';
 
   return (
     <nav className="bg-white border-b border-gray-200 mb-6">

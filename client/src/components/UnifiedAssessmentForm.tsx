@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentFile } from "@/types/assessment";
 import DocumentUpload from './DocumentUpload';
 import { GradeSelection } from './GradeSelection';
-import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface UnifiedAssessmentFormProps {
   moduleType: 'k12' | 'post_secondary';
@@ -140,13 +140,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
             className={uniqueIdError ? 'border-red-500' : ''}
             data-testid="input-unique-id"
           />
-          <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-amber-800 dark:text-amber-200">
-              <strong className="font-semibold">Privacy Notice:</strong> Do NOT use real names or personally identifiable information. 
-              Create your own unique identifier (e.g., STU-2025-001, CASE-12345, Student-A).
-            </div>
-          </div>
           {uniqueIdError && <p className="text-sm text-red-500">{uniqueIdError}</p>}
         </div>
 
