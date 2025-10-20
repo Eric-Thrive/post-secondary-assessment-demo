@@ -229,7 +229,6 @@ const DocumentUpload = ({
       <PrivacyNotice
         onOpenRedactor={handleOpenRedactor}
       />
-
       {waitingForRedactor && (
         <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
           <CardContent className="py-4">
@@ -247,7 +246,6 @@ const DocumentUpload = ({
           </CardContent>
         </Card>
       )}
-
       {documents.length > 0 && (
         <Card>
           <CardHeader>
@@ -272,9 +270,7 @@ const DocumentUpload = ({
               <Label
                 htmlFor="upload-confirmed"
                 className="text-base font-medium text-gray-700 dark:text-gray-300 cursor-pointer leading-relaxed"
-              >
-                I confirm that all documents have been uploaded and are ready for analysis
-              </Label>
+              > All documents have been uploaded and are ready for analysis</Label>
             </div>
           </CardContent>
         </Card>
