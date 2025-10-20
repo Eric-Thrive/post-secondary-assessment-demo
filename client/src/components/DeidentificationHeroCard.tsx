@@ -133,17 +133,17 @@ export function DeidentificationHeroCard({ onOpenRedactor }: DeidentificationHer
           </CollapsibleContent>
         </Collapsible>
 
-        {onOpenRedactor && (
+        <div className="flex justify-center">
           <Button 
             onClick={onOpenRedactor}
             size="lg"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8"
             data-testid="button-open-redactor"
           >
             <ExternalLink className="mr-2 h-5 w-5" />
             Open PI Redactor Tool
           </Button>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

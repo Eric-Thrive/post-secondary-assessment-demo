@@ -27,6 +27,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('assessment-info');
+  const [activeDocumentSubSection, setActiveDocumentSubSection] = useState<'deidentification' | 'upload'>('deidentification');
   
   const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [documentFiles, setDocumentFiles] = useState<FileList | null>(null);
@@ -88,6 +89,8 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       setUniqueIdError('');
       setReportAuthorError('');
       setGradeError('');
+      // Reset to first sub-section when entering document section
+      setActiveDocumentSubSection('deidentification');
       setActiveSection('document-upload');
     } else if (activeSection === 'document-upload') {
       // This will trigger the final submission
@@ -97,6 +100,8 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
 
   const handlePreviousSection = () => {
     if (activeSection === 'document-upload') {
+      // Reset to first sub-section when re-entering document section
+      setActiveDocumentSubSection('deidentification');
       setActiveSection('assessment-info');
     }
   };
@@ -139,6 +144,8 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       setUniqueIdError('');
       setReportAuthorError('');
       setGradeError('');
+      // Reset to first sub-section when entering document section
+      setActiveDocumentSubSection('deidentification');
     }
 
     // Set active section (backward navigation allowed without validation)
@@ -352,60 +359,94 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
               background: 'linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1))'
             }}
           >
-            <div className="max-w-4xl mx-auto space-y-6">
-              {/* De-identification Hero Card */}
-              <DeidentificationHeroCard 
-                onOpenRedactor={() => {
-                  const redactorUrl = import.meta.env.VITE_PI_REDACTOR_URL || 'https://pi-redactor.replit.app';
-                  window.open(redactorUrl, 'piRedactor', 'width=1200,height=800');
-                }}
-              />
-
-              {/* Document Upload Card */}
-              <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
-                <h2 className="text-3xl font-bold text-gray-800 mb-8">Documents Reviewed</h2>
-
-                <DocumentUpload
-                  documents={documents}
-                  setDocuments={setDocuments}
-                  onFilesChange={setDocumentFiles}
-                  fileInputRefs={fileInputRefs}
-                />
-
-                {/* Navigation Buttons */}
-                <div className="mt-10 flex justify-between">
-                  <Button
-                    onClick={handlePreviousSection}
-                    variant="outline"
-                    size="lg"
-                    className="px-8 h-12 text-base font-semibold"
-                    data-testid="button-previous-section"
-                  >
-                    ← Previous
-                  </Button>
-
-                  <Button
-                    onClick={handleNextSection}
-                    disabled={isProcessing}
-                    size="lg"
-                    className="px-8 h-12 text-base font-semibold"
-                    style={{
-                      backgroundColor: brandColors.skyBlue,
-                      color: '#1e40af'
+            <div className="max-w-4xl mx-auto">
+              {/* De-identification Sub-section */}
+              {activeDocumentSubSection === 'deidentification' && (
+                <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-8">Document De-identification</h2>
+                  
+                  <DeidentificationHeroCard 
+                    onOpenRedactor={() => {
+                      const redactorUrl = import.meta.env.VITE_PI_REDACTOR_URL || 'https://pi-redactor.replit.app';
+                      window.open(redactorUrl, 'piRedactor', 'width=1200,height=800');
                     }}
-                    data-testid="button-start-analysis"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      'Start Analysis →'
-                    )}
-                  </Button>
+                  />
+                  
+                  {/* Navigation Buttons */}
+                  <div className="mt-10 flex justify-between">
+                    <Button
+                      onClick={handlePreviousSection}
+                      variant="outline"
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold"
+                      data-testid="button-previous-from-deidentification"
+                    >
+                      ← Previous
+                    </Button>
+
+                    <Button
+                      onClick={() => setActiveDocumentSubSection('upload')}
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold"
+                      style={{
+                        backgroundColor: brandColors.skyBlue,
+                        color: '#1e40af'
+                      }}
+                      data-testid="button-next-to-upload"
+                    >
+                      Next Section →
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Document Upload Sub-section */}
+              {activeDocumentSubSection === 'upload' && (
+                <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-8">Documents Reviewed</h2>
+
+                  <DocumentUpload
+                    documents={documents}
+                    setDocuments={setDocuments}
+                    onFilesChange={setDocumentFiles}
+                    fileInputRefs={fileInputRefs}
+                  />
+
+                  {/* Navigation Buttons */}
+                  <div className="mt-10 flex justify-between">
+                    <Button
+                      onClick={() => setActiveDocumentSubSection('deidentification')}
+                      variant="outline"
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold"
+                      data-testid="button-back-to-deidentification"
+                    >
+                      ← Previous
+                    </Button>
+
+                    <Button
+                      onClick={handleNextSection}
+                      disabled={isProcessing}
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold"
+                      style={{
+                        backgroundColor: brandColors.skyBlue,
+                        color: '#1e40af'
+                      }}
+                      data-testid="button-start-analysis"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Start Analysis →'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
