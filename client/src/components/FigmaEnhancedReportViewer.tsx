@@ -1161,7 +1161,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                             <ChevronRight className="h-4 w-4" />
                           </button>
                         )}
-                        {currentSlide === totalSlides - 1 && (
+                        {(!totalSlides || totalSlides === 1 || currentSlide === totalSlides - 1) && (
                           <button 
                             className="text-white px-6 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2"
                             style={{ 
