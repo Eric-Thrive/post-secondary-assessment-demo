@@ -72,7 +72,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
     if (isDemoMode) {
       toast({
         title: "Premium Feature",
-        description: "Review & Edit is only available on paid plans. Upgrade to access this feature.",
+        description: "Review & Edit is only available on paid plans. Contact eric@thriveiep.com to upgrade and access this feature.",
         variant: "default"
       });
       return;
