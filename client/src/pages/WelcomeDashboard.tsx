@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +19,10 @@ const WelcomeDashboard = () => {
   const { activeModule } = useModule();
   const { assessmentCases, isLoading, refreshCases } = useModuleAssessmentData(activeModule);
   const { user, logout } = useAuth();
+  
+  // Preserve previous data to prevent flash during refreshes
+  const previousCompletedReports = useRef<any[]>([]);
+  const [displayedReports, setDisplayedReports] = useState<any[]>([]);
 
   // Refresh cases when dashboard mounts
   useEffect(() => {
@@ -49,10 +53,43 @@ const WelcomeDashboard = () => {
     yellow: '#FDE677',
   };
 
-  // Get completed reports only
-  const completedReports = assessmentCases.filter(
-    (report) => report.status === 'completed' && report.analysis_result
+  // Memoize completed reports to avoid creating new array on every render
+  const completedReports = useMemo(() => 
+    assessmentCases.filter(
+      (report) => report.status === 'completed' && report.analysis_result
+    ),
+    [assessmentCases]
   );
+
+  // Update displayed reports, preserving previous data during refreshes
+  useEffect(() => {
+    // Helper to compare report arrays by IDs
+    const arraysEqual = (a: any[], b: any[]) => {
+      if (a.length !== b.length) return false;
+      const aIds = new Set(a.map(r => r.id));
+      const bIds = new Set(b.map(r => r.id));
+      return a.every(r => bIds.has(r.id)) && b.every(r => aIds.has(r.id));
+    };
+
+    if (completedReports.length > 0) {
+      // We have new data - only update if it's actually different
+      if (!arraysEqual(completedReports, displayedReports)) {
+        setDisplayedReports(completedReports);
+        previousCompletedReports.current = completedReports;
+      }
+    } else if (previousCompletedReports.current.length > 0 && isLoading) {
+      // We're loading and data is temporarily empty - keep showing previous data
+      if (!arraysEqual(previousCompletedReports.current, displayedReports)) {
+        setDisplayedReports(previousCompletedReports.current);
+      }
+    } else if (completedReports.length === 0 && !isLoading) {
+      // Confirmed no data and not loading - clear display
+      if (displayedReports.length > 0) {
+        setDisplayedReports([]);
+        previousCompletedReports.current = [];
+      }
+    }
+  }, [completedReports, isLoading, displayedReports]);
 
   // Get new assessment route based on module
   const getNewReportRoute = () => {
@@ -184,7 +221,7 @@ const WelcomeDashboard = () => {
                       View Reports
                     </h3>
                     <p className="text-white text-opacity-90 text-base">
-                      {completedReports.length} report{completedReports.length !== 1 ? 's' : ''} available
+                      {displayedReports.length} report{displayedReports.length !== 1 ? 's' : ''} available
                     </p>
                   </div>
                   <ChevronDown className="h-5 w-5 text-white text-opacity-70" />
@@ -195,12 +232,12 @@ const WelcomeDashboard = () => {
               className="w-80 max-h-96 overflow-y-auto"
               align="center"
             >
-              {isLoading ? (
+              {isLoading && displayedReports.length === 0 ? (
                 <DropdownMenuItem disabled>Loading reports...</DropdownMenuItem>
-              ) : completedReports.length === 0 ? (
+              ) : displayedReports.length === 0 ? (
                 <DropdownMenuItem disabled>No reports available</DropdownMenuItem>
               ) : (
-                completedReports.map((report) => (
+                displayedReports.map((report) => (
                   <DropdownMenuItem
                     key={report.id}
                     onClick={() => navigate(getReportsRoute(report.id))}
