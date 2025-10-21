@@ -1,11 +1,12 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { AssessmentCase } from '@/types/assessmentCase';
 import { apiClient } from '@/lib/apiClient';
 
 export const usePostSecondaryAssessmentCases = () => {
   const [assessmentCases, setAssessmentCases] = useState<AssessmentCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitiallyLoaded = useRef(false);
 
   console.log('=== usePostSecondaryAssessmentCases Hook State ===');
   console.log('Total Post-Secondary cases:', assessmentCases.length);
@@ -15,7 +16,10 @@ export const usePostSecondaryAssessmentCases = () => {
   // Load Post-Secondary cases via API client
   const loadCases = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // Only show loading state on initial load, not on refreshes
+      if (!hasInitiallyLoaded.current) {
+        setIsLoading(true);
+      }
       console.log('Loading assessment cases via API client...');
       const postSecondaryCases = await apiClient.getAssessmentCases('post_secondary');
       console.log('Loaded', postSecondaryCases.length, 'cases from API client');
@@ -27,6 +31,7 @@ export const usePostSecondaryAssessmentCases = () => {
         hasAnalysis: !!c.analysis_result 
       })));
       setAssessmentCases(postSecondaryCases);
+      hasInitiallyLoaded.current = true;
     } catch (error) {
       console.error('Failed to load Post-Secondary cases via API:', error);
       setAssessmentCases([]);

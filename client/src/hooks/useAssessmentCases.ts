@@ -1,11 +1,12 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { AssessmentCase } from '@/types/assessmentCase';
 import { apiClient } from '@/lib/apiClient';
 
 export const useAssessmentCases = () => {
   const [assessmentCases, setAssessmentCases] = useState<AssessmentCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitiallyLoaded = useRef(false);
 
   console.log('=== useAssessmentCases Hook State ===');
   console.log('Total cases:', assessmentCases.length);
@@ -15,7 +16,10 @@ export const useAssessmentCases = () => {
   // Load cases from Database on mount - uses 'general' module type for backward compatibility
   const loadCases = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // Only show loading state on initial load, not on refreshes
+      if (!hasInitiallyLoaded.current) {
+        setIsLoading(true);
+      }
       console.log('Loading general assessment cases from Database...');
       // Use 'general' module type for backward compatibility
       const cases = await apiClient.getAssessmentCases('general');
@@ -27,6 +31,7 @@ export const useAssessmentCases = () => {
         hasAnalysis: !!c.analysis_result 
       })));
       setAssessmentCases(cases);
+      hasInitiallyLoaded.current = true;
     } catch (error) {
       console.error('Failed to load general cases:', error);
       setAssessmentCases([]);
