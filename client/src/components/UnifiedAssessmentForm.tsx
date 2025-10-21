@@ -161,7 +161,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   };
 
   const handleSubmit = async () => {
-    console.log(`=== Preparing ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment for Review ===`);
+    console.log(`=== Starting ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment Analysis ===`);
 
     // Validate unique ID
     if (!uniqueId.trim()) {
@@ -211,22 +211,112 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       return;
     }
 
-    // Convert FileList to array for serialization
-    const filesArray = Array.from(documentFiles);
-    
-    // Navigate to review page with all assessment data
-    console.log('Navigating to review page with documents:', documents.length);
-    navigate('/review-documents', {
-      state: {
-        moduleType,
-        pathway,
-        uniqueId: uniqueId.trim(),
-        reportAuthor: reportAuthor.trim(),
-        selectedGrade,
-        documents,
-        filesArray
+    // Check for finalized documents
+    const finalizedDocuments = documents.filter(doc => doc.finalized === true);
+    if (finalizedDocuments.length === 0) {
+      toast({
+        title: "No Finalized Documents",
+        description: "Please finalize at least one document in the PI Redactor before proceeding.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      console.log('Finalized documents count:', finalizedDocuments.length);
+
+      // Extract text from finalized files only
+      const filesArray = Array.from(documentFiles);
+      const extractedDocs = [];
+      for (let i = 0; i < filesArray.length; i++) {
+        const file = filesArray[i];
+        
+        const isFinalized = file.name.includes('_FINALIZED_');
+        if (!isFinalized) {
+          console.log(`Skipping non-finalized file: ${file.name}`);
+          continue;
+        }
+
+        console.log(`Extracting text from finalized file: ${file.name}...`);
+        
+        const { documentProcessor } = await import('@/services/document/documentProcessor');
+        const text = await documentProcessor.extractTextFromFile(file);
+        extractedDocs.push({
+          filename: file.name,
+          content: text
+        });
       }
-    });
+
+      if (extractedDocs.length === 0) {
+        toast({
+          title: "No Documents to Process",
+          description: "No finalized documents were found to analyze.",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      const caseId = crypto.randomUUID();
+
+      toast({
+        title: "Processing Started",
+        description: `${moduleType.toUpperCase()} AI analysis using ${pathway} pathway is running. This may take a few minutes...`
+      });
+      
+      console.log(`Starting ${moduleType} AI processing using ${pathway} pathway...`);
+
+      const environment = localStorage.getItem('app-environment') || 'replit-prod';
+      const isDemoEnvironment = environment.includes('demo');
+      const endpoint = isDemoEnvironment ? '/api/demo-analyze-assessment' : '/api/analyze-assessment';
+      
+      console.log(`Using endpoint: ${endpoint} (environment: ${environment}, isDemo: ${isDemoEnvironment})`);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Environment': environment
+        },
+        body: JSON.stringify({
+          caseId,
+          documents: extractedDocs,
+          moduleType,
+          pathway,
+          uniqueId: uniqueId.trim(),
+          reportAuthor: reportAuthor.trim(),
+          studentGrade: selectedGrade,
+          environment
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || `${moduleType.toUpperCase()} analysis failed`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ ${moduleType.toUpperCase()} ${pathway} analysis completed:`, result);
+      
+      toast({
+        title: "Analysis Completed",
+        description: `Documents have been processed. Redirecting to your ${moduleType.toUpperCase()} report...`
+      });
+      
+      const reportsPath = moduleType === 'k12' ? '/k12-reports' : '/post-secondary-reports';
+      console.log(`Navigating to ${reportsPath}...`);
+      navigate(reportsPath);
+      
+    } catch (error) {
+      console.error(`${moduleType.toUpperCase()} ${pathway} Assessment analysis failed:`, error);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred during analysis.",
+        variant: "destructive"
+      });
+      setIsProcessing(false);
+    }
   };
 
   // THRIVE brand colors
