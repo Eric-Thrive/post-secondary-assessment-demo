@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,8 +17,29 @@ import ThriveLogo from '@assets/primary logo O-W png_1760911234604.png';
 const WelcomeDashboard = () => {
   const navigate = useNavigate();
   const { activeModule } = useModule();
-  const { assessmentCases, isLoading } = useModuleAssessmentData(activeModule);
+  const { assessmentCases, isLoading, refreshCases } = useModuleAssessmentData(activeModule);
   const { user, logout } = useAuth();
+
+  // Refresh cases when dashboard mounts
+  useEffect(() => {
+    console.log('WelcomeDashboard mounted - refreshing assessment cases');
+    if (refreshCases) {
+      refreshCases();
+    }
+  }, [refreshCases]);
+
+  // Refresh cases when window regains focus (user returns to the tab/window)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Window focused - refreshing assessment cases');
+      if (refreshCases) {
+        refreshCases();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refreshCases]);
 
   // THRIVE brand colors
   const brandColors = {
