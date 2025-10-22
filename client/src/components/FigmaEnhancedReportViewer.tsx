@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, PenTool, Info, Lock, GraduationCap, Brain, MessageSquare, Headphones, UserPlus, Phone, ChevronRight, ChevronDown, ChevronLeft, Edit, Home, Edit2, Save, X, Plus, LogOut } from "lucide-react";
+import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, PenTool, Info, Lock, GraduationCap, Brain, MessageSquare, Headphones, UserPlus, Phone, ChevronRight, ChevronDown, ChevronLeft, Edit, Home, Edit2, Save, X, Plus, LogOut, Printer } from "lucide-react";
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -36,6 +36,7 @@ import StudentHeaderIcon from '@assets/icon7.7_1755100209288.png'; // Student In
 import ThriveLogo from '@assets/isotype Y-NB_1754494460165.png'; // THRIVE logo
 import BarrierIllustration from '@assets/image_1754498028324.png'; // Barrier illustration
 import CompletionBackground from '@assets/ChatGPT Image Aug 6, 2025, 03_51_54 PM_1754509933318.png'; // Completion background
+import PostSecondaryPrintReport from '@/components/report/PostSecondaryPrintReport';
 
 interface FigmaEnhancedReportViewerProps {
   currentCase: AssessmentCase | null;
@@ -150,6 +151,13 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
     const [showAccommodationsDropdown, setShowAccommodationsDropdown] = useState(false);
     const [currentAccommodationSlide, setCurrentAccommodationSlide] = useState(0);
     const [expandedAccommodationIndex, setExpandedAccommodationIndex] = useState<number | null>(null);
+    
+    // Print functionality
+    const printRef = useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+      contentRef: printRef,
+      documentTitle: `Accommodation_Report_${currentCase?.display_name || 'Report'}`,
+    });
 
     // Parse markdown into structured sections using centralized parser
     const sections = useMemo(() => {
@@ -264,6 +272,17 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
               <div className="ml-3">
                 <h1 className="text-2xl font-bold" 
                     style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>Accommodation Report</h1>
+              </div>
+              <div className="ml-auto">
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+                  title="Print Report"
+                  data-testid="button-print-report"
+                >
+                  <Printer className="h-5 w-5" />
+                  <span className="font-medium">Print</span>
+                </button>
               </div>
             </div>
           </header>
@@ -1460,6 +1479,15 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
         </div>
         </div>
         </div>
+        
+        {/* Hidden Print Component - positioned off-screen but still measurable */}
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+          <PostSecondaryPrintReport 
+            ref={printRef}
+            currentCase={currentCase}
+            markdownReport={markdownReport}
+          />
+        </div>
       </div>
     );
   };
@@ -1483,6 +1511,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
       <div className={isDemoLink ? "" : "report-viewer w-full"}>
         <FigmaStyledReport />
       </div>
+
 
       {/* Hide additional controls for demo links */}
       {!isDemoLink && children}
