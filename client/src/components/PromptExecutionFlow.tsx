@@ -85,10 +85,10 @@ const PromptExecutionFlow = () => {
     const currentIndex = allPrompts.findIndex(p => p.id === prompt.id);
     
     if (direction === 'up' && currentIndex > 0) {
-      const newOrder = allPrompts[currentIndex - 1].execution_order;
+      const newOrder = allPrompts[currentIndex - 1].execution_order ?? 0;
       updateOrderMutation.mutate({ sectionKey: prompt.section_key, newOrder: newOrder });
     } else if (direction === 'down' && currentIndex < allPrompts.length - 1) {
-      const newOrder = allPrompts[currentIndex + 1].execution_order;
+      const newOrder = allPrompts[currentIndex + 1].execution_order ?? 0;
       updateOrderMutation.mutate({ sectionKey: prompt.section_key, newOrder: newOrder });
     }
   };

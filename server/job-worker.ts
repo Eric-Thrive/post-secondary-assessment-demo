@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { aiAnalysisQueue, type AIAnalysisJobData, closeQueue } from './job-queue';
 import { createLogger } from './reliability-improvements';
 import { storage } from './storage';

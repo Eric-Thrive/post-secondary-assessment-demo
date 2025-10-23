@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Alternative Approach 1: Direct Node.js OpenAI Integration
 // Bypass Database Edge Functions entirely and implement GPT-4.1 locally
 

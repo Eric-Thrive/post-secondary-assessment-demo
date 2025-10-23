@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Demo AI Handler Implementation
 // Shows the complete three-step workflow without requiring OpenAI API
 

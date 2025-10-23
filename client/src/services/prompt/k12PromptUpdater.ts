@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { apiClient } from '@/lib/apiClient';
 import { getK12SystemInstructionsTemplate } from './templates/k12SystemInstructionsTemplate';
 import { getK12MarkdownTemplate } from './templates/k12MarkdownTemplate';

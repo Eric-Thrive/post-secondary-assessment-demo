@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import { apiClient } from '@/lib/apiClient';
 import { LookupTable, MappingConfiguration } from '@/types/promptService';

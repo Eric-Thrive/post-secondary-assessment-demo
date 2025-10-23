@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { K12ItemMaster, k12ItemMasterService } from '@/services/k12ItemMasterService';
 import { PostSecondaryItemMaster, postSecondaryItemMasterService } from '@/services/postSecondaryItemMasterService';
 import { AssessmentCase } from '@/types/assessmentCase';

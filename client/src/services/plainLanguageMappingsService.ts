@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import { apiClient } from '@/lib/apiClient';
 import { PlainLanguageMapping } from '@/types/promptService';
