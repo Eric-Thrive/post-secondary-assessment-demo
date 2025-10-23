@@ -1,82 +1,32 @@
 # Assessment Report Generator
 
 ## Overview
-This project is an AI-powered educational assessment application that generates comprehensive accommodation reports for K-12 and post-secondary educational contexts. It analyzes uploaded documents using advanced AI function calling to produce structured reports, including barrier identification, accommodation mappings, and evidence-based recommendations. The system aims to streamline assessment processes and provide tailored support plans for students.
+This project is an AI-powered educational assessment application designed to generate comprehensive accommodation reports for K-12 and post-secondary educational contexts. It analyzes uploaded documents using advanced AI function calling to produce structured reports, including barrier identification, accommodation mappings, and evidence-based recommendations. The system aims to streamline assessment processes and provide tailored support plans for students, improving efficiency and personalization in educational support.
 
-## Recent Changes (October 16, 2025)
-- **Finalized Document Review Workflow**: Implemented document review page for pre-analysis validation
-  - **Document Finalization Detection**: Automatic detection of finalized documents via filename pattern `_FINALIZED_YYYYMMDD_HHMM`
-    - DocumentUpload component now checks for `_FINALIZED_` pattern in filenames from PI Redactor
-    - Documents marked with `finalized: true` flag in DocumentFile type
-    - Only finalized documents are processed by AI analysis
-  - **Review Page Component**: New ReviewDocumentsPage displays finalized documents before analysis
-    - Shows assessment information (unique ID, report author, grade level)
-    - Lists only documents marked as finalized with timestamp parsing
-    - "Proceed to Analysis" button enabled only when finalized documents exist
-    - Pathway-aware back navigation (K12 simple vs complex pathways)
-    - Clear visual indicators (checkmarks, badges) for finalized status
-  - **Updated Assessment Workflow**: Modified flow to include review step
-    - Assessment form → Review finalized documents → AI analysis → Reports
-    - FileList converted to File array for proper state serialization
-    - No breaking changes to existing analysis functionality
-  - **PI Redactor Integration**: Full integration with new redactor version
-    - Environment variable `VITE_PI_REDACTOR_URL` configured for redactor popup
-    - PostMessage API receives redacted files with finalized naming convention
-    - Security validation ensures messages only accepted from configured redactor origin
-
-## Recent Changes (October 8, 2025)
-- **Dual-Access Architecture Implementation**: Established separate customer and developer access modes for improved user experience
-  - **Customer Experience Shell**: Created dedicated routes at `/post-secondary-demo/*`, `/k12-demo/*`, `/tutoring-demo/*`
-    - Environment locked to respective demo modes with no switching capability
-    - Environment switcher component automatically hidden
-    - Backend API errors handled gracefully without disrupting user experience
-    - Module automatically locked based on demo type (post-secondary, k12, or tutoring)
-  - **Developer Shell**: Maintained full functionality at standard routes (`/`, `/reports`, etc.)
-    - Complete environment switching capability preserved
-    - Environment switcher visible with all demo and production options
-    - Backend environment API called with graceful failure handling
-    - Module switching remains flexible for development and testing
-  - **EnvironmentContext Enhancements**: Updated context to support forced environments
-    - Added `forcedEnvironment` prop for customer-facing routes
-    - Implemented `isCustomerMode` and `isDeveloperMode` properties
-    - Backend `/api/environment` errors now handled gracefully with fallback to client-side switching
-    - Client-side environment switching works even when backend is unavailable
-  - **Performance Optimizations**: Resolved page reload issues with React Router navigation
-    - Replaced `window.location.href` with `useNavigate` for client-side routing
-    - Implemented sessionStorage caching for instant report display when navigating
-    - Eliminated full page reloads when switching between Report Viewer and Review & Edit pages
-
-## Recent Changes (September 19, 2025)
-- **Centralized Post-Secondary Report Parsing**: Created dedicated parsing utility for post-secondary reports at `client/src/utils/postSecondaryReportParser.ts`
-  - Extracted all markdown parsing logic from FigmaEnhancedReportViewer into reusable functions
-  - Improved maintainability by centralizing parsing functions for sections, accommodations, and barriers
-  - Standardized parsing of all 4 required accommodation categories (Academic, Testing, Technology Support, Additional Resources/Services)
-- **Isolated Pathway Configuration**: Implemented dedicated configuration module for post-secondary pathway settings at `server/config/postSecondaryPathways.ts`
-  - Isolated post-secondary module configuration to prevent interference with other report types (K-12, tutoring)
-  - Enhanced demo environment support with automatic simple pathway selection
-  - Validation functions ensure all 4 accommodation categories are generated in reports
-  - Strict separation between demo and production environments maintained
-
-## Recent Changes (September 13, 2025)
-- **Enhanced Document Processing System**: Implemented comprehensive multi-format document support with advanced OCR capabilities
-  - **PDF Processing with OCR Fallback**: Enhanced PDFExtractionService with intelligent OCR fallback using Tesseract.js
-    - Automatic detection of scanned PDFs when text extraction yields minimal content (<50 characters)
-    - PDF-to-image conversion using PDF.js canvas rendering at 2.0x scale for optimal OCR accuracy
-    - Sequential page processing with 10-page limit to balance functionality with performance
-    - Comprehensive error handling and progress logging throughout the OCR pipeline
-  - **Word Document Support**: Added complete Microsoft Word document processing using Mammoth.js
-    - Client-side text extraction from .docx and .docm files
-    - Removed .doc support with clear user guidance to convert to modern formats
-    - Robust validation and error handling for document processing failures
-  - **Image OCR Processing**: Integrated Tesseract.js for extracting text from scanned images
-    - Support for multiple image formats: JPG, PNG, GIF, BMP, TIFF, WEBP
-    - Confidence scoring and validation of OCR results
-    - Progress tracking and detailed logging for troubleshooting
-  - **Enhanced File Upload Interface**: Updated DocumentUpload component to support expanded file types
-    - Accepts: .pdf, .docx, .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp, .txt
-    - Maintained 4-document upload limit with improved user feedback
-    - All processing remains client-side for maximum security and data privacy
-- **Previous Database Migration Completed (September 12, 2025)**: Full Supabase to Replit PostgreSQL migration with comprehensive development database setup and enhanced security controls
+## Recent Changes (October 21, 2025)
+- **Fixed Data Flash During Dashboard Refresh**: Eliminated visual flash showing "0 reports available" when navigating back to dashboard
+  - **Smart Loading States**: Updated assessment case hooks to distinguish between initial load and background refreshes
+    - Added useRef tracking (hasInitiallyLoaded) to prevent clearing data during refreshes
+    - Only show loading state on first mount, not on subsequent data refetches
+    - Previous data remains visible while new data loads in the background
+  - **Optimized Hook Dependencies**: Fixed double-fetch regression by maintaining stable loadCases reference
+    - Removed isLoading from useCallback dependency arrays to prevent recreation on state changes
+    - Unconditional setIsLoading(false) in finally block (React optimizes no-ops automatically)
+    - Applied pattern consistently across all four assessment hooks (K12, Post-Secondary, Tutoring, General)
+  - **Impact**: Smooth user experience when returning to dashboard - report counts update seamlessly without flashing zero, reducing cognitive load and improving perceived performance
+- **Streamlined Assessment Workflow**: Removed redundant Review Documents page to create a more efficient two-step workflow
+  - **Direct Analysis Trigger**: Modified UnifiedAssessmentForm to start AI analysis immediately when "Start Analysis" is clicked
+    - Moved all analysis logic from ReviewDocumentsPage into UnifiedAssessmentForm's handleSubmit function
+    - Analysis now validates finalized documents and starts processing without intermediate navigation
+    - Document Upload → AI Analysis → Reports (reduced from three steps to two)
+  - **Preserved Validation**: All document validation logic maintained in the streamlined flow
+    - Finalized document checks occur before analysis starts
+    - Text extraction from finalized files only (skips non-finalized documents)
+    - Error handling for missing documents, non-finalized files, and API failures
+  - **TypeScript Compliance**: Fixed module type routing to align with component's declared union types
+    - Reports routing now correctly handles only k12 and post_secondary module types
+    - Resolved TS2367 build error by removing tutoring case check from UnifiedAssessmentForm
+  - **Impact**: Faster workflow with fewer clicks, reduced cognitive load for users, and immediate feedback when starting analysis
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -95,7 +45,9 @@ The application features a dual-module architecture for K-12 and Post-Secondary 
 -   **Framework:** React with TypeScript
 -   **Styling:** Tailwind CSS with shadcn/ui components
 -   **State Management:** React Context API, React Query
--   **PDF Processing:** Client-side text extraction using PDF.js worker
+-   **Document Processing:** Client-side text extraction using PDF.js worker, Mammoth.js for Word documents, and Tesseract.js for image OCR.
+-   **UI/UX:** Streamlined two-step assessment workflow (Document Upload → AI Analysis → Reports), enhanced document upload UI with confirmation and disabled states for workflow control, prominent PI Redactor button.
+-   **Accessibility:** WCAG AA compliant elements (e.g., contrast ratios, focus rings).
 
 **Backend:**
 -   **Runtime:** Node.js with Express.js
@@ -105,15 +57,19 @@ The application features a dual-module architecture for K-12 and Post-Secondary 
 -   **API:** RESTful API with `/api` prefix
 
 **Key Features & Design Patterns:**
--   **Dual-Module Architecture:** Separate K-12 and Post-Secondary modules with tailored configurations, prompts, and lookup tables.
--   **AI Processing Pipeline:** Handles multi-file document upload, client-side PDF extraction, direct OpenAI analysis, template enforcement, and structured report generation.
--   **Advanced AI Configuration:** Strict model enforcement (GPT-4.1 primary, GPT-4o fallback), dynamic function calling for database queries, comprehensive system prompts (6,371+ characters), expert inference for missing data, and smart token management.
--   **Report Generation:** Markdown output with export options (PDF, Word, raw text), including structured data extraction for educational assessments.
+-   **Dual-Module Architecture:** Separate K-12 and Post-Secondary modules with tailored configurations, prompts, and lookup tables. Includes dedicated customer-facing demo environments with locked configurations and a developer shell with full functionality.
+-   **AI Processing Pipeline:** Handles multi-format document upload (PDF, DOCX, images, TXT), client-side text extraction with OCR fallback, direct OpenAI analysis, template enforcement, and structured report generation.
+-   **Advanced AI Configuration:** Strict model enforcement, dynamic function calling for database queries, comprehensive system prompts, expert inference for missing data, and smart token management.
+-   **Report Generation:** Markdown output with export options (PDF, Word, raw text), including structured data extraction for educational assessments. Centralized parsing utilities for post-secondary reports.
 -   **Review & Edit Workflow:** Allows users to review, edit, and restore original versions of generated reports with change tracking.
 -   **Prompt Management:** System prompts and report templates are database-driven for real-time updates and flexibility.
+-   **Document Finalization:** Automatic detection of finalized documents via filename patterns for pre-analysis validation.
+-   **Environment Persistence:** Demo environments maintain state across logout/login cycles and navigation through URL-based detection and protected routes.
 
 ## External Dependencies
 -   **OpenAI GPT-4.1 / GPT-4o:** AI models for analysis, content generation, and function calling.
 -   **Replit PostgreSQL:** Primary database for development and production data storage.
 -   **@neondatabase/serverless:** PostgreSQL client for database interaction.
 -   **pdfjs-dist:** For client-side PDF text extraction.
+-   **Mammoth.js:** For client-side Word document (.docx, .docm) text extraction.
+-   **Tesseract.js:** For client-side OCR processing of scanned PDFs and images.

@@ -4,12 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, PenTool, Info, Lock, GraduationCap, Brain, MessageSquare, Headphones, UserPlus, Phone, ChevronRight, ChevronDown, ChevronLeft, Edit, Home, Edit2, Save, X } from "lucide-react";
+import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, PenTool, Info, Lock, GraduationCap, Brain, MessageSquare, Headphones, UserPlus, Phone, ChevronRight, ChevronDown, ChevronLeft, Edit, Home, Edit2, Save, X, Plus, LogOut, Printer } from "lucide-react";
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link, useNavigate } from 'react-router-dom';
-import { PostSecondaryOnePagePDF } from './PostSecondaryOnePagePDF';
+import { useReactToPrint } from 'react-to-print';
+import { useAuth } from '@/contexts/AuthContext';
+import { useModule } from '@/contexts/ModuleContext';
+import { useEnvironment } from '@/contexts/EnvironmentContext';
 
 import { unsplashImages, navigationIcons } from '@/utils/unsplashImages';
 import { 
@@ -33,6 +36,7 @@ import StudentHeaderIcon from '@assets/icon7.7_1755100209288.png'; // Student In
 import ThriveLogo from '@assets/isotype Y-NB_1754494460165.png'; // THRIVE logo
 import BarrierIllustration from '@assets/image_1754498028324.png'; // Barrier illustration
 import CompletionBackground from '@assets/ChatGPT Image Aug 6, 2025, 03_51_54 PM_1754509933318.png'; // Completion background
+import PostSecondaryPrintReport from '@/components/report/PostSecondaryPrintReport';
 
 interface FigmaEnhancedReportViewerProps {
   currentCase: AssessmentCase | null;
@@ -55,9 +59,26 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
   // Always use enhanced view - removed standard view option
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { activeModule } = useModule();
+  const { logout, isAuthenticated, getLogoutRedirectPath } = useAuth();
+  const { currentEnvironment, isCustomerMode } = useEnvironment();
+  
+  // Check if current environment is a demo mode (only demo environments, not development)
+  const isDemoMode = currentEnvironment.endsWith('-demo') || 
+                     ['post-secondary-demo', 'k12-demo', 'tutoring-demo'].includes(currentEnvironment);
   
   // Navigation function to Review & Edit section
   const handleEditClick = (sectionId: string) => {
+    // Block Review & Edit in demo mode - show upgrade message
+    if (isDemoMode) {
+      toast({
+        title: "Premium Feature",
+        description: "Review & Edit is only available on paid plans. Contact eric@thriveiep.com to upgrade and access this feature.",
+        variant: "default"
+      });
+      return;
+    }
+    
     console.log('🔄 Navigating to Review & Edit section for:', sectionId, 'Case ID:', currentCase?.id);
     
     // Cache the current case data to avoid refetching
@@ -76,6 +97,34 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
       navigate(`/post-secondary-review-edit?caseId=${currentCase.id}`);
     } else {
       navigate('/post-secondary-review-edit');
+    }
+  };
+
+  // Get assessment route based on active module
+  const getNewReportRoute = () => {
+    if (activeModule === 'k12') {
+      return '/new-k12-assessment';
+    } else if (activeModule === 'tutoring') {
+      return '/new-tutoring-assessment';
+    } else {
+      return '/new-post-secondary-assessment';
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Redirect to appropriate path based on current environment
+      const redirectPath = getLogoutRedirectPath();
+      navigate(redirectPath);
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to logout. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -102,6 +151,13 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
     const [showAccommodationsDropdown, setShowAccommodationsDropdown] = useState(false);
     const [currentAccommodationSlide, setCurrentAccommodationSlide] = useState(0);
     const [expandedAccommodationIndex, setExpandedAccommodationIndex] = useState<number | null>(null);
+    
+    // Print functionality
+    const printRef = useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+      contentRef: printRef,
+      documentTitle: `Accommodation_Report_${currentCase?.display_name || 'Report'}`,
+    });
 
     // Parse markdown into structured sections using centralized parser
     const sections = useMemo(() => {
@@ -198,29 +254,35 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
         <div className="relative z-10">
         {/* Header - Content Area Extended to Right Edge */}
         <div className="fixed top-0 left-80 right-0 z-50">
-          <header className="text-white py-3 shadow-2xl"
+          <header className="text-white py-3 shadow-2xl" 
                   style={{ background: `linear-gradient(to right, ${brandColors.primary}, ${brandColors.lightBlue})` }}>
-            <div className="flex items-center justify-between px-6">
-              <div className="flex items-center">
-                <Link to="/">
-                  <button
-                    className="hover:opacity-80 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 rounded"
-                    title="Go Home"
-                >
-                  <img
-                    src={ThriveLogo}
-                    alt="THRIVE Logo - Go Home"
-                    className="h-10 w-10 object-contain"
-                  />
-                </button>
-                </Link>
-                <div className="ml-3">
-                  <h1 className="text-2xl font-bold"
-                      style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>Accommodation Report</h1>
-                </div>
+            <div className="flex items-center px-6">
+              <Link to="/">
+                <button 
+                  className="hover:opacity-80 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 rounded"
+                  title="Go Home"
+              >
+                <img 
+                  src={ThriveLogo}
+                  alt="THRIVE Logo - Go Home"
+                  className="h-10 w-10 object-contain"
+                />
+              </button>
+              </Link>
+              <div className="ml-3">
+                <h1 className="text-2xl font-bold" 
+                    style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>Accommodation Report</h1>
               </div>
-              <div className="no-print">
-                <PostSecondaryOnePagePDF currentCase={currentCase} markdownReport={markdownReport} />
+              <div className="ml-auto">
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+                  title="Print Report"
+                  data-testid="button-print-report"
+                >
+                  <Printer className="h-5 w-5" />
+                  <span className="font-medium">Print</span>
+                </button>
               </div>
             </div>
           </header>
@@ -436,46 +498,105 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                 onClick={() => handleEditClick('review')}
                 className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: '#f3f4f6',
-                  borderColor: '#d1d5db',
-                  color: '#374151'
+                  backgroundColor: isDemoMode ? '#e5e7eb' : '#f3f4f6',
+                  borderColor: isDemoMode ? '#9ca3af' : '#d1d5db',
+                  color: isDemoMode ? '#9ca3af' : '#374151',
+                  opacity: isDemoMode ? 0.6 : 1,
+                  cursor: isDemoMode ? 'not-allowed' : 'pointer'
                 }}
                 data-testid="button-review"
               >
                 <div className="flex items-center gap-3">
-                  <Edit2 
-                    className="h-5 w-5"
-                    style={{ color: '#6b7280' }}
-                  />
+                  {isDemoMode ? (
+                    <Lock 
+                      className="h-5 w-5"
+                      style={{ color: '#9ca3af' }}
+                    />
+                  ) : (
+                    <Edit2 
+                      className="h-5 w-5"
+                      style={{ color: '#6b7280' }}
+                    />
+                  )}
                   <div className="font-bold text-left" 
                        style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
-                    Review
+                    Review {isDemoMode && '(Paid Plans)'}
                   </div>
                 </div>
               </button>
 
-              {/* Go Home */}
+              {/* New Report */}
+              <Link to={getNewReportRoute()} className="block">
+                <button
+                  className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  style={{
+                    backgroundColor: brandColors.primary,
+                    borderColor: brandColors.primary,
+                    color: '#ffffff'
+                  }}
+                  data-testid="button-new-report"
+                >
+                  <div className="flex items-center gap-3">
+                    <Plus 
+                      className="h-5 w-5"
+                      style={{ color: '#ffffff' }}
+                    />
+                    <div className="font-bold text-left" 
+                         style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+                      New Report
+                    </div>
+                  </div>
+                </button>
+              </Link>
+
+              {/* Home */}
               <Link to="/" className="block">
                 <button
                   className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{
-                  backgroundColor: '#f3f4f6',
-                  borderColor: '#d1d5db',
-                  color: '#374151'
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <Home 
-                    className="h-5 w-5"
-                    style={{ color: '#6b7280' }}
-                  />
-                  <div className="font-bold text-left" 
-                       style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
-                    Go Home
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    borderColor: '#d1d5db',
+                    color: '#374151'
+                  }}
+                  data-testid="button-home"
+                >
+                  <div className="flex items-center gap-3">
+                    <Home 
+                      className="h-5 w-5"
+                      style={{ color: '#6b7280' }}
+                    />
+                    <div className="font-bold text-left" 
+                         style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+                      Home
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
               </Link>
+
+              {/* Logout */}
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    borderColor: '#d1d5db',
+                    color: '#374151'
+                  }}
+                  data-testid="button-logout"
+                >
+                  <div className="flex items-center gap-3">
+                    <LogOut 
+                      className="h-5 w-5"
+                      style={{ color: '#6b7280' }}
+                    />
+                    <div className="font-bold text-left" 
+                         style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+                      Logout
+                    </div>
+                  </div>
+                </button>
+              )}
             </nav>
           </div>
         </aside>
@@ -1059,7 +1180,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                             <ChevronRight className="h-4 w-4" />
                           </button>
                         )}
-                        {currentSlide === totalSlides - 1 && (
+                        {(!totalSlides || totalSlides === 1 || currentSlide === totalSlides - 1) && (
                           <button 
                             className="text-white px-6 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2"
                             style={{ 
@@ -1358,6 +1479,15 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
         </div>
         </div>
         </div>
+        
+        {/* Hidden Print Component - positioned off-screen but still measurable */}
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+          <PostSecondaryPrintReport 
+            ref={printRef}
+            currentCase={currentCase}
+            markdownReport={markdownReport}
+          />
+        </div>
       </div>
     );
   };
@@ -1381,6 +1511,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
       <div className={isDemoLink ? "" : "report-viewer w-full"}>
         <FigmaStyledReport />
       </div>
+
 
       {/* Hide additional controls for demo links */}
       {!isDemoLink && children}

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentFile, DocumentType } from "@/types/assessment";
@@ -11,13 +13,17 @@ interface DocumentUploadProps {
   setDocuments: React.Dispatch<React.SetStateAction<DocumentFile[]>>;
   onFilesChange?: (files: FileList | null) => void;
   fileInputRefs?: React.MutableRefObject<{ [key: string]: HTMLInputElement | null }>;
+  uploadConfirmed?: boolean;
+  onUploadConfirmedChange?: (confirmed: boolean) => void;
 }
 
 const DocumentUpload = ({
   documents,
   setDocuments,
   onFilesChange,
-  fileInputRefs
+  fileInputRefs,
+  uploadConfirmed = false,
+  onUploadConfirmedChange
 }: DocumentUploadProps) => {
   const { toast } = useToast();
   const [allFiles, setAllFiles] = React.useState<FileList | null>(null);
@@ -223,7 +229,6 @@ const DocumentUpload = ({
       <PrivacyNotice
         onOpenRedactor={handleOpenRedactor}
       />
-
       {waitingForRedactor && (
         <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
           <CardContent className="py-4">
@@ -241,7 +246,6 @@ const DocumentUpload = ({
           </CardContent>
         </Card>
       )}
-
       {documents.length > 0 && (
         <Card>
           <CardHeader>
@@ -253,6 +257,21 @@ const DocumentUpload = ({
               onRemoveDocument={removeDocument} 
               documentTypes={documentTypes} 
             />
+            
+            {/* Upload Confirmation Checkbox */}
+            <div className="flex items-start space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Checkbox
+                id="upload-confirmed"
+                checked={uploadConfirmed}
+                onCheckedChange={(checked) => onUploadConfirmedChange?.(checked === true)}
+                className="mt-1"
+                data-testid="checkbox-upload-confirmed"
+              />
+              <Label
+                htmlFor="upload-confirmed"
+                className="text-base font-medium text-gray-700 dark:text-gray-300 cursor-pointer leading-relaxed"
+              > All documents have been uploaded and are ready for analysis</Label>
+            </div>
           </CardContent>
         </Card>
       )}

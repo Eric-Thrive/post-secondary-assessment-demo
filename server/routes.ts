@@ -31,6 +31,9 @@ function isDemoOperationAllowed(method: string, path: string): boolean {
     { method: 'POST', path: '/auth/reset-password' },
     { method: 'POST', path: '/auth/forgot-username' },
     
+    // Environment configuration endpoint
+    { method: 'GET', path: '/config/environment' },
+    
     // Demo analysis endpoints
     { method: 'POST', path: '/demo-analyze-assessment' },
     { method: 'GET', path: '/demo-assessment-cases' },
@@ -285,20 +288,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post('/api/auth/register', async (req, res) => {
     try {
-      console.log('🔍 Registration request body:', JSON.stringify(req.body, null, 2));
       const { username, password, email, customerId, customerName, role } = req.body;
-      console.log('🔍 Extracted fields:', { 
-        username: !!username, 
-        password: !!password, 
-        email: !!email,
-        usernameVal: username,
-        emailVal: email 
-      });
       
       // Validate required fields
       if (!username || !password || !email) {
-        console.log('❌ Validation failed - missing fields:', { username: !!username, password: !!password, email: !!email });
         return res.status(400).json({ error: 'Username, password, and email are required' });
+      }
+
+      // Normalize username and email by trimming whitespace
+      const trimmedUsername = username.trim();
+      const trimmedEmail = email.trim();
+
+      // Validate that username is not empty after trimming
+      if (!trimmedUsername) {
+        return res.status(400).json({ error: 'Username cannot be empty or contain only whitespace' });
+      }
+
+      // Validate that email is not empty after trimming
+      if (!trimmedEmail) {
+        return res.status(400).json({ error: 'Email cannot be empty or contain only whitespace' });
       }
 
       // Validate password security requirements
@@ -310,11 +318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' });
       }
 
-      // Check if user already exists by username or email
+      // Check if user already exists by username or email (using trimmed values)
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username));
+        .where(eq(users.username, trimmedUsername));
 
       if (existingUser) {
         return res.status(409).json({ error: 'Username already exists' });
@@ -323,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [existingEmail] = await db
         .select()
         .from(users)
-        .where(eq(users.email, email));
+        .where(eq(users.email, trimmedEmail));
 
       if (existingEmail) {
         return res.status(409).json({ error: 'Email already exists' });
@@ -360,13 +368,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create user
+      // Create user with normalized (trimmed) username and email
       const [newUser] = await db
         .insert(users)
         .values({
-          username,
+          username: trimmedUsername,
           password: hashedPassword,
-          email,
+          email: trimmedEmail,
           customerId: assignedCustomerId,
           customerName,
           role: assignedRole,
@@ -421,22 +429,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Username and password are required' });
       }
 
+      // Normalize username by trimming whitespace
+      const trimmedUsername = username.trim();
+      
+      console.log(`🔐 Login attempt for username: "${trimmedUsername}"`);
+      
       // Find user
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username));
+        .where(eq(users.username, trimmedUsername));
 
-      if (!user || !user.isActive) {
+      if (!user) {
+        console.log(`❌ User "${trimmedUsername}" not found in database`);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
+
+      if (!user.isActive) {
+        console.log(`❌ User "${trimmedUsername}" is not active`);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      console.log(`✓ User "${trimmedUsername}" found and active`);
 
       // Verify password
       const isValidPassword = await verifyPassword(password, user.password);
       
       if (!isValidPassword) {
+        console.log(`❌ Password verification failed for user "${trimmedUsername}"`);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
+
+      console.log(`✅ Login successful for user "${trimmedUsername}"`);
 
       // Update last login
       await db
@@ -936,17 +960,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Demo Assessment Cases - for demo environments (no authentication required)
-  app.get("/api/demo-assessment-cases/:moduleType", async (req, res) => {
+  // Demo Assessment Cases - requires authentication to ensure user isolation
+  app.get("/api/demo-assessment-cases/:moduleType", requireAuth, async (req, res) => {
     try {
       const { moduleType } = req.params;
+      const userId = req.user?.id;
+      
+      // In demo mode, userId is MANDATORY for security
+      if (!userId || typeof userId !== 'number') {
+        console.error(`Demo security violation: Missing or invalid userId. User object:`, req.user);
+        return res.status(403).json({ 
+          error: 'Authentication required - invalid user session',
+          demo: true
+        });
+      }
+      
       console.log(`Demo API Route hit: GET /demo-assessment-cases/${moduleType}`);
-      console.log(`Fetching demo assessment cases for module: ${moduleType}`);
+      console.log(`Fetching demo assessment cases for module: ${moduleType}, user: ${userId}`);
       
-      // Get demo cases with demo customer ID
-      const cases = await storage.getAssessmentCases(moduleType, 'demo-customer');
+      // Get demo cases filtered by the current user's ID
+      // This ensures users only see their own assessment cases
+      const cases = await storage.getAssessmentCases(moduleType, 'demo-customer', userId);
       
-      console.log(`Found ${cases.length} demo ${moduleType} cases`);
+      console.log(`Found ${cases.length} demo ${moduleType} cases for user ${userId}`);
       res.json(cases || []);
     } catch (error: any) {
       console.error(`Error fetching demo assessment cases for ${req.params.moduleType}:`, error);
@@ -1137,6 +1173,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Save the demo analysis result to database so reports page can find it
           console.log('💾 Saving demo analysis result to database...');
+          
+          // Capture user ID from session if user is logged in
+          const userId = req.session?.userId;
+          console.log(`🔑 Demo analysis - User ID from session: ${userId || 'none (anonymous)'}`);
+          
           const caseData = {
             id: caseId,
             moduleType: moduleType, // Fixed: camelCase
@@ -1149,6 +1190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             analysisDate: result.analysis_date || new Date().toISOString(), // Fixed: camelCase
             itemMasterData: JSON.stringify(result.item_master_data || []), // Fixed: camelCase
             customerId: 'demo-customer', // Fixed: camelCase - Special demo customer ID
+            createdByUserId: userId, // Link to logged-in user if available
             environment: 'post-secondary-demo', // More specific environment
             // Add the missing new fields
             uniqueId: uniqueId?.trim() || null,
@@ -2567,6 +2609,26 @@ Follow the template EXACTLY as shown above.`
       console.error("Error reverting change:", error);
       res.status(500).json({ error: "Failed to revert change" });
     }
+  });
+
+  // Environment configuration endpoint
+  app.get('/api/config/environment', (req: Request, res: Response) => {
+    console.log(`🌍 Environment config requested`);
+    const currentEnv = process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'production';
+    const normalized = currentEnv.toLowerCase().replace(/_/g, '-').trim();
+    
+    // Determine if this should be a locked environment
+    const lockedEnvironments = ['post-secondary-demo', 'k12-demo', 'tutoring-demo', 'post-secondary-dev'];
+    const isLocked = lockedEnvironments.includes(normalized);
+    
+    res.json({ 
+      environment: normalized,
+      rawEnvironment: currentEnv,
+      isLocked,
+      module: normalized.includes('post-secondary') ? 'post_secondary' : 
+              normalized.includes('k12') ? 'k12' : 
+              normalized.includes('tutoring') ? 'tutoring' : null
+    });
   });
 
   // Register no-cache routes only (alternative routes disabled to use simple pathway)

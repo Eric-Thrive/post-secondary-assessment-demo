@@ -12,6 +12,11 @@ export interface AssessmentCase {
   last_updated: string;
   status: 'draft' | 'processing' | 'completed' | 'completed_no_findings' | 'document_processing_error' | 'error';
   module_type: string; // Make required instead of optional
+  // Student information fields
+  unique_id?: string | null;
+  program_major?: string | null;
+  report_author?: string | null;
+  date_issued?: string | null;
   // Sharing fields
   share_token?: string | null;
   is_shared?: boolean;

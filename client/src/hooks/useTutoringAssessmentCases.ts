@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { AssessmentCase } from '@/types/assessmentCase';
 import { apiClient } from '@/lib/apiClient';
 
 export const useTutoringAssessmentCases = () => {
   const [assessmentCases, setAssessmentCases] = useState<AssessmentCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitiallyLoaded = useRef(false);
 
   console.log('=== useTutoringAssessmentCases Hook State ===');
   console.log('Total Tutoring cases:', assessmentCases.length);
@@ -14,7 +15,10 @@ export const useTutoringAssessmentCases = () => {
   // Load Tutoring cases via API client
   const loadCases = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // Only show loading state on initial load, not on refreshes
+      if (!hasInitiallyLoaded.current) {
+        setIsLoading(true);
+      }
       console.log('Loading assessment cases via API client...');
       const tutoringCases = await apiClient.getAssessmentCases('tutoring');
       console.log('Loaded', tutoringCases.length, 'cases from API client');
@@ -26,6 +30,7 @@ export const useTutoringAssessmentCases = () => {
         hasAnalysis: !!c.analysis_result 
       })));
       setAssessmentCases(tutoringCases);
+      hasInitiallyLoaded.current = true;
     } catch (error) {
       console.error('Failed to load Tutoring cases via API:', error);
       setAssessmentCases([]);

@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
 import { DocumentFile } from "@/types/assessment";
 import DocumentUpload from './DocumentUpload';
 import { GradeSelection } from './GradeSelection';
-import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { DeidentificationHeroCard } from './DeidentificationHeroCard';
+import { Loader2, FileText, Eye, Zap, GraduationCap, User } from 'lucide-react';
+import { ProgressSidebar } from './shared/ProgressSidebar';
+import ThriveLogo from "@assets/isotype Y-NB_1754494460165.png";
 
 interface UnifiedAssessmentFormProps {
   moduleType: 'k12' | 'post_secondary';
@@ -22,7 +26,10 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('assessment-info');
+  const [activeDocumentSubSection, setActiveDocumentSubSection] = useState<'deidentification' | 'upload'>('deidentification');
   
   const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [documentFiles, setDocumentFiles] = useState<FileList | null>(null);
@@ -32,8 +39,14 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   const [uniqueIdError, setUniqueIdError] = useState<string>('');
   const [reportAuthor, setReportAuthor] = useState<string>('');
   const [reportAuthorError, setReportAuthorError] = useState<string>('');
+  const [uploadConfirmed, setUploadConfirmed] = useState<boolean>(false);
 
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  // Reset upload confirmation when documents are added or removed
+  React.useEffect(() => {
+    setUploadConfirmed(false);
+  }, [documents.length]);
 
   const clearAllFileInputs = () => {
     console.log('=== Clearing all file inputs after processing ===');
@@ -47,8 +60,108 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
     console.log('✅ File inputs and document state cleared');
   };
 
+  const handleNextSection = () => {
+    if (activeSection === 'assessment-info') {
+      // Validate assessment info before moving to documents
+      if (!uniqueId.trim()) {
+        setUniqueIdError('Please enter the student\'s unique ID');
+        toast({
+          title: "Unique ID Required",
+          description: "Please enter the student's unique ID before proceeding.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!reportAuthor.trim()) {
+        setReportAuthorError('Please enter the report author');
+        toast({
+          title: "Report Author Required",
+          description: "Please enter who is creating this report.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (moduleType === 'k12' && !selectedGrade) {
+        setGradeError('Please select a grade level for K-12 assessment');
+        toast({
+          title: "Grade Required",
+          description: "Please select the student's grade level before proceeding.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Clear errors and move to next section
+      setUniqueIdError('');
+      setReportAuthorError('');
+      setGradeError('');
+      // Reset to first sub-section when entering document section
+      setActiveDocumentSubSection('deidentification');
+      setActiveSection('document-upload');
+    } else if (activeSection === 'document-upload') {
+      // This will trigger the final submission
+      handleSubmit();
+    }
+  };
+
+  const handlePreviousSection = () => {
+    if (activeSection === 'document-upload') {
+      // Reset to first sub-section when re-entering document section
+      setActiveDocumentSubSection('deidentification');
+      setActiveSection('assessment-info');
+    }
+  };
+
+  const handleSectionClick = (sectionId: string) => {
+    // Validate whenever entering document-upload section
+    if (sectionId === 'document-upload') {
+      // Validate assessment info before allowing navigation to documents
+      if (!uniqueId.trim()) {
+        setUniqueIdError('Please enter the student\'s unique ID');
+        toast({
+          title: "Unique ID Required",
+          description: "Please enter the student's unique ID before proceeding.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!reportAuthor.trim()) {
+        setReportAuthorError('Please enter the report author');
+        toast({
+          title: "Report Author Required",
+          description: "Please enter who is creating this report.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (moduleType === 'k12' && !selectedGrade) {
+        setGradeError('Please select a grade level for K-12 assessment');
+        toast({
+          title: "Grade Required",
+          description: "Please select the student's grade level before proceeding.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Clear errors
+      setUniqueIdError('');
+      setReportAuthorError('');
+      setGradeError('');
+      // Reset to first sub-section when entering document section
+      setActiveDocumentSubSection('deidentification');
+    }
+
+    // Set active section (backward navigation allowed without validation)
+    setActiveSection(sectionId);
+  };
+
   const handleSubmit = async () => {
-    console.log(`=== Preparing ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment for Review ===`);
+    console.log(`=== Starting ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment Analysis ===`);
 
     // Validate unique ID
     if (!uniqueId.trim()) {
@@ -98,114 +211,349 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       return;
     }
 
-    // Convert FileList to array for serialization
-    const filesArray = Array.from(documentFiles);
-    
-    // Navigate to review page with all assessment data
-    console.log('Navigating to review page with documents:', documents.length);
-    navigate('/review-documents', {
-      state: {
-        moduleType,
-        pathway,
-        uniqueId: uniqueId.trim(),
-        reportAuthor: reportAuthor.trim(),
-        selectedGrade,
-        documents,
-        filesArray
+    // Check for finalized documents
+    const finalizedDocuments = documents.filter(doc => doc.finalized === true);
+    if (finalizedDocuments.length === 0) {
+      toast({
+        title: "No Finalized Documents",
+        description: "Please finalize at least one document in the PI Redactor before proceeding.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      console.log('Finalized documents count:', finalizedDocuments.length);
+
+      // Extract text from finalized files only
+      const filesArray = Array.from(documentFiles);
+      const extractedDocs = [];
+      for (let i = 0; i < filesArray.length; i++) {
+        const file = filesArray[i];
+        
+        const isFinalized = file.name.includes('_FINALIZED_');
+        if (!isFinalized) {
+          console.log(`Skipping non-finalized file: ${file.name}`);
+          continue;
+        }
+
+        console.log(`Extracting text from finalized file: ${file.name}...`);
+        
+        const { documentProcessor } = await import('@/services/document/documentProcessor');
+        const text = await documentProcessor.extractTextFromFile(file);
+        extractedDocs.push({
+          filename: file.name,
+          content: text
+        });
       }
-    });
+
+      if (extractedDocs.length === 0) {
+        toast({
+          title: "No Documents to Process",
+          description: "No finalized documents were found to analyze.",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      const caseId = crypto.randomUUID();
+
+      toast({
+        title: "Processing Started",
+        description: `${moduleType.toUpperCase()} AI analysis using ${pathway} pathway is running. This may take a few minutes...`
+      });
+      
+      console.log(`Starting ${moduleType} AI processing using ${pathway} pathway...`);
+
+      const environment = localStorage.getItem('app-environment') || 'replit-prod';
+      const isDemoEnvironment = environment.includes('demo');
+      const endpoint = isDemoEnvironment ? '/api/demo-analyze-assessment' : '/api/analyze-assessment';
+      
+      console.log(`Using endpoint: ${endpoint} (environment: ${environment}, isDemo: ${isDemoEnvironment})`);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Environment': environment
+        },
+        body: JSON.stringify({
+          caseId,
+          documents: extractedDocs,
+          moduleType,
+          pathway,
+          uniqueId: uniqueId.trim(),
+          reportAuthor: reportAuthor.trim(),
+          studentGrade: selectedGrade,
+          environment
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || `${moduleType.toUpperCase()} analysis failed`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ ${moduleType.toUpperCase()} ${pathway} analysis completed:`, result);
+      
+      toast({
+        title: "Analysis Completed",
+        description: `Documents have been processed. Redirecting to your ${moduleType.toUpperCase()} report...`
+      });
+      
+      const reportsPath = moduleType === 'k12' ? '/k12-reports' : '/post-secondary-reports';
+      console.log(`Navigating to ${reportsPath}...`);
+      navigate(reportsPath);
+      
+    } catch (error) {
+      console.error(`${moduleType.toUpperCase()} ${pathway} Assessment analysis failed:`, error);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred during analysis.",
+        variant: "destructive"
+      });
+      setIsProcessing(false);
+    }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
-          {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
-        </h1>
-      </div>
+  // THRIVE brand colors
+  const brandColors = {
+    navyBlue: '#1297D2',
+    skyBlue: '#96D7E1',
+    orange: '#F89E54',
+    yellow: '#FDE677',
+  };
 
-      {/* Assessment Information */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h3 className="text-lg font-semibold">Assessment Information</h3>
-        
-        <div className="space-y-2">
-          <Label htmlFor="uniqueId">Unique ID *</Label>
-          <Input
-            id="uniqueId"
-            type="text"
-            placeholder="e.g., STU-2025-001, CASE-12345, or any custom code"
-            value={uniqueId}
-            onChange={(e) => setUniqueId(e.target.value)}
-            className={uniqueIdError ? 'border-red-500' : ''}
-            data-testid="input-unique-id"
-          />
-          <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-amber-800 dark:text-amber-200">
-              <strong className="font-semibold">Privacy Notice:</strong> Do NOT use real names or personally identifiable information. 
-              Create your own unique identifier (e.g., STU-2025-001, CASE-12345, Student-A).
+  // Define progress sections
+  const progressSections = [
+    {
+      id: 'assessment-info',
+      label: 'Assessment Info',
+      icon: GraduationCap,
+      status: 'pending' as const,
+      iconColor: brandColors.orange
+    },
+    {
+      id: 'document-upload',
+      label: 'Document Upload',
+      icon: FileText,
+      status: 'pending' as const,
+      iconColor: brandColors.navyBlue
+    }
+  ];
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Progress Sidebar */}
+      <ProgressSidebar 
+        steps={progressSections} 
+        activeSection={activeSection}
+        onSectionClick={handleSectionClick}
+      />
+      {/* Main Content Area */}
+      <div className="flex-1 ml-64">
+        {/* Blue Header Banner */}
+        <div 
+          className="py-8 px-8 flex items-center justify-between"
+          style={{
+            background: `linear-gradient(135deg, ${brandColors.navyBlue} 0%, ${brandColors.skyBlue} 100%)`
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <img 
+              src={ThriveLogo}
+              alt="THRIVE"
+              className="h-12 w-auto"
+            />
+            <h1 className="text-3xl font-bold text-white">
+              {moduleType === 'k12' ? 'K-12' : 'Post-Secondary'} Assessment
+            </h1>
+          </div>
+          {user && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg backdrop-blur-sm" data-testid="user-indicator">
+              <User className="h-5 w-5 text-white" />
+              <span className="text-white font-medium" data-testid="text-username">{user.username || 'User'}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Assessment Information Section */}
+        {activeSection === 'assessment-info' && (
+          <div 
+            className="min-h-screen p-8"
+            style={{
+              background: 'linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1))'
+            }}
+          >
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
+                <h2 className="text-3xl font-bold text-gray-800 mb-8">
+                  {moduleType === 'k12' ? 'Student' : 'Student'} Information & Report Details
+                </h2>
+
+                <div className="space-y-8">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <Label htmlFor="uniqueId" className="text-base font-semibold text-gray-700">Unique ID *</Label>
+                      <Input
+                        id="uniqueId"
+                        type="text"
+                        placeholder="e.g., STU-2025-001, CZ, or any custom code"
+                        value={uniqueId}
+                        onChange={(e) => setUniqueId(e.target.value)}
+                        className={`h-12 ${uniqueIdError ? 'border-red-500' : ''}`}
+                        data-testid="input-unique-id"
+                      />
+                      {uniqueIdError && <p className="text-sm text-red-500">{uniqueIdError}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="reportAuthor" className="text-base font-semibold text-gray-700">Report Author *</Label>
+                      <Input
+                        id="reportAuthor"
+                        type="text"
+                        placeholder="Enter who is creating this report"
+                        value={reportAuthor}
+                        onChange={(e) => setReportAuthor(e.target.value)}
+                        className={`h-12 ${reportAuthorError ? 'border-red-500' : ''}`}
+                        data-testid="input-report-author"
+                      />
+                      {reportAuthorError && <p className="text-sm text-red-500">{reportAuthorError}</p>}
+                    </div>
+                  </div>
+
+                  {moduleType === 'k12' && (
+                    <div className="space-y-2">
+                      <Label className="text-base font-semibold text-gray-700">Grade Level *</Label>
+                      <GradeSelection
+                        selectedGrade={selectedGrade}
+                        onGradeChange={setSelectedGrade}
+                        error={gradeError}
+                      />
+                      {gradeError && <p className="text-sm text-red-500">{gradeError}</p>}
+                    </div>
+                  )}
+                </div>
+
+                {/* Next Section Button */}
+                <div className="mt-10 flex justify-end">
+                  <Button
+                    onClick={handleNextSection}
+                    size="lg"
+                    className="px-8 h-12 text-base font-semibold"
+                    style={{
+                      backgroundColor: brandColors.skyBlue,
+                      color: '#1e40af'
+                    }}
+                    data-testid="button-next-section"
+                  >
+                    Next Section →
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-          {uniqueIdError && <p className="text-sm text-red-500">{uniqueIdError}</p>}
-        </div>
+        )}
 
-        <div className="space-y-2">
-          <Label htmlFor="reportAuthor">Report Author *</Label>
-          <Input
-            id="reportAuthor"
-            type="text"
-            placeholder="Enter who is creating this report"
-            value={reportAuthor}
-            onChange={(e) => setReportAuthor(e.target.value)}
-            className={reportAuthorError ? 'border-red-500' : ''}
-            data-testid="input-report-author"
-          />
-          {reportAuthorError && <p className="text-sm text-red-500">{reportAuthorError}</p>}
-        </div>
+        {/* Document Upload Section */}
+        {activeSection === 'document-upload' && (
+          <div 
+            className="min-h-screen p-8"
+            style={{
+              background: 'linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1))'
+            }}
+          >
+            <div className="max-w-4xl mx-auto">
+              {/* De-identification Sub-section */}
+              {activeDocumentSubSection === 'deidentification' && (
+                <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-8">Document De-identification</h2>
+                  
+                  <DeidentificationHeroCard />
+                  
+                  {/* Navigation Buttons */}
+                  <div className="mt-10 flex justify-between">
+                    <Button
+                      onClick={handlePreviousSection}
+                      variant="outline"
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold"
+                      data-testid="button-previous-from-deidentification"
+                    >
+                      ← Previous
+                    </Button>
 
+                    <Button
+                      onClick={() => setActiveDocumentSubSection('upload')}
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold"
+                      style={{
+                        backgroundColor: brandColors.skyBlue,
+                        color: '#1e40af'
+                      }}
+                      data-testid="button-next-to-upload"
+                    >
+                      Next Section →
+                    </Button>
+                  </div>
+                </div>
+              )}
 
-        {moduleType === 'k12' && (
-          <div className="space-y-2">
-            <Label>Grade Level *</Label>
-            <GradeSelection
-              selectedGrade={selectedGrade}
-              onGradeChange={setSelectedGrade}
-              error={gradeError}
-            />
-            {gradeError && <p className="text-sm text-red-500">{gradeError}</p>}
+              {/* Document Upload Sub-section */}
+              {activeDocumentSubSection === 'upload' && (
+                <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-8">Documents Upload</h2>
+
+                  <DocumentUpload
+                    documents={documents}
+                    setDocuments={setDocuments}
+                    onFilesChange={setDocumentFiles}
+                    fileInputRefs={fileInputRefs}
+                    uploadConfirmed={uploadConfirmed}
+                    onUploadConfirmedChange={setUploadConfirmed}
+                  />
+
+                  {/* Navigation Buttons */}
+                  <div className="mt-10 flex justify-between">
+                    <Button
+                      onClick={() => setActiveDocumentSubSection('deidentification')}
+                      variant="outline"
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold"
+                      data-testid="button-back-to-deidentification"
+                    >
+                      ← Previous
+                    </Button>
+
+                    <Button
+                      onClick={handleNextSection}
+                      disabled={isProcessing || !uploadConfirmed}
+                      size="lg"
+                      className="px-8 h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: brandColors.skyBlue,
+                        color: '#1e40af'
+                      }}
+                      data-testid="button-start-analysis"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Start Analysis →'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </div>
-
-      {/* Document Upload */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h3 className="text-lg font-semibold">Document Upload</h3>
-        <DocumentUpload
-          documents={documents}
-          setDocuments={setDocuments}
-          onFilesChange={setDocumentFiles}
-          fileInputRefs={fileInputRefs}
-        />
-      </div>
-
-      {/* Submit Button */}
-      <div className="pt-4">
-        <Button
-          onClick={handleSubmit}
-          disabled={isProcessing}
-          className="w-full"
-          size="lg"
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing {pathway.charAt(0).toUpperCase() + pathway.slice(1)} Analysis...
-            </>
-          ) : (
-            `Start ${pathway.charAt(0).toUpperCase() + pathway.slice(1)} Analysis`
-          )}
-        </Button>
       </div>
     </div>
   );

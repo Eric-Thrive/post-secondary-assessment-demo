@@ -112,7 +112,7 @@ export interface IStorage {
   resetUserPassword(token: string, newPassword: string): Promise<boolean>;
   
   // Assessment Cases
-  getAssessmentCases(moduleType: string, customerId?: string): Promise<any[]>;
+  getAssessmentCases(moduleType: string, customerId?: string, userId?: number): Promise<any[]>;
   getAssessmentCase(id: string): Promise<any>;
   createAssessmentCase(assessmentCase: any): Promise<any>;
   updateAssessmentCase(id: string, data: any): Promise<any>;
@@ -212,8 +212,12 @@ export class MemStorage implements IStorage {
 
   async getUserByResetToken(token: string): Promise<User | undefined> {
     const now = new Date();
+    // Hash the incoming token to match what's stored in the database
+    const { hashResetToken } = await import('./auth');
+    const hashedToken = hashResetToken(token);
+    
     return Array.from(this.users.values()).find(
-      (user) => user.resetToken === token && 
+      (user) => user.resetToken === hashedToken && 
                 user.resetTokenExpiry && 
                 user.resetTokenExpiry > now
     );
@@ -223,9 +227,13 @@ export class MemStorage implements IStorage {
     const user = await this.getUserByResetToken(token);
     if (!user) return false;
     
+    // Hash password before storing
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    
     const updatedUser = { 
       ...user, 
-      password: newPassword, // Note: This should be hashed in real implementation
+      password: hashedPassword,
       resetToken: null, 
       resetTokenExpiry: null 
     };
@@ -256,7 +264,7 @@ export class MemStorage implements IStorage {
   }
 
   // Stub implementations for other methods
-  async getAssessmentCases(moduleType: string, customerId?: string): Promise<any[]> { return []; }
+  async getAssessmentCases(moduleType: string, customerId?: string, userId?: number): Promise<any[]> { return []; }
   async getAssessmentCase(): Promise<any> { return undefined; }
   async createAssessmentCase(): Promise<any> { throw new Error('Not implemented'); }
   async updateAssessmentCase(): Promise<any> { throw new Error('Not implemented'); }
@@ -397,10 +405,14 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByResetToken(token: string): Promise<User | undefined> {
     const now = new Date();
+    // Hash the incoming token to match what's stored in the database
+    const { hashResetToken } = await import('./auth');
+    const hashedToken = hashResetToken(token);
+    
     const result = await db
       .select()
       .from(users)
-      .where(eq(users.resetToken, token));
+      .where(eq(users.resetToken, hashedToken));
     
     const [user] = result;
     
@@ -417,14 +429,20 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUserByResetToken(token);
       if (!user) return false;
 
+      // Import bcrypt for password hashing and auth utilities
+      const bcrypt = await import('bcryptjs');
+      const { hashResetToken } = await import('./auth');
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      const hashedToken = hashResetToken(token);
+
       const result = await db
         .update(users)
         .set({
-          password: newPassword, // Note: Should be hashed
+          password: hashedPassword,
           resetToken: null,
           resetTokenExpiry: null,
         })
-        .where(eq(users.resetToken, token))
+        .where(eq(users.resetToken, hashedToken))
         .returning();
       
       return result.length > 0;
@@ -442,10 +460,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // For now, delegate complex queries to the existing raw SQL implementation
-  async getAssessmentCases(moduleType: string, customerId?: string): Promise<any[]> {
+  async getAssessmentCases(moduleType: string, customerId?: string, userId?: number): Promise<any[]> {
     console.log(`\n🔍 DatabaseStorage.getAssessmentCases called`);
     console.log(`📋 Module Type Requested: "${moduleType}"`);
     console.log(`👤 Customer ID Filter: "${customerId || 'NONE - ADMIN MODE'}"`);
+    console.log(`🧑 User ID Filter: "${userId || 'NONE - ALL USERS'}"`);
     console.log(`🗄️  Database URL: ${process.env.DATABASE_URL?.substring(0, 50)}...`);
     
     // First, let's check ALL cases in the database to debug
@@ -463,15 +482,21 @@ export class DatabaseStorage implements IStorage {
     // Now check specifically for the requested module type
     try {
       let checkQuery = `SELECT COUNT(*) as total, COUNT(CASE WHEN report_data IS NOT NULL THEN 1 END) as with_report FROM assessment_cases WHERE module_type = $1 AND status = 'completed'`;
-      const checkParams = [moduleType];
+      const checkParams: any[] = [moduleType];
+      let paramCount = 1;
       
       if (customerId) {
-        checkQuery += ` AND customer_id = $2`;
+        checkQuery += ` AND customer_id = $${++paramCount}`;
         checkParams.push(customerId);
       }
       
+      if (userId) {
+        checkQuery += ` AND created_by_user_id = $${++paramCount}`;
+        checkParams.push(userId);
+      }
+      
       const checkResult = await pool.query(checkQuery, checkParams);
-      console.log(`\n✅ Specific check for "${moduleType}" module${customerId ? ` (customer: ${customerId})` : ''}:`);
+      console.log(`\n✅ Specific check for "${moduleType}" module${customerId ? ` (customer: ${customerId})` : ''}${userId ? ` (user: ${userId})` : ''}:`);
       console.log(`   - Total completed: ${checkResult.rows[0].total}`);
       console.log(`   - With report_data: ${checkResult.rows[0].with_report}`);
     } catch (e) {
@@ -479,20 +504,27 @@ export class DatabaseStorage implements IStorage {
     }
     
     let query = `SELECT * FROM assessment_cases WHERE module_type = $1 AND status = 'completed' AND report_data IS NOT NULL`;
-    const params = [moduleType];
+    const params: any[] = [moduleType];
+    let paramCount = 1;
     
     // Add customer filter if provided
     if (customerId) {
-      query += ` AND customer_id = $2`;
+      query += ` AND customer_id = $${++paramCount}`;
       params.push(customerId);
     }
     
+    // Add user filter if provided (for user isolation in demo mode)
+    if (userId) {
+      query += ` AND created_by_user_id = $${++paramCount}`;
+      params.push(userId);
+    }
+    
     query += ` ORDER BY created_date DESC`;
-    console.log(`\n🔎 Executing query for "${moduleType}"${customerId ? ` with customer filter "${customerId}"` : ''}...`);
+    console.log(`\n🔎 Executing query for "${moduleType}"${customerId ? ` with customer filter "${customerId}"` : ''}${userId ? ` with user filter "${userId}"` : ''}...`);
     
     try {
       const result = await pool.query(query, params);
-      console.log(`✅ Query returned ${result.rows.length} rows for "${moduleType}"${customerId ? ` and customer "${customerId}"` : ''}`);
+      console.log(`✅ Query returned ${result.rows.length} rows for "${moduleType}"${customerId ? ` and customer "${customerId}"` : ''}${userId ? ` and user "${userId}"` : ''}`);
       
       if (result.rows.length > 0) {
         console.log(`📄 First case ID: ${result.rows[0].id}`);

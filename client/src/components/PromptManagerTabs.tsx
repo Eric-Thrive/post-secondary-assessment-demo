@@ -100,9 +100,9 @@ const PromptManagerTabs: React.FC = () => {
           {barrierLoading ? (
             <div>Loading barrier glossary...</div>
           ) : (
-            barrierGlossary?.filter((glossary): glossary is import('@/types/promptService').BarrierGlossary => 'id' in glossary).map((glossary) => (
-              <BarrierGlossaryCard
-                key={glossary.id}
+            barrierGlossary?.map((glossary) => (
+              <BarrierGlossaryCard 
+                key={glossary.id} 
                 glossary={glossary}
                 onSave={handleSaveBarrierGlossary}
                 onDelete={handleDeleteBarrierGlossary}
@@ -118,9 +118,9 @@ const PromptManagerTabs: React.FC = () => {
           {triggersLoading ? (
             <div>Loading inference triggers...</div>
           ) : (
-            inferenceTriggers?.filter((trigger): trigger is import('@/types/promptService').InferenceTrigger => 'id' in trigger).map((trigger) => (
-              <InferenceTriggersCard
-                key={trigger.id}
+            inferenceTriggers?.map((trigger) => (
+              <InferenceTriggersCard 
+                key={trigger.id} 
                 trigger={trigger}
                 onSave={handleSaveInferenceTrigger}
                 onDelete={handleDeleteInferenceTrigger}

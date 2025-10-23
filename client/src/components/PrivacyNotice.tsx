@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, ExternalLink, Shield } from "lucide-react";
+import { ExternalLink, Info } from "lucide-react";
 
 interface PrivacyNoticeProps {
   onOpenRedactor: () => void;
@@ -9,52 +8,38 @@ interface PrivacyNoticeProps {
 const PrivacyNotice = ({ onOpenRedactor }: PrivacyNoticeProps) => {
   const redactorUrl = import.meta.env.VITE_PI_REDACTOR_URL;
 
+  if (!redactorUrl) return null;
+
   return (
-    <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-          <Shield className="h-5 w-5" />
-          Document De-identification
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-start gap-2 text-sm text-blue-800 dark:text-blue-200">
-          <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold mb-2">HIPAA & FERPA Compliance</p>
-            <p className="mb-2">
-              All documents must be de-identified before uploading to remove any personally 
-              identifiable information (PII) including names, dates of birth, addresses, 
-              social security numbers, and other protected health information.
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+      <p className="text-base font-medium mb-4 text-gray-900 dark:text-gray-100">Click the blue button below to get started</p>
+      <div className="max-w-md mx-auto w-full">
+        <Button
+          onClick={onOpenRedactor}
+          className="w-full justify-between text-xl py-3 bg-[#1297D2] hover:bg-[#0F7DB0] text-white font-bold shadow-md rounded-lg focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
+          data-testid="button-remove-personal-info"
+        >
+          <span className="flex items-center gap-2">
+            Remove Personal Info
+          </span>
+          <ExternalLink className="h-6 w-6" />
+        </Button>
+      </div>
+      {/* Privacy & Security Note */}
+      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-md">
+        <div className="flex gap-3">
+          <Info className="h-5 w-5 text-gray-500 dark:text-gray-400 mt-0.5 flex-shrink-0" />
+          <div className="space-y-2">
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              <span className="font-medium">Complete Privacy:</span> The redactor operates entirely in your browser—no documents leave your device until redacted.
+            </p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              <span className="font-medium">Easy Workflow:</span> Redacted files automatically upload when complete. For multiple documents, simply repeat the process for each one.
             </p>
           </div>
         </div>
-
-        {redactorUrl && (
-          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p className="text-sm font-medium mb-3 text-gray-900 dark:text-gray-100">
-              Use our secure redactor tool to remove PI from your documents:
-            </p>
-            <Button
-              onClick={onOpenRedactor}
-              variant="outline"
-              className="w-full justify-between border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
-              data-testid="button-open-redactor"
-            >
-              <span className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Open PI Redactor Tool
-              </span>
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              The redactor runs entirely in your browser - no data is sent to external servers. 
-              Redacted files will automatically upload when you're done.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

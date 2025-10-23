@@ -1,11 +1,12 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { AssessmentCase } from '@/types/assessmentCase';
 import { apiClient } from '@/lib/apiClient';
 
 export const useK12AssessmentCases = () => {
   const [assessmentCases, setAssessmentCases] = useState<AssessmentCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitiallyLoaded = useRef(false);
 
   console.log('=== useK12AssessmentCases Hook State ===');
   console.log('Total K-12 cases:', assessmentCases.length);
@@ -15,7 +16,10 @@ export const useK12AssessmentCases = () => {
   // Load K-12 cases via API client
   const loadCases = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // Only show loading state on initial load, not on refreshes
+      if (!hasInitiallyLoaded.current) {
+        setIsLoading(true);
+      }
       console.log('Loading assessment cases via API client...');
       const k12Cases = await apiClient.getAssessmentCases('k12');
       console.log('Loaded', k12Cases.length, 'cases from API client');
@@ -27,6 +31,7 @@ export const useK12AssessmentCases = () => {
         hasAnalysis: !!c.analysis_result 
       })));
       setAssessmentCases(k12Cases);
+      hasInitiallyLoaded.current = true;
     } catch (error) {
       console.error('Failed to load K-12 cases via API:', error);
       setAssessmentCases([]);
