@@ -382,11 +382,66 @@ npm update
 - **Version control**: Report finalization with history
 
 ## Performance Considerations
+
+### Long-Running Operations
 - OpenAI API calls can be long-running (30s-2min for full reports)
 - Consider implementing job queue for async processing (Bull, BullMQ)
 - PDF processing in browser reduces server load
 - Use connection pooling for PostgreSQL
 - Implement caching for lookup tables and static data
+
+### Caching & Performance Optimizations (Oct 2025)
+
+**Browser Caching Strategy**
+- HTML files: `no-cache` headers (always fresh)
+- JS/CSS assets: 1-day cache with ETags for smart validation
+- Static assets: Optimized with proper cache headers
+- Prevents stale content issues during development
+
+**Code Splitting**
+- React vendor bundle: ~350KB (React, React DOM, React Router)
+- UI vendor bundle: ~112KB (Radix UI components)
+- Query vendor bundle: React Query separate
+- Markdown vendor bundle: react-markdown + remark-gfm separate
+- Main app bundle: Smaller, faster initial load
+
+**Build Optimizations**
+- esbuild minification for fastest builds
+- ES2020 target for modern browsers
+- Optimized dependency pre-bundling
+- Removed Replit-specific scripts (banner, etc.)
+
+**Development Server**
+- Cache-busting query parameters on HTML
+- Proper cache control headers on all responses
+- Hot Module Replacement (HMR) for fast iteration
+
+### Performance Troubleshooting
+
+**Slow Loading Without Cache Clear?**
+See [PERFORMANCE_TIPS.md](PERFORMANCE_TIPS.md) for:
+- Hard refresh shortcuts (Cmd+Shift+R / Ctrl+Shift+R)
+- Browser cache clearing methods
+- Environment reset procedures
+- Server management commands
+
+**Kill Multiple Dev Servers**
+```bash
+# Kill all processes on port 5001
+lsof -ti:5001 | xargs kill -9
+
+# Clean restart sequence
+lsof -ti:5001 | xargs kill -9
+sleep 2
+unset APP_ENVIRONMENT
+npm run dev
+```
+
+**Common Issues**
+- Multiple server instances causing port conflicts
+- Stale localStorage causing wrong environment
+- Shell environment variables overriding .env
+- Browser cache showing old version
 
 # Support & Documentation
 
