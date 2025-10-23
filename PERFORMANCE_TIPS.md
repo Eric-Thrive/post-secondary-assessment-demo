@@ -116,8 +116,21 @@ npm run dev
 # Check if server is running on port 5001
 lsof -ti:5001
 
-# Kill process on port 5001
+# Kill ALL processes on port 5001
 lsof -ti:5001 | xargs kill -9
+
+# Verify port is clear
+lsof -ti:5001
+# (should return nothing if port is free)
+```
+
+### Clean Restart (Recommended)
+```bash
+# Complete clean restart sequence
+lsof -ti:5001 | xargs kill -9   # Kill old servers
+sleep 2                          # Wait for port release
+unset APP_ENVIRONMENT            # Clear shell variable
+npm run dev                      # Start fresh
 ```
 
 ---
