@@ -121,6 +121,7 @@ export function getDatabaseConnectionInfo(): {
   environment: string;
   appEnvironment: string;
   isDemoEnvironment: boolean;
+  isDemo: boolean; // Alias for compatibility
 } {
   const nodeEnv = process.env.NODE_ENV || 'production';
   const appEnv = process.env.APP_ENVIRONMENT || 'production';
@@ -131,6 +132,7 @@ export function getDatabaseConnectionInfo(): {
     description: `Shared database for all environments`,
     environment: nodeEnv,
     appEnvironment: appEnv,
-    isDemoEnvironment: isDemo
+    isDemoEnvironment: isDemo,
+    isDemo: isDemo // Add alias for backwards compatibility
   };
 }

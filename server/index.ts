@@ -1,10 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { requestTimeout, setupGracefulShutdown, healthCheck } from "./reliability-improvements";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Add request timeout for non-AI routes (30 second timeout)
+app.use(requestTimeout(30000));
+
+// Add health check endpoint
+app.get('/health', healthCheck);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -65,7 +72,15 @@ app.use((req, res, next) => {
   const isLocal = process.env.APP_ENVIRONMENT === 'local';
   const host = isLocal ? '127.0.0.1' : '0.0.0.0';
 
+  // Configure server timeouts for reliability
+  server.timeout = 180000; // 3 minutes for AI operations
+  server.keepAliveTimeout = 65000; // Slightly longer than ALB timeout
+  server.headersTimeout = 66000; // Slightly longer than keepAliveTimeout
+
   server.listen(port, host, () => {
     log(`serving on port ${port}`);
   });
+
+  // Setup graceful shutdown handlers
+  setupGracefulShutdown(server);
 })();

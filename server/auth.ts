@@ -3,7 +3,7 @@ import connectPg from 'connect-pg-simple';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
-import { db } from './db';
+import { db, pool } from './db';
 import { users } from '@shared/schema';
 import { eq, sql } from 'drizzle-orm';
 
@@ -28,17 +28,21 @@ const PgSession = connectPg(session);
 
 export const sessionConfig = session({
   store: new PgSession({
-    conString: process.env.DATABASE_URL,
+    pool: pool, // Reuse existing pool instead of creating new connections
     tableName: 'sessions',
     createTableIfMissing: false, // We already created the table
+    pruneSessionInterval: 60, // Clean up old sessions every 60 seconds
+    ttl: 7 * 24 * 60 * 60, // 7 days in seconds
   }),
   secret: process.env.SESSION_SECRET || 'default-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Reset session expiration on activity
   cookie: {
-    secure: false, // Set to true in production with HTTPS
+    secure: process.env.NODE_ENV === 'production', // Enable in production with HTTPS
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: 'lax', // CSRF protection
   },
 });
 

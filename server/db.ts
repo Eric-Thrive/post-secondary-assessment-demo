@@ -27,11 +27,15 @@ console.log(`   Demo Environment: ${isDemo}`);
 // Create pool configuration with read-only enforcement for demo environments
 const poolConfig = {
   connectionString: databaseUrl,
-  max: 10,
+  max: 20, // Increased from 10 for better concurrency
+  min: 2, // Keep minimum connections alive
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-  statement_timeout: 30000,
-  query_timeout: 30000,
+  connectionTimeoutMillis: 5000, // Reduced from 10000 for faster failures
+  statement_timeout: 60000, // Increased from 30000 for AI operations
+  query_timeout: 60000,
+  // Add connection lifecycle management
+  maxUses: 7500, // Recycle connections periodically
+  allowExitOnIdle: true, // Allow process to exit cleanly
 };
 
 // Use standard PostgreSQL pool
@@ -114,11 +118,15 @@ export function reinitializeDatabase() {
   // Create new pool configuration
   const newPoolConfig = {
     connectionString: newDatabaseUrl,
-    max: 10,
+    max: 20, // Increased from 10 for better concurrency
+    min: 2, // Keep minimum connections alive
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-    statement_timeout: 30000,
-    query_timeout: 30000,
+    connectionTimeoutMillis: 5000, // Reduced from 10000 for faster failures
+    statement_timeout: 60000, // Increased from 30000 for AI operations
+    query_timeout: 60000,
+    // Add connection lifecycle management
+    maxUses: 7500, // Recycle connections periodically
+    allowExitOnIdle: true, // Allow process to exit cleanly
   };
   
   // Create new pool with updated database URL

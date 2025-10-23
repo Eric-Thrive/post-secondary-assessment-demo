@@ -4,7 +4,9 @@ import thriveLogo from "@assets/primary logo NB-W png_1752592774951.png";
 
 export const SplashScreen = () => {
   const { currentEnvironment } = useEnvironment();
-  
+
+  console.log('🎨 SplashScreen rendered at:', new Date().toLocaleTimeString());
+
   const isDemoMode = currentEnvironment === 'post-secondary-demo' || currentEnvironment === 'k12-demo';
   const isK12Demo = currentEnvironment === 'k12-demo';
 
@@ -26,7 +28,7 @@ export const SplashScreen = () => {
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Call to Action */}
           <div className="mt-12">
-            <p className="text-white/70 text-sm">
+            <p className="text-yellow-400 text-sm">
               {isK12Demo 
                 ? 'Use the navigation menu above to explore our K-12 educational assessment capabilities'
                 : isDemoMode 

@@ -110,7 +110,7 @@
   {
     "key": "cmd+k cmd+p",
     "command": "simpleBrowser.show",
-    "args": "http://localhost:5000"
+    "args": "http://localhost:5001"
   },
   // Visual Development Shortcuts
   // Open color picker (Cmd+Shift+C when on a color)

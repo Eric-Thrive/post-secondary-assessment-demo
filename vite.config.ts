@@ -20,15 +20,39 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    sourcemap: false, // Disable in production for faster builds
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+        },
+      },
+    },
   },
   server: {
     port: 5173,
     strictPort: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
+        timeout: 180000, // 3 minutes for AI operations
       },
     },
+    // Performance optimizations
+    watch: {
+      usePolling: false, // Use native file watching (faster)
+      ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
+    },
+    hmr: {
+      overlay: true, // Show errors in browser overlay
+    },
+  },
+  // Add caching for faster rebuilds
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    exclude: ['@vite/client', '@vite/env'],
   },
 });

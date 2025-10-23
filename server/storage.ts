@@ -2,6 +2,10 @@ import { users, type User, type InsertUser, lookupTables, barrierGlossary } from
 import { db, pool } from './db';
 import { eq } from 'drizzle-orm';
 import { isReadOnlyEnvironment, isControlledAccessMode, isDemoEnvironment, getDatabaseConnectionInfo } from './config/database';
+import { createLogger } from './reliability-improvements';
+
+// Create conditional logger based on environment
+const logger = createLogger(process.env.NODE_ENV === 'development');
 
 /**
  * SECURITY: Demo operation validation functions
@@ -49,7 +53,7 @@ class DemoSecurityValidator {
     
     // Allow writes in controlled access mode for demo operations
     if (isDemoEnv && isControlledAccess) {
-      console.log(`🔒 CONTROLLED ACCESS: Storage write operation approved for demo environment`, {
+      logger.debug(`🔒 CONTROLLED ACCESS: Storage write operation approved for demo environment`, {
         operation,
         mode: 'controlled_access',
         timestamp: new Date().toISOString(),
@@ -63,7 +67,7 @@ class DemoSecurityValidator {
       const connInfo = getDatabaseConnectionInfo();
       throw new Error(
         `SECURITY VIOLATION: Write operation '${operation}' blocked in read-only environment. ` +
-        `Environment: ${connInfo.environment}, IsDemo: ${connInfo.isDemo}. ` +
+        `Environment: ${connInfo.environment}, IsDemo: ${connInfo.isDemoEnvironment}. ` +
         `Consider enabling controlled access mode for demo operations.`
       );
     }
@@ -692,46 +696,40 @@ export class DatabaseStorage implements IStorage {
     
     // Check if this is K-12 demo environment
     if (currentEnv === 'k12-demo' && moduleType === 'k12') {
-      console.log('🎯 K-12 Demo mode detected - using demo prompts');
-      
+      logger.debug('K-12 Demo mode detected - using demo prompts');
+
       // Fetch demo-specific templates
       let demoQuery = `SELECT * FROM prompt_sections WHERE module_type = $1 AND section_key LIKE '%_demo'`;
       const demoParams: any[] = [moduleType];
-      
+
       if (promptType) {
         demoQuery += ` AND prompt_type = $2`;
         demoParams.push(promptType);
       }
-      
+
       demoQuery += ` ORDER BY section_key`;
       const demoResult = await pool.query(demoQuery, demoParams);
-      
-      console.log(`Found ${demoResult.rows.length} K-12 demo templates`);
-      
+
+      logger.debug(`Found ${demoResult.rows.length} K-12 demo templates`);
+
       // Merge demo templates with regular templates, prioritizing demo versions
       const allTemplates = [...result.rows, ...demoResult.rows];
       const templateMap = new Map();
-      
+
       // Add regular templates first
       result.rows.forEach(template => {
         templateMap.set(template.section_key, template);
       });
-      
+
       // Override with demo templates where available
       demoResult.rows.forEach(template => {
         // Replace regular K-12 prompts with demo versions
         const baseKey = template.section_key.replace('_demo', '');
         templateMap.set(baseKey, template);
-        console.log(`🔄 Replacing ${baseKey} with demo version: ${template.section_key}`);
+        logger.debug(`Replacing ${baseKey} with demo version: ${template.section_key}`);
       });
-      
-      const finalTemplates = Array.from(templateMap.values());
-      console.log(`Returning ${finalTemplates.length} templates for K-12 demo`);
-      finalTemplates.forEach(t => {
-        console.log(`  - ${t.section_key} (${t.prompt_type})`);
-      });
-      
-      return finalTemplates;
+
+      return Array.from(templateMap.values());
     }
     
     return result.rows;
@@ -747,7 +745,7 @@ export class DatabaseStorage implements IStorage {
     if (currentEnv === 'post-secondary-demo' && sectionKey.includes('post_secondary') && !sectionKey.includes('_demo')) {
       // Redirect to demo-specific template
       const demoSectionKey = sectionKey.replace('post_secondary', 'post_secondary_demo');
-      console.log(`🎭 Demo environment detected, redirecting to demo template: ${demoSectionKey}`);
+      logger.debug(`Demo environment detected, redirecting to demo template: ${demoSectionKey}`);
       
       // Update the demo template instead
       let query = `UPDATE prompt_sections SET content = $2, last_updated = NOW()`;
@@ -962,18 +960,15 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    // Debug finalization process
-    console.log('🔍 DEBUG: Finalizing report for case:', {
+    logger.debug('Finalizing report for case', {
       caseId: currentCase.id || currentCase.case_id,
-      hasReportData: !!currentCase.report_data,
-      currentVersionFromDB: currentCase.report_data?.currentVersion,
-      existingFinalizedVersions: currentCase.report_data?.finalizedVersions?.length || 0
+      hasReportData: !!currentCase.report_data
     });
-    
+
     // Get current version info from report_data or default to version 1.0
     const currentVersion = currentCase.report_data?.currentVersion || '1.0';
     const finalizedVersions = currentCase.report_data?.finalizedVersions || [];
-    
+
     // Create new version entry - V2, V3, V4, etc.
     const versionNum = currentVersion === '1.0' ? 2 : parseInt(currentVersion.replace('V', '')) + 1;
     const newVersionNumber = `V${versionNum}`;
@@ -983,13 +978,12 @@ export class DatabaseStorage implements IStorage {
       timestamp: new Date().toISOString(),
       changes: changesSummary
     };
-    
-    console.log('🔍 DEBUG: Creating new version:', {
+
+    logger.debug('Creating new version', {
       oldVersion: currentVersion,
-      newVersion: newVersionNumber,
-      previousVersionsCount: finalizedVersions.length
+      newVersion: newVersionNumber
     });
-    
+
     // Update report_data with version tracking
     const updatedReportData = {
       ...currentCase.report_data,
@@ -998,13 +992,6 @@ export class DatabaseStorage implements IStorage {
       isFinalized: true,
       markdown_report: finalizedContent
     };
-    
-    console.log('🔍 DEBUG: Updated report data structure:', {
-      currentVersion: updatedReportData.currentVersion,
-      finalizedVersionsCount: updatedReportData.finalizedVersions.length,
-      isFinalized: updatedReportData.isFinalized,
-      finalizedVersionsPreview: updatedReportData.finalizedVersions.map((v: any) => ({ version: v.version, timestamp: v.timestamp }))
-    });
     
     const query = `UPDATE assessment_cases 
       SET report_data = $2, last_updated = NOW()
@@ -1016,29 +1003,17 @@ export class DatabaseStorage implements IStorage {
   async getReportVersions(id: string): Promise<any> {
     const currentCase = await this.getAssessmentCase(id);
     if (!currentCase) {
-      console.log(`⚠️  No case found for ID: ${id}`);
+      logger.warn(`No case found for ID: ${id}`);
       return { versions: [], currentVersion: '1.0' };
     }
-    
-    // Debug: Log what we found in the database
-    console.log('🔍 DEBUG: Case data for versions:', {
-      caseId: currentCase.id || currentCase.case_id,
-      hasReportData: !!currentCase.report_data,
-      reportDataType: typeof currentCase.report_data,
-      reportDataKeys: currentCase.report_data ? Object.keys(currentCase.report_data) : 'none',
-      currentVersionFromDB: currentCase.report_data?.currentVersion,
-      finalizedVersionsFromDB: currentCase.report_data?.finalizedVersions,
-      isFinalized: currentCase.report_data?.isFinalized,
-      finalizedVersionsLength: currentCase.report_data?.finalizedVersions?.length || 0
-    });
-    
+
     const result = {
       currentVersion: currentCase.report_data?.currentVersion || '1.0',
       versions: currentCase.report_data?.finalizedVersions || [],
       isFinalized: currentCase.report_data?.isFinalized || false
     };
-    
-    console.log('🔍 DEBUG: Returning versions result:', result);
+
+    logger.debug('Returning versions result', { versionCount: result.versions.length });
     return result;
   }
   
@@ -1093,25 +1068,25 @@ export class DatabaseStorage implements IStorage {
   // Report Sharing Methods
   async getSharedReport(shareToken: string): Promise<any> {
     try {
-      console.log(`🔗 Getting shared report for token: ${shareToken}`);
-      
+      logger.debug('Getting shared report for token', { shareToken });
+
       const query = `
-        SELECT id, case_id, display_name, module_type, report_data, created_date, 
+        SELECT id, case_id, display_name, module_type, report_data, created_date,
                share_token, is_shared, shared_at
-        FROM assessment_cases 
+        FROM assessment_cases
         WHERE share_token = $1 AND is_shared = true
       `;
-      
+
       const result = await pool.query(query, [shareToken]);
-      
+
       if (result.rows.length === 0) {
-        console.log(`❌ No shared report found for token: ${shareToken}`);
+        logger.warn('No shared report found for token', { shareToken });
         return null;
       }
-      
+
       const report = result.rows[0];
-      console.log(`✅ Found shared report: ${report.display_name}`);
-      
+      logger.info('Found shared report', { displayName: report.display_name });
+
       return {
         id: report.id,
         caseId: report.case_id,
@@ -1122,81 +1097,81 @@ export class DatabaseStorage implements IStorage {
         sharedAt: report.shared_at
       };
     } catch (error) {
-      console.error('❌ Error getting shared report:', error);
+      logger.error('Error getting shared report:', error);
       throw error;
     }
   }
 
   async enableReportSharing(caseId: string, customerId?: string): Promise<string | null> {
     try {
-      console.log(`🔗 Enabling sharing for case: ${caseId}`);
-      
+      logger.debug('Enabling sharing for case', { caseId });
+
       // Generate a new share token
       const { randomUUID } = await import('crypto');
       const shareToken = randomUUID();
-      
+
       // Build query with optional customer filter
       let query = `
-        UPDATE assessment_cases 
+        UPDATE assessment_cases
         SET share_token = $1, is_shared = true, shared_at = NOW()
         WHERE case_id = $2
       `;
       let params = [shareToken, caseId];
-      
+
       // Add customer filter if provided
       if (customerId) {
         query += ` AND customer_id = $3`;
         params.push(customerId);
       }
-      
+
       query += ` RETURNING share_token`;
-      
+
       const result = await pool.query(query, params);
-      
+
       if (result.rows.length === 0) {
-        console.log(`❌ No report found for case: ${caseId}`);
+        logger.warn('No report found for case', { caseId });
         return null;
       }
-      
-      console.log(`✅ Sharing enabled for case: ${caseId}, token: ${shareToken}`);
+
+      logger.info('Sharing enabled for case', { caseId });
       return shareToken;
     } catch (error) {
-      console.error('❌ Error enabling report sharing:', error);
+      logger.error('Error enabling report sharing:', error);
       throw error;
     }
   }
 
   async disableReportSharing(caseId: string, customerId?: string): Promise<boolean> {
     try {
-      console.log(`🔗 Disabling sharing for case: ${caseId}`);
-      
+      logger.debug('Disabling sharing for case', { caseId });
+
       // Build query with optional customer filter
       let query = `
-        UPDATE assessment_cases 
+        UPDATE assessment_cases
         SET share_token = NULL, is_shared = false, shared_at = NULL
         WHERE case_id = $1
       `;
       let params = [caseId];
-      
+
       // Add customer filter if provided
       if (customerId) {
         query += ` AND customer_id = $2`;
         params.push(customerId);
       }
-      
+
       query += ` RETURNING id`;
-      
+
       const result = await pool.query(query, params);
-      
+
       if (result.rows.length === 0) {
-        console.log(`❌ No report found for case: ${caseId}`);
+        logger.warn('No report found for case', { caseId });
         return false;
       }
-      
-      console.log(`✅ Sharing disabled for case: ${caseId}`);
+
+      logger.info('Sharing disabled for case', { caseId });
       return true;
     } catch (error) {
-      console.error('❌ Error disabling report sharing:', error);
+      logger.error('Error disabling report sharing:', error);
       throw error;
     }
   }
@@ -1206,10 +1181,10 @@ export class DatabaseStorage implements IStorage {
 let storage: IStorage;
 
 function initializeStorage() {
-  // Always use DatabaseStorage with Replit PostgreSQL
+  // Always use DatabaseStorage with Neon PostgreSQL
   storage = new DatabaseStorage();
   console.log('Storage initialized: DatabaseStorage');
-  console.log('Database: Replit PostgreSQL');
+  console.log('Database: Neon PostgreSQL');
   return storage;
 }
 

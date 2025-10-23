@@ -9,7 +9,7 @@ import { Eye, FileText, Calendar, CheckCircle, BookOpen, Clock, Users, Volume2, 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link, useNavigate } from 'react-router-dom';
-import { useReactToPrint } from 'react-to-print';
+import { PostSecondaryOnePagePDF } from './PostSecondaryOnePagePDF';
 
 import { unsplashImages, navigationIcons } from '@/utils/unsplashImages';
 import { 
@@ -198,24 +198,29 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
         <div className="relative z-10">
         {/* Header - Content Area Extended to Right Edge */}
         <div className="fixed top-0 left-80 right-0 z-50">
-          <header className="text-white py-3 shadow-2xl" 
+          <header className="text-white py-3 shadow-2xl"
                   style={{ background: `linear-gradient(to right, ${brandColors.primary}, ${brandColors.lightBlue})` }}>
-            <div className="flex items-center px-6">
-              <Link to="/">
-                <button 
-                  className="hover:opacity-80 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 rounded"
-                  title="Go Home"
-              >
-                <img 
-                  src={ThriveLogo}
-                  alt="THRIVE Logo - Go Home"
-                  className="h-10 w-10 object-contain"
-                />
-              </button>
-              </Link>
-              <div className="ml-3">
-                <h1 className="text-2xl font-bold" 
-                    style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>Accommodation Report</h1>
+            <div className="flex items-center justify-between px-6">
+              <div className="flex items-center">
+                <Link to="/">
+                  <button
+                    className="hover:opacity-80 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 rounded"
+                    title="Go Home"
+                >
+                  <img
+                    src={ThriveLogo}
+                    alt="THRIVE Logo - Go Home"
+                    className="h-10 w-10 object-contain"
+                  />
+                </button>
+                </Link>
+                <div className="ml-3">
+                  <h1 className="text-2xl font-bold"
+                      style={{ fontFamily: 'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif' }}>Accommodation Report</h1>
+                </div>
+              </div>
+              <div className="no-print">
+                <PostSecondaryOnePagePDF currentCase={currentCase} markdownReport={markdownReport} />
               </div>
             </div>
           </header>

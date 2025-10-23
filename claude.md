@@ -91,33 +91,32 @@ npm install
 cp .env.example .env
 
 # Configure .env with your values:
-# - DATABASE_URL (PostgreSQL connection string or Railway database)
+# - DATABASE_URL (Neon PostgreSQL connection string)
 # - OPENAI_API_KEY
 # - SESSION_SECRET (random string)
-# - APP_ENVIRONMENT (local, railway, replit-dev, replit-prod, neon, supabase)
+# - APP_ENVIRONMENT (development, production, post-secondary-demo, k12-demo, tutoring-demo)
 # - NODE_ENV (development or production)
+# - PORT (5001 - to avoid macOS ControlCenter conflict on 5000)
 
 # Push database schema
 npm run db:push
-# Or use Railway database: railway run npm run db:push
 
 # Start development server
 npm run dev
-# Runs on http://localhost:5000
+# Runs on http://localhost:5001
 ```
 
 ## Environment Variables
 Required in `.env`:
-- `DATABASE_URL` - PostgreSQL connection string
+- `DATABASE_URL` - Neon PostgreSQL connection string (all environments use same database)
 - `OPENAI_API_KEY` - OpenAI API key for GPT-4
 - `SESSION_SECRET` - Random string for session encryption
-- `APP_ENVIRONMENT` - Options: `local`, `railway`, `replit-prod`, `replit-dev`, `neon`, `supabase`
+- `APP_ENVIRONMENT` - Options: `development`, `production`, `post-secondary-demo`, `k12-demo`, `tutoring-demo`
 - `NODE_ENV` - `development` or `production`
+- `PORT` - Default: `5001` (avoid macOS ControlCenter conflict on port 5000)
 - `VITE_PI_REDACTOR_URL` - URL to PI Redactor tool (optional)
 
-Optional for Supabase:
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+**Note**: All environments (dev, prod, demo) use the same Neon database. The `APP_ENVIRONMENT` variable controls application behavior (demo mode = read-only, production = full access).
 
 # Testing Guidelines
 

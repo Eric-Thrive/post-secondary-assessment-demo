@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Preview Test - Educational Accessibility Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-2xl p-8">
+            <h1 class="text-4xl font-bold text-indigo-600 mb-4">
+                🎉 Live Preview Working!
+            </h1>
+
+            <p class="text-gray-700 text-lg mb-6">
+                This is a test page for the Educational Accessibility Platform.
+                Try editing this file and watch it update in real-time!
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+                    <h2 class="text-xl font-semibold text-blue-700 mb-2">K-12 Module</h2>
+                    <p class="text-gray-600">Grade-specific analysis and barrier identification</p>
+                </div>
+
+                <div class="bg-green-50 p-6 rounded-lg border-l-4 border-green-500">
+                    <h2 class="text-xl font-semibold text-green-700 mb-2">Post-Secondary</h2>
+                    <p class="text-gray-600">Higher education accommodations and resources</p>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">Live Preview Tips:</h3>
+                <ul class="list-disc list-inside text-yellow-700 space-y-1">
+                    <li>Right-click this file → "Open with Live Server"</li>
+                    <li>Or click "Go Live" in VS Code status bar</li>
+                    <li>Edit this file and see changes instantly!</li>
+                    <li>Try changing colors, text, or adding new elements</li>
+                </ul>
+            </div>
+
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105">
+                Click Me! (Try editing this button)
+            </button>
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-gray-600">
+                Current Time: <span id="time" class="font-mono font-bold"></span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Update time every second to show live updates
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

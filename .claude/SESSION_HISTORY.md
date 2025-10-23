@@ -200,6 +200,209 @@ For copying to Google Docs or other documentation:
 
 ---
 
+## Session: October 21, 2025 - Database Configuration Simplification & Live Preview Setup
+
+**Duration**: ~2 hours
+**Branch**: `railway-deployment`
+**Goal**: Simplify database configuration, fix development environment setup, and guide user through live preview workflow
+
+### What Was Accomplished
+
+#### 1. Database Configuration Simplification
+- ✅ Reduced database config from 483 lines to ~140 lines (70% reduction)
+- ✅ Eliminated complex environment-specific database URL logic
+- ✅ Unified all environments to use single `DATABASE_URL` (Neon PostgreSQL)
+- ✅ Simplified environment detection to use `APP_ENVIRONMENT` (development, production, *-demo)
+- ✅ Removed legacy Replit-specific code and references
+- ✅ Added backwards compatibility for existing function calls (`isDemo` alias)
+
+**Files Modified**:
+- `server/config/database.ts` - Complete rewrite (483 → 137 lines)
+- `server/storage.ts` - Updated to use `isDemoEnvironment` instead of `isDemo`
+- `.env` - Updated with correct environment variables
+
+#### 2. Development Environment Fixes
+- ✅ Fixed port conflict: Changed from 5000 to 5001 (macOS ControlCenter conflict)
+- ✅ Updated Vite proxy to point to port 5001
+- ✅ Fixed `.env` loading with tsx `--env-file` flag
+- ✅ Updated VS Code keybinding for preview (Cmd+K Cmd+P) to use port 5001
+- ✅ Fixed database connection logging ("Replit" → "Neon")
+
+**Files Modified**:
+- `.env` - Added `PORT=5001`
+- `vite.config.ts` - Updated proxy target to localhost:5001
+- `package.json` - Changed dev script to use `tsx --env-file=.env`
+- `.vscode/keybindings.json` - Updated preview URL to port 5001
+
+#### 3. Login & Security Middleware Fixes
+- ✅ Fixed security middleware blocking login in development mode
+- ✅ Added `isDemo` field to `getDatabaseConnectionInfo()` for backwards compatibility
+- ✅ Verified user credentials in database (username: Pippa, password: 77Emily#77)
+- ✅ Tested password hash validation with bcrypt
+
+#### 4. Live Preview Workflow Documentation
+- ✅ Created comprehensive guide for using live preview environment
+- ✅ Explained chat-to-code workflow (describe → code → auto-refresh)
+- ✅ Demonstrated live editing with background color change (blue → green → blue)
+- ✅ Explained environment detection limitations (can't see user's screen)
+- ✅ Provided multiple methods for opening preview in VS Code
+
+### Key Decisions Made
+
+1. **Single Database for All Environments**
+   - **Decision**: Use one Neon database URL for development, production, and demo modes
+   - **Rationale**: Eliminates complexity, reduces configuration errors, matches actual usage
+   - **Impact**: Dramatically simplified codebase, easier to maintain
+
+2. **APP_ENVIRONMENT vs NODE_ENV**
+   - **Decision**: Keep `APP_ENVIRONMENT` for app behavior (demo vs prod), use `NODE_ENV` for build mode
+   - **Rationale**: User wanted to distinguish between demo mode (read-only) and production (full access)
+   - **Options**: development, production, post-secondary-demo, k12-demo, tutoring-demo
+
+3. **Port Change to 5001**
+   - **Decision**: Change from 5000 to 5001
+   - **Rationale**: macOS ControlCenter uses port 5000, causing conflicts
+   - **Impact**: Requires updating all references to localhost:5000
+
+4. **Backwards Compatibility**
+   - **Decision**: Add `isDemo` alias for `isDemoEnvironment`
+   - **Rationale**: Existing code in routes.ts expects `isDemo` field
+   - **Impact**: No breaking changes to existing security middleware
+
+### Code Changes
+
+**Files Modified** (11):
+- `server/config/database.ts` - Complete rewrite
+- `server/storage.ts` - Fixed field name (`isDemo` → `isDemoEnvironment`)
+- `.env` - Updated environment variables
+- `vite.config.ts` - Updated proxy port
+- `package.json` - Updated dev script
+- `.vscode/keybindings.json` - Updated preview URL
+- `client/src/pages/Index.tsx` - Demonstrated live editing (blue → green → blue)
+
+**Configuration Changes**:
+- Database: All environments now use Neon PostgreSQL
+- Port: Backend moved from 5000 → 5001
+- Environment loading: Using tsx --env-file flag
+
+### Technical Details
+
+**Database Configuration (Before vs After)**:
+
+Before:
+- 483 lines of complex environment logic
+- 12+ environment configurations (all pointing to same DB)
+- Complex security validation
+- Replit-specific references
+
+After:
+- 137 lines of simplified code
+- Single DATABASE_URL for all environments
+- Simple demo mode detection (APP_ENVIRONMENT contains 'demo')
+- Clean Neon PostgreSQL references
+
+**Environment Variables**:
+```bash
+DATABASE_URL=postgresql://neondb_owner:...@ep-dark-breeze-aezh6e7z.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
+APP_ENVIRONMENT=development  # or production, post-secondary-demo, etc.
+NODE_ENV=development         # or production
+PORT=5001
+OPENAI_API_KEY=sk-proj-...
+SESSION_SECRET=local-dev-secret-change-in-production
+```
+
+### Questions Answered
+
+**Q**: "We should be using the Neon database?"
+**A**: Yes! You're already using Neon database via Railway. All environment configurations pointed to the same Neon DB, so we simplified it to use one DATABASE_URL.
+
+**Q**: "Should we eliminate the distinction between dev, demo, and prod servers?"
+**A**: Partially yes - all use the same Neon database, but we kept APP_ENVIRONMENT to distinguish between demo mode (read-only for presentations) and production (full access for editing prompts).
+
+**Q**: "Can you tell what view I am looking at?"
+**A**: No, Claude Code cannot see your browser or screen. You need to tell me the URL, describe what you see, or tell me what you want to edit.
+
+**Q**: "How do I use preview to edit?"
+**A**: The workflow is: (1) Tell Claude what you want to change, (2) Claude edits the code, (3) Browser auto-refreshes to show changes. It's chat-driven editing, not click-to-edit.
+
+**Q**: "How do I open preview in VS Code?"
+**A**: Use Cmd+K Cmd+P (after reloading VS Code), or press F1 and type "Simple Browser: Show", then enter http://localhost:5001.
+
+### Workflow Demonstrated
+
+1. **Live Editing Example**:
+   - User: "Make the background green not blue"
+   - Claude: Found `bg-gradient-to-br from-blue-600 to-blue-800` in Index.tsx
+   - Claude: Changed to `from-green-600 to-green-800`
+   - Result: Browser auto-refreshed with green background
+   - User: "Undo the green background change"
+   - Claude: Reverted to blue
+   - Result: Browser auto-refreshed back to blue
+
+2. **Environment Switching**:
+   - Explained how to switch environments using browser console
+   - Provided localStorage commands to switch to demo mode
+   - Noted that environment switcher should be visible in nav bar
+
+### Challenges Encountered
+
+1. **Login Security Violation**:
+   - Issue: Security middleware blocked login in development mode
+   - Cause: `getDatabaseConnectionInfo()` returned `isDemoEnvironment` but code expected `isDemo`
+   - Solution: Added `isDemo` alias field for backwards compatibility
+
+2. **Port Conflict**:
+   - Issue: macOS ControlCenter occupied port 5000
+   - Attempted: Killing process (didn't work - system process)
+   - Solution: Changed app to use port 5001
+
+3. **Server Not Restarting**:
+   - Issue: Code changes not taking effect
+   - Cause: tsx doesn't auto-restart on config changes
+   - Solution: Manual restart of dev server
+
+4. **Environment Variable Loading**:
+   - Issue: .env file not being loaded by tsx
+   - Solution: Changed npm script to use `tsx --env-file=.env`
+
+### Next Steps
+
+**Immediate**:
+- [ ] User needs to restart dev server: `npm run dev`
+- [ ] User should test login with credentials (Pippa / 77Emily#77)
+- [ ] User should verify live preview works correctly
+
+**Future Improvements**:
+- [ ] Consider adding nodemon for auto-restart on server changes
+- [ ] Add better error messages for environment configuration
+- [ ] Update CLAUDE.md with new simplified database setup
+- [ ] Consider removing unused environment detection code
+- [ ] Add integration tests for environment switching
+
+**Documentation Updates Needed**:
+- [ ] Update CLAUDE.md with simplified database configuration
+- [ ] Document the port change (5000 → 5001)
+- [ ] Add troubleshooting guide for common setup issues
+- [ ] Update Quick Reference with new environment variables
+
+### Notes for Future Sessions
+
+- Database configuration is now dramatically simpler (137 lines vs 483)
+- All environments use single Neon database URL
+- Port 5001 is now the default (avoid macOS conflicts)
+- Live preview workflow is chat-driven, not click-to-edit
+- Environment switching works via localStorage or nav dropdown
+- User successfully logged in as Pippa (demo-customer)
+
+### Files to Reference
+
+- `.claude/SESSION_HISTORY.md` - This file (updated)
+- `.env` - Contains current environment configuration
+- `server/config/database.ts` - Simplified database config
+- `.vscode/keybindings.json` - Preview keyboard shortcuts
+
+---
+
 ## Session Template (for future use)
 
 ```markdown
