@@ -450,11 +450,53 @@ unset APP_ENVIRONMENT
 npm run dev
 ```
 
+**Unstyled/No CSS Rendering Issues**
+
+If you see content without styling (text squeezed in a column, no colors/spacing):
+
+1. **Check Browser Console for JavaScript Errors**
+   - Open DevTools (F12) → Console tab
+   - Scroll to top or clear console and refresh
+   - Look for RED error messages
+   - JavaScript errors can prevent React components from rendering properly
+
+2. **Verify CSS is Loading**
+   - Open DevTools (F12) → Network tab
+   - Refresh page (Cmd/Ctrl+R)
+   - Filter by "css"
+   - Look for `index.css` - should show Status 200 or 304
+   - If missing or failed (red), check Vite server logs
+
+3. **Check Element Classes**
+   - Open DevTools (F12) → Elements tab
+   - Use element picker (cursor icon) to select visible element
+   - Verify elements have Tailwind classes (e.g., `class="p-12 cursor-pointer"`)
+   - If no classes, React components aren't rendering
+   - If classes exist but no styling, CSS isn't being applied
+
+4. **Force CSS Rebuild**
+   ```bash
+   # Touch CSS file to trigger rebuild
+   touch apps/web/src/index.css
+
+   # Hard refresh browser
+   # Mac: Cmd+Shift+R
+   # Windows/Linux: Ctrl+Shift+R
+   ```
+
+5. **Common Root Causes**
+   - JavaScript errors in Console preventing component render
+   - Browser cache serving stale/broken CSS (hard refresh needed)
+   - Multiple dev servers running (kill and restart)
+   - Vite not processing Tailwind directives (check Vite logs)
+
 **Common Issues**
 - Multiple server instances causing port conflicts
 - Stale localStorage causing wrong environment
 - Shell environment variables overriding .env
 - Browser cache showing old version
+- JavaScript errors preventing React component rendering
+- CSS file loaded but Tailwind classes not applied
 
 # Support & Documentation
 

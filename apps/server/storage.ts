@@ -134,27 +134,58 @@ export interface IStorage {
   
   // Prompts
   getPromptSections(moduleType: string, promptType?: string, pathwayType?: string): Promise<any[]>;
-  updatePromptSection(sectionKey: string, content: string, promptType?: string): Promise<any>;
+  updatePromptSection(
+    sectionKey: string,
+    updates: {
+      content?: string;
+      promptType?: string;
+      executionOrder?: number;
+      isSystemPrompt?: boolean;
+      moduleType?: string;
+      title?: string;
+      description?: string;
+      version?: string;
+      pathwayType?: string;
+    }
+  ): Promise<any>;
   
   // Lookup Tables
   getLookupTables(moduleType: string): Promise<any[]>;
-  updateLookupTable(tableKey: string, content: any): Promise<any>;
+  updateLookupTable(
+    tableKey: string,
+    updates: {
+      content: any;
+      moduleType?: string;
+      title?: string;
+    }
+  ): Promise<any>;
   
   // Mapping Configurations
   getMappingConfigurations(moduleType: string): Promise<any[]>;
-  updateMappingConfiguration(mappingKey: string, mappingRules: any): Promise<any>;
+  updateMappingConfiguration(
+    mappingKey: string,
+    updates: {
+      mapping_rules: any;
+      moduleType?: string;
+      title?: string;
+      description?: string;
+    }
+  ): Promise<any>;
   
   // Plain Language Mappings
   getPlainLanguageMappings(moduleType: string): Promise<any[]>;
-  updatePlainLanguageMapping(id: string, data: any): Promise<any>;
+  updatePlainLanguageMapping(id: string, updates: any): Promise<any>;
+  deletePlainLanguageMapping(id: string): Promise<void>;
   
   // Inference Triggers
   getInferenceTriggers(moduleType: string): Promise<any[]>;
-  updateInferenceTrigger(id: string, data: any): Promise<any>;
+  updateInferenceTrigger(id: string, updates: any): Promise<any>;
+  deleteInferenceTrigger(id: string): Promise<void>;
   
   // Barrier Glossary
   getBarrierGlossary(moduleType: string): Promise<any[]>;
-  updateBarrierGlossary(id: string, data: any): Promise<any>;
+  updateBarrierGlossary(id: string, updates: any): Promise<any>;
+  deleteBarrierGlossary(id: string): Promise<void>;
   
   // Assessment Findings
   createAssessmentFinding?(finding: any): Promise<any>;
@@ -279,10 +310,13 @@ export class MemStorage implements IStorage {
   async updateMappingConfiguration(): Promise<any> { throw new Error('Not implemented'); }
   async getPlainLanguageMappings(): Promise<any[]> { return []; }
   async updatePlainLanguageMapping(): Promise<any> { throw new Error('Not implemented'); }
+  async deletePlainLanguageMapping(): Promise<void> { throw new Error('Not implemented'); }
   async getInferenceTriggers(): Promise<any[]> { return []; }
   async updateInferenceTrigger(): Promise<any> { throw new Error('Not implemented'); }
+  async deleteInferenceTrigger(): Promise<void> { throw new Error('Not implemented'); }
   async getBarrierGlossary(): Promise<any[]> { return []; }
   async updateBarrierGlossary(): Promise<any> { throw new Error('Not implemented'); }
+  async deleteBarrierGlossary(): Promise<void> { throw new Error('Not implemented'); }
   
   // Version Management Methods (stubs for MemStorage)
   async finalizeReport(id: string, finalizedContent: string, changesSummary: any[]): Promise<any> {
@@ -768,42 +802,112 @@ export class DatabaseStorage implements IStorage {
     return result.rows;
   }
 
-  async updatePromptSection(sectionKey: string, content: string, promptType?: string): Promise<any> {
+  async updatePromptSection(
+    sectionKey: string,
+    updates: {
+      content?: string;
+      promptType?: string;
+      executionOrder?: number;
+      isSystemPrompt?: boolean;
+      moduleType?: string;
+      title?: string;
+      description?: string;
+      version?: string;
+      pathwayType?: string;
+      // Allow snake_case variants for backward compatibility
+      prompt_type?: string;
+      execution_order?: number;
+      is_system_prompt?: boolean;
+      module_type?: string;
+      pathway_type?: string;
+    }
+  ): Promise<any> {
+    if (!updates || Object.keys(updates).length === 0) {
+      throw new Error('No updates provided for prompt section');
+    }
+
+    const normalizedUpdates = {
+      content: updates.content,
+      promptType: updates.promptType ?? updates.prompt_type,
+      executionOrder: updates.executionOrder ?? updates.execution_order,
+      isSystemPrompt: updates.isSystemPrompt ?? updates.is_system_prompt,
+      moduleType: updates.moduleType ?? updates.module_type,
+      title: updates.title,
+      description: updates.description,
+      version: updates.version,
+      pathwayType: updates.pathwayType ?? updates.pathway_type,
+    };
+
     // SECURITY: Enhanced validation with demo customer enforcement
-    this.checkWritePermissions('updatePromptSection', { sectionKey, content, promptType });
-    
-    // Check if this is a demo environment update
+    this.checkWritePermissions('updatePromptSection', { sectionKey, ...normalizedUpdates });
+
+    // Determine the effective section key (demo environments rewrite keys)
     const currentEnv = process.env.APP_ENVIRONMENT || 'replit-prod';
-    
-    if (currentEnv === 'post-secondary-demo' && sectionKey.includes('post_secondary') && !sectionKey.includes('_demo')) {
-      // Redirect to demo-specific template
-      const demoSectionKey = sectionKey.replace('post_secondary', 'post_secondary_demo');
-      logger.debug(`Demo environment detected, redirecting to demo template: ${demoSectionKey}`);
-      
-      // Update the demo template instead
-      let query = `UPDATE prompt_sections SET content = $2, last_updated = NOW()`;
-      const params: any[] = [demoSectionKey, content];
-      
-      if (promptType) {
-        query += `, prompt_type = $3`;
-        params.push(promptType);
-      }
-      
-      query += ` WHERE section_key = $1 RETURNING *`;
-      const result = await pool.query(query, params);
-      return result.rows[0];
+    let targetSectionKey = sectionKey;
+
+    if (
+      currentEnv === 'post-secondary-demo' &&
+      sectionKey.includes('post_secondary') &&
+      !sectionKey.includes('_demo')
+    ) {
+      targetSectionKey = sectionKey.replace('post_secondary', 'post_secondary_demo');
+      logger.debug(`Demo environment detected, redirecting to demo template: ${targetSectionKey}`);
     }
-    
-    // Normal update for non-demo environments
-    let query = `UPDATE prompt_sections SET content = $2, last_updated = NOW()`;
-    const params: any[] = [sectionKey, content];
-    
-    if (promptType) {
-      query += `, prompt_type = $3`;
-      params.push(promptType);
+
+    const setClauses: string[] = [];
+    const params: any[] = [];
+
+    const pushUpdate = (column: string, value: unknown) => {
+      params.push(value);
+      setClauses.push(`${column} = $${params.length}`);
+    };
+
+    if (normalizedUpdates.content !== undefined) {
+      pushUpdate('content', normalizedUpdates.content);
     }
-    
-    query += ` WHERE section_key = $1 RETURNING *`;
+
+    if (normalizedUpdates.promptType !== undefined) {
+      pushUpdate('prompt_type', normalizedUpdates.promptType);
+    }
+
+    if (normalizedUpdates.executionOrder !== undefined) {
+      pushUpdate('execution_order', normalizedUpdates.executionOrder);
+    }
+
+    if (normalizedUpdates.isSystemPrompt !== undefined) {
+      pushUpdate('is_system_prompt', normalizedUpdates.isSystemPrompt);
+    }
+
+    if (normalizedUpdates.moduleType !== undefined) {
+      pushUpdate('module_type', normalizedUpdates.moduleType);
+    }
+
+    if (normalizedUpdates.title !== undefined) {
+      pushUpdate('title', normalizedUpdates.title);
+    }
+
+    if (normalizedUpdates.description !== undefined) {
+      pushUpdate('description', normalizedUpdates.description);
+    }
+
+    if (normalizedUpdates.version !== undefined) {
+      pushUpdate('version', normalizedUpdates.version);
+    }
+
+    if (normalizedUpdates.pathwayType !== undefined) {
+      pushUpdate('pathway_type', normalizedUpdates.pathwayType);
+    }
+
+    if (setClauses.length === 0) {
+      throw new Error('No valid prompt section fields provided for update');
+    }
+
+    setClauses.push('last_updated = NOW()');
+    params.push(targetSectionKey);
+
+    const query = `UPDATE prompt_sections SET ${setClauses.join(', ')} WHERE section_key = $${
+      params.length
+    } RETURNING *`;
     const result = await pool.query(query, params);
     return result.rows[0];
   }
@@ -814,9 +918,46 @@ export class DatabaseStorage implements IStorage {
     return result.rows;
   }
 
-  async updateLookupTable(tableKey: string, content: any): Promise<any> {
-    const query = `UPDATE lookup_tables SET content = $2, last_updated = NOW() WHERE table_key = $1 RETURNING *`;
-    const result = await pool.query(query, [tableKey, JSON.stringify(content)]);
+  async updateLookupTable(
+    tableKey: string,
+    updates: {
+      content: any;
+      moduleType?: string;
+      title?: string;
+      description?: string;
+    }
+  ): Promise<any> {
+    if (!updates || updates.content === undefined) {
+      throw new Error('Lookup table update requires content');
+    }
+
+    this.checkWritePermissions('updateLookupTable', { tableKey, ...updates });
+
+    const setClauses: string[] = [];
+    const params: any[] = [];
+
+    if (updates.content !== undefined) {
+      params.push(JSON.stringify(updates.content));
+      setClauses.push(`content = $${params.length}`);
+    }
+
+    if (updates.title !== undefined) {
+      params.push(updates.title);
+      setClauses.push(`table_name = $${params.length}`);
+    }
+
+    if (updates.moduleType !== undefined) {
+      params.push(updates.moduleType);
+      setClauses.push(`module_type = $${params.length}`);
+    }
+
+    setClauses.push('last_updated = NOW()');
+    params.push(tableKey);
+
+    const query = `UPDATE lookup_tables SET ${setClauses.join(', ')} WHERE table_key = $${
+      params.length
+    } RETURNING *`;
+    const result = await pool.query(query, params);
     return result.rows[0];
   }
 
@@ -826,9 +967,52 @@ export class DatabaseStorage implements IStorage {
     return result.rows;
   }
 
-  async updateMappingConfiguration(mappingKey: string, mappingRules: any): Promise<any> {
-    const query = `UPDATE mapping_configurations SET mapping_rules = $2, last_updated = NOW() WHERE mapping_key = $1 RETURNING *`;
-    const result = await pool.query(query, [mappingKey, JSON.stringify(mappingRules)]);
+  async updateMappingConfiguration(
+    mappingKey: string,
+    updates: {
+      mapping_rules: any;
+      moduleType?: string;
+      title?: string;
+      description?: string;
+    }
+  ): Promise<any> {
+    if (!updates || updates.mapping_rules === undefined) {
+      throw new Error('Mapping configuration update requires mapping_rules');
+    }
+
+    this.checkWritePermissions('updateMappingConfiguration', { mappingKey, ...updates });
+
+    const setClauses: string[] = [];
+    const params: any[] = [];
+
+    if (updates.mapping_rules !== undefined) {
+      params.push(JSON.stringify(updates.mapping_rules));
+      setClauses.push(`mapping_rules = $${params.length}`);
+    }
+
+    if (updates.title !== undefined) {
+      params.push(updates.title);
+      setClauses.push(`mapping_name = $${params.length}`);
+    }
+
+    if (updates.moduleType !== undefined) {
+      params.push(updates.moduleType);
+      setClauses.push(`module_type = $${params.length}`);
+    }
+
+    // description column may not exist; include only if present via updates.description mapping to notes?
+    if (updates.description !== undefined) {
+      params.push(updates.description);
+      setClauses.push(`description = $${params.length}`);
+    }
+
+    setClauses.push('last_updated = NOW()');
+    params.push(mappingKey);
+
+    const query = `UPDATE mapping_configurations SET ${setClauses.join(', ')} WHERE mapping_key = $${
+      params.length
+    } RETURNING *`;
+    const result = await pool.query(query, params);
     return result.rows[0];
   }
 

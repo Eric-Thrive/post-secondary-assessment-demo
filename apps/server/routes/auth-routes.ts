@@ -189,6 +189,10 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
+      // Set userId for auth middleware
+      req.session.userId = user.id;
+
+      // Also set user object for backwards compatibility
       req.session.user = {
         id: user.id,
         username: user.username,
