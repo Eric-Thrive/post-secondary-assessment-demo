@@ -1,11 +1,13 @@
-# Database Export and Import Scripts
+# Database Backup and Restore Scripts
 
-This directory contains comprehensive scripts for copying production data to development databases.
+This directory contains comprehensive scripts for database backup and restore operations.
+
+**Note**: These scripts are for backup/restore and optional local testing workflows. The application uses a **single shared cloud database** (Neon PostgreSQL via `DATABASE_URL`) for all environments. See [../claude.md](../claude.md) for architecture details.
 
 ## Overview
 
-- **export-production-data.ts** - Exports all production data to JSON files
-- **import-to-development.ts** - Imports JSON data into development database
+- **export-database-backup.ts** (formerly export-production-data.ts) - Exports database to JSON files
+- **import-database-backup.ts** (formerly import-to-development.ts) - Imports JSON backup to target database
 
 ## Features
 
@@ -30,25 +32,28 @@ This directory contains comprehensive scripts for copying production data to dev
 
 ## Quick Start
 
-### 1. Export Production Data
+### 1. Export Database Backup
 
 ```bash
-# Set production database URL
-export DATABASE_URL="postgres://username:password@host:port/database"
-
-# Run export (creates timestamped directory in exports/)
-npx tsx scripts/export-production-data.ts
+# Export from your cloud database
+DATABASE_URL="postgres://username:password@host:port/database" \
+npx tsx scripts/export-database-backup.ts
 ```
 
-### 2. Import to Development
+**Output**: Creates timestamped directory in `/tmp/db-exports/backup-YYYYMMDD-HHMMSS/`
+
+### 2. Import Database Backup
 
 ```bash
-# Set development database URL
-export DEV_DATABASE_URL="postgres://username:password@host:port/dev_database"
-
-# Import from export directory
-npx tsx scripts/import-to-development.ts exports/production-2024-01-01T12-00-00-000Z
+# Import to target database (e.g., local testing database)
+TARGET_DATABASE_URL="postgres://username:password@localhost:5432/local_test" \
+npx tsx scripts/import-database-backup.ts /tmp/db-exports/backup-2024-01-01T12-00-00-000Z
 ```
+
+**Use Cases**:
+- Restore from backup
+- Copy data to local PostgreSQL for isolated testing
+- Migrate between database providers
 
 ## Configuration Options
 
@@ -88,36 +93,39 @@ export VALIDATE_SCHEMA=true
 
 ### Basic Export
 ```bash
-DATABASE_URL="postgres://user:pass@localhost:5432/prod" npx tsx scripts/export-production-data.ts
+# Export from cloud database
+DATABASE_URL="postgres://user:pass@host:5432/mydb" \
+npx tsx scripts/export-database-backup.ts
 ```
 
 ### Export with Custom Batch Size
 ```bash
-DATABASE_URL="postgres://user:pass@localhost:5432/prod" \
+DATABASE_URL="postgres://user:pass@host:5432/mydb" \
 EXPORT_BATCH_SIZE=2000 \
-npx tsx scripts/export-production-data.ts
+npx tsx scripts/export-database-backup.ts
 ```
 
 ### Import with Clean Target
 ```bash
-DEV_DATABASE_URL="postgres://user:pass@localhost:5432/dev" \
+# Import to local database, cleaning existing data
+TARGET_DATABASE_URL="postgres://user:pass@localhost:5432/local_test" \
 CLEAN_TARGET=true \
 HANDLE_CONFLICTS=overwrite \
-npx tsx scripts/import-to-development.ts exports/production-2024-01-01T12-00-00-000Z
+npx tsx scripts/import-database-backup.ts /tmp/db-exports/backup-2024-01-01T12-00-00-000Z
 ```
 
 ### Dry Run Import (Test Without Changes)
 ```bash
-DEV_DATABASE_URL="postgres://user:pass@localhost:5432/dev" \
+TARGET_DATABASE_URL="postgres://user:pass@localhost:5432/local_test" \
 DRY_RUN=true \
-npx tsx scripts/import-to-development.ts exports/production-2024-01-01T12-00-00-000Z
+npx tsx scripts/import-database-backup.ts /tmp/db-exports/backup-2024-01-01T12-00-00-000Z
 ```
 
 ## Output Structure
 
 ### Export Directory Structure
 ```
-exports/production-2024-01-01T12-00-00-000Z/
+/tmp/db-exports/backup-2024-01-01T12-00-00-000Z/
 ├── export-summary.json          # Overall export statistics
 ├── metadata/
 │   └── database-info.json       # Database metadata and schema info
@@ -129,6 +137,8 @@ exports/production-2024-01-01T12-00-00-000Z/
     ├── lookup_tables.json       # Lookup data
     └── ...                      # All other tables
 ```
+
+**Note**: Exports are stored in `/tmp/db-exports/` to prevent PII data from being committed to version control.
 
 ### JSON File Format
 ```json

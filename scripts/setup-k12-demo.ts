@@ -10,11 +10,11 @@ const { Pool } = pg;
 async function setupK12DemoDatabase() {
   console.log('🚀 Setting up K-12 Demo Database...\n');
 
-  // For demo purposes, we'll use the same database URL until a separate one is configured
-  const databaseUrl = process.env.K12_DEMO_DATABASE_URL || process.env.DATABASE_URL;
-  
+  // Use the shared database
+  const databaseUrl = process.env.DATABASE_URL;
+
   if (!databaseUrl) {
-    console.error('❌ No database URL found. Please set K12_DEMO_DATABASE_URL or DATABASE_URL');
+    console.error('❌ No database URL found. Please set DATABASE_URL');
     process.exit(1);
   }
 

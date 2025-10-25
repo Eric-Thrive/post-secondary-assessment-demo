@@ -9,11 +9,11 @@ const { Pool } = pg;
 async function addK12DemoPrompts() {
   console.log('🚀 Adding K-12 Demo prompts to database...\n');
 
-  // Use K12_DEMO_DATABASE_URL if available, otherwise fall back to regular DATABASE_URL
-  const databaseUrl = process.env.K12_DEMO_DATABASE_URL || process.env.DATABASE_URL;
-  
+  // Use the shared database
+  const databaseUrl = process.env.DATABASE_URL;
+
   if (!databaseUrl) {
-    console.error('❌ No database URL found. Please set K12_DEMO_DATABASE_URL or DATABASE_URL');
+    console.error('❌ No database URL found. Please set DATABASE_URL');
     process.exit(1);
   }
 

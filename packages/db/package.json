@@ -1,0 +1,19 @@
+{
+  "name": "@repo/db",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./schema.ts",
+  "types": "./schema.ts",
+  "scripts": {
+    "db:push": "cd ../.. && node --env-file=.env node_modules/.bin/drizzle-kit push",
+    "db:generate": "cd ../.. && node --env-file=.env node_modules/.bin/drizzle-kit generate",
+    "db:studio": "cd ../.. && node --env-file=.env node_modules/.bin/drizzle-kit studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.39.1",
+    "drizzle-zod": "^0.7.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.4"
+  }
+}

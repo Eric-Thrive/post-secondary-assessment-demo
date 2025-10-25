@@ -1,31 +1,59 @@
 # Development Database Setup Guide
 
+⚠️ **DEPRECATION NOTICE**: This guide describes an **optional** setup for a separate local testing database. The default application architecture uses a **single shared database** (Neon PostgreSQL via `DATABASE_URL`) for all environments. `APP_ENVIRONMENT` controls behavior (demo=read-only, dev/prod=full access), not which database is used.
+
+**When to use this guide:**
+- You want a completely isolated local PostgreSQL instance for destructive testing
+- You need to test database migrations without affecting the shared database
+- You're working offline without access to the cloud database
+
+**Default setup (recommended):** Use the single shared database as documented in [claude.md](../claude.md).
+
 ⚠️ **SECURITY WARNING**: This guide handles potentially sensitive data exports. All exports now use `/tmp/db-exports/` directory outside the repository to prevent PII data leaks through version control.
 
-This guide walks you through setting up a separate development database for testing features and development work, while keeping your production database intact.
+---
+
+This guide walks you through setting up an **optional** separate development database for isolated testing, while keeping your production database intact.
 
 ## Overview
 
-Your application now supports two primary database environments:
-- **Production**: Your live application database (`DATABASE_URL`)  
-- **Development**: A separate database for testing and feature development (`DEV_DATABASE_URL`)
+This optional setup supports two database environments:
+- **Primary**: Your cloud application database (`DATABASE_URL` - Neon/Railway/Supabase)
+- **Local Testing (optional)**: A separate local database for isolated testing (`DEV_DATABASE_URL`)
 
-## Step 1: Create Development Database in Replit
+## Step 1: Create Local Development Database
 
-1. **Open Replit Database Tool**:
-   - Go to the left Tool dock and select "All tools" icon
-   - Choose "Database" from the tools list
-   - Or use search bar → type "Replit Database" → select it
+**Option A: Local PostgreSQL (Recommended for local development)**
+```bash
+# macOS (using Homebrew)
+brew install postgresql@16
+brew services start postgresql@16
+createdb local_dev_database
 
-2. **Create New Database**:
-   - Click "Create Database" button
-   - Replit will automatically create a new PostgreSQL database
-   - Note the connection credentials that appear
+# Your connection string:
+# postgresql://localhost:5432/local_dev_database
+```
 
-3. **Set Environment Variable**:
-   - Copy the database connection URL
-   - Go to your Replit project's environment variables (Secrets tool)
-   - Add new secret: `DEV_DATABASE_URL` = `your-new-database-connection-string`
+**Option B: Docker**
+```bash
+docker run --name local-postgres \
+  -e POSTGRES_PASSWORD=localdev \
+  -e POSTGRES_DB=local_dev_database \
+  -p 5432:5432 -d postgres:16
+
+# Your connection string:
+# postgresql://postgres:localdev@localhost:5432/local_dev_database
+```
+
+**Option C: Cloud Database Provider**
+- Create a separate database on Neon, Supabase, or Railway
+- Note the connection URL provided
+
+**Set Environment Variable:**
+```bash
+# Add to your .env file (NOT committed to git)
+DEV_DATABASE_URL=postgresql://localhost:5432/local_dev_database
+```
 
 ## Step 2: Copy Production Data to Development
 
@@ -36,18 +64,19 @@ Now you'll copy all your current production data to the new development database
 ⚠️ **SECURITY NOTICE**: Exports are stored in `/tmp/db-exports/` to prevent PII data from being committed to version control.
 
 ```bash
-# Export all production data to JSON files
-DATABASE_URL="your-production-database-url" npx tsx scripts/export-production-data.ts
+# Export all data from your cloud database to JSON files
+DATABASE_URL="your-cloud-database-url" npx tsx scripts/export-database-backup.ts
 ```
 
 This creates a timestamped export directory with all your data:
-- `/tmp/db-exports/production-YYYYMMDD-HHMMSS/tables/` - All table data as JSON
-- `/tmp/db-exports/production-YYYYMMDD-HHMMSS/metadata/` - Export metadata and statistics
+- `/tmp/db-exports/backup-YYYYMMDD-HHMMSS/tables/` - All table data as JSON
+- `/tmp/db-exports/backup-YYYYMMDD-HHMMSS/metadata/` - Export metadata and statistics
 
-### Import to Development Database
+### Import to Local Development Database
 ```bash
-# Import the exported data to development database
-DEV_DATABASE_URL="your-development-database-url" npx tsx scripts/import-to-development.ts /tmp/db-exports/production-YYYYMMDD-HHMMSS
+# Import the exported data to your local test database
+TARGET_DATABASE_URL="postgresql://localhost:5432/local_dev_database" \
+npx tsx scripts/import-database-backup.ts /tmp/db-exports/backup-YYYYMMDD-HHMMSS
 ```
 
 The import script will:
@@ -56,36 +85,39 @@ The import script will:
 - Validate data integrity after import
 - Provide detailed import statistics
 
-## Step 3: Switch Between Environments
+## Step 3: Configure Application to Use Local Database
 
-### Development Mode
+**Important**: The application does NOT automatically switch databases based on `APP_ENVIRONMENT`. You must explicitly configure it to use `DEV_DATABASE_URL`.
+
+### Method 1: Temporary Override (For Current Session)
 ```bash
-# Set environment to use development database
-export APP_ENVIRONMENT=development
+# Use local database temporarily
+DATABASE_URL="postgresql://localhost:5432/local_dev_database" npm run dev
+```
+
+### Method 2: Modify .env (For Persistent Local Development)
+```bash
+# In your .env file, temporarily comment out cloud database:
+# DATABASE_URL=postgresql://cloud-db-url...
+DATABASE_URL=postgresql://localhost:5432/local_dev_database
+
+# Then run normally:
 npm run dev
 ```
 
-You'll see in the logs: `Using database: Replit Development PostgreSQL`
-
-### Production Mode
-```bash
-# Set environment to use production database (default)
-export APP_ENVIRONMENT=production
-npm run dev
-```
-
-Or simply don't set `APP_ENVIRONMENT` (defaults to production)
-You'll see in the logs: `Using database: Replit Production PostgreSQL`
+### Method 3: Application Code Modification (Advanced)
+Modify [server/config/database.ts](../server/config/database.ts) to check for `DEV_DATABASE_URL` when in development mode.
 
 ## Environment Variables Reference
 
-### Required for Development:
-- `DEV_DATABASE_URL`: Connection string for your development database
-- `DATABASE_URL`: Connection string for your production database (already set)
-- `OPENAI_API_KEY`: Your OpenAI API key (shared across environments)
+### Standard Setup (Default):
+- `DATABASE_URL`: Cloud database connection string (Neon/Railway/Supabase)
+- `OPENAI_API_KEY`: Your OpenAI API key
+- `APP_ENVIRONMENT`: Controls behavior (`development`, `production`, `*-demo` for read-only)
 
-### Optional Environment Controls:
-- `APP_ENVIRONMENT`: Set to `development` or `production` (defaults to `production`)
+### Optional Local Testing Setup:
+- `DATABASE_URL`: Set to local database URL (e.g., `postgresql://localhost:5432/local_dev_database`)
+- `DEV_DATABASE_URL`: Not used by application code (only by backup/import scripts)
 
 ## Database Features Supported
 
@@ -112,8 +144,8 @@ Both databases support all application features:
 ## Troubleshooting
 
 ### "No database URL configured" Error
-**Cause**: Missing `DEV_DATABASE_URL` when `APP_ENVIRONMENT=development`
-**Solution**: Set the `DEV_DATABASE_URL` environment variable with your development database connection string
+**Cause**: Missing or incorrect `DATABASE_URL`
+**Solution**: Ensure `DATABASE_URL` is set in your `.env` file or environment
 
 ### Import Fails with Foreign Key Constraints
 **Cause**: Managed databases (like Neon) may restrict constraint modifications
@@ -123,41 +155,35 @@ Both databases support all application features:
 **Cause**: Large amounts of data being transferred
 **Solution**: Scripts use batch processing and are optimized for large datasets. Be patient with large databases.
 
-### Environment Not Switching
-**Cause**: Environment variable not properly set or cached
-**Solution**: 
-1. Ensure `APP_ENVIRONMENT` is set correctly
-2. Restart your application server
-3. Check logs for "Using database: ..." message to confirm
+### Local Database Not Connecting
+**Cause**: Local PostgreSQL not running or incorrect connection string
+**Solution**:
+1. Verify PostgreSQL is running: `brew services list` (macOS) or `docker ps` (Docker)
+2. Check connection string format: `postgresql://user:password@host:port/database`
+3. Test connection: `psql postgresql://localhost:5432/local_dev_database`
 
 ## Best Practices
 
-### Development Workflow
-1. **Start Development**: Set `APP_ENVIRONMENT=development` and work on new features
-2. **Test Thoroughly**: Use development database for all testing
-3. **Deploy to Production**: Only deploy tested code to production environment
+### When to Use Local Database
+1. **Destructive Testing**: Testing migrations, bulk deletes, or schema changes
+2. **Offline Development**: Working without internet access
+3. **Performance Testing**: Need to reset database state frequently
 
 ### Data Management
-1. **Keep Separate**: Never mix development and production data
-2. **Regular Exports**: Export production data periodically for development refreshes (if needed)
-3. **Clean Development**: Periodically clean up test data in development database
+1. **Keep Separate**: Local database is for testing only, not for production-like data
+2. **Regular Refreshes**: Export from cloud database when you need fresh test data
+3. **Clean Regularly**: Drop and recreate local database as needed
 
 ### Security
-1. **Environment Variables**: Keep database URLs in environment variables (never in code)
-2. **Access Control**: Limit who can access production database credentials
-3. **Connection Security**: Both databases use secure SSL connections through Replit
-
-## Cost Optimization
-
-Replit databases are serverless and cost-optimized:
-- **Auto-Suspend**: Databases suspend after 5 minutes of inactivity
-- **Instant Activation**: Databases activate instantly when queried
-- **Pay for Usage**: You only pay for compute time when databases are active
+1. **Never Commit**: Keep local database URLs in `.env` (gitignored)
+2. **PII Handling**: Be careful with sensitive data in local exports
+3. **Connection Security**: Use SSL connections for cloud databases
 
 ## Need Help?
 
 If you encounter issues:
 1. Check the application logs for database connection messages
-2. Verify environment variables are set correctly
-3. Ensure both databases are accessible from your Replit environment
+2. Verify `DATABASE_URL` is set correctly in `.env`
+3. Test database connectivity: `psql $DATABASE_URL`
 4. Review the export/import script logs for detailed error information
+5. Refer to [claude.md](../claude.md) for standard setup documentation

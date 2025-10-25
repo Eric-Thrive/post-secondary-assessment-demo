@@ -1,0 +1,268 @@
+import type { Express, Request, Response } from "express";
+import { storage } from "../storage";
+import { db } from "../db";
+import {
+  isDemoEnvironment as checkIsDemoEnvironment,
+  getModuleForEnvironment,
+  normalizeEnvironment,
+  isValidEnvironment
+} from "@shared/constants/environments";
+
+export function registerConfigRoutes(app: Express): void {
+    // Prompt Sections - Direct database query with proper transformation
+    app.get("/api/prompt-sections", async (req, res) => {
+      try {
+        const moduleType = req.query.moduleType as string || 'post_secondary';
+        const promptType = req.query.promptType as string | undefined;
+        console.log(`DEBUG: Fetching prompt sections from database for: ${moduleType}, type: ${promptType || 'all'}`);
+        
+        const sections = await storage.getPromptSections(moduleType, promptType);
+        console.log(`DEBUG: Found ${sections.length} prompt sections in database`);
+        
+        if (sections.length === 0) {
+          console.log(`DEBUG: No sections found, returning empty array`);
+          res.json([]);
+          return;
+        }
+        
+        // Transform database results to match frontend expectations
+        const transformedSections = sections.map((section: any, index: number) => ({
+          id: String(index + 1),
+          section_key: section.section_key,
+          section_name: section.section_name || `${section.section_key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}`,
+          content: section.content,
+          version: section.version || '1.0',
+          module_type: section.module_type,
+          prompt_type: section.prompt_type,
+          created_at: section.created_at,
+          last_updated: section.last_updated
+        }));
+        
+        console.log(`DEBUG: Returning ${transformedSections.length} prompt sections for ${moduleType}`);
+        console.log(`DEBUG: Section keys: ${transformedSections.map(s => s.section_key).join(', ')}`);
+        res.json(transformedSections);
+      } catch (error: any) {
+        console.error(`ERROR: Failed to fetch prompt sections for ${req.query.moduleType}:`, error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Prompt Sections - Path parameter format for backward compatibility
+    app.get("/api/prompt-sections/:moduleType", async (req, res) => {
+      try {
+        const { moduleType } = req.params;
+        console.log(`DEBUG: Fetching prompt sections from database for: ${moduleType}`);
+        
+        const sections = await storage.getPromptSections(moduleType);
+        console.log(`DEBUG: Found ${sections.length} prompt sections in database`);
+        
+        if (sections.length === 0) {
+          console.log(`DEBUG: No sections found, returning empty array`);
+          res.json([]);
+          return;
+        }
+        
+        // Transform database results to match frontend expectations
+        const transformedSections = sections.map((section: any, index: number) => ({
+          id: String(index + 1),
+          section_key: section.section_key,
+          section_name: section.section_name || `${section.section_key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}`,
+          content: section.content,
+          version: section.version || '1.0',
+          module_type: section.module_type,
+          created_at: section.created_at,
+          last_updated: section.last_updated
+        }));
+        
+        console.log(`DEBUG: Returning ${transformedSections.length} prompt sections for ${moduleType}`);
+        console.log(`DEBUG: Section keys: ${transformedSections.map(s => s.section_key).join(', ')}`);
+        
+        // Add cache-busting headers to ensure frontend gets fresh data
+        res.set({
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'ETag': `"${Date.now()}"` // Force fresh response
+        });
+        
+        res.json(transformedSections);
+      } catch (error: any) {
+        console.error(`ERROR: Failed to fetch prompt sections for ${req.params.moduleType}:`, error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Update prompt section
+    app.patch("/api/prompt-sections/:sectionKey", async (req, res) => {
+      try {
+        const { sectionKey } = req.params;
+        const { content, promptType } = req.body;
+        console.log(`Updating prompt section: ${sectionKey}, type: ${promptType || 'not specified'}`);
+        const section = await storage.updatePromptSection(sectionKey, content, promptType);
+        res.json(section);
+      } catch (error: any) {
+        console.error('Error updating prompt section:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Save prompt section (PUT for create/update)
+    app.put("/api/prompt-sections/:sectionKey", async (req, res) => {
+      try {
+        const { sectionKey } = req.params;
+        const { content, module_type, execution_order, is_system_prompt } = req.body;
+        console.log(`Saving prompt section: ${sectionKey}, module: ${module_type || 'post_secondary'}`);
+        
+        // Use updatePromptSection for now - it handles both create and update
+        const section = await storage.updatePromptSection(sectionKey, content);
+        res.json(section);
+      } catch (error: any) {
+        console.error('Error saving prompt section:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Add missing API endpoints
+    app.get("/api/lookup-tables/:moduleType", async (req, res) => {
+      try {
+        const { moduleType } = req.params;
+        const tables = await storage.getLookupTables(moduleType);
+        res.json(tables);
+      } catch (error: any) {
+        console.error('Error fetching lookup tables:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get("/api/ai-config", async (req, res) => {
+      try {
+        const config = await storage.getAiConfig();
+        res.json(config);
+      } catch (error: any) {
+        console.error('Error fetching AI config:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get("/api/barrier-glossary/:moduleType", async (req, res) => {
+      try {
+        const { moduleType } = req.params;
+        const glossary = await storage.getBarrierGlossary(moduleType);
+        res.json(glossary);
+      } catch (error: any) {
+        console.error('Error fetching barrier glossary:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get("/api/inference-triggers/:moduleType", async (req, res) => {
+      try {
+        const { moduleType } = req.params;
+        const triggers = await storage.getInferenceTriggers(moduleType);
+        res.json(triggers);
+      } catch (error: any) {
+        console.error('Error fetching inference triggers:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get("/api/plain-language-mappings/:moduleType", async (req, res) => {
+      try {
+        const { moduleType } = req.params;
+        const mappings = await storage.getPlainLanguageMappings(moduleType);
+        res.json(mappings);
+      } catch (error: any) {
+        console.error('Error fetching plain language mappings:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get("/api/mapping-configurations/:moduleType", async (req, res) => {
+      try {
+        const { moduleType } = req.params;
+        const configurations = await storage.getMappingConfigurations(moduleType);
+        res.json(configurations);
+      } catch (error: any) {
+        console.error('Error fetching mapping configurations:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Environment switching endpoint
+    app.get("/api/environment", async (req, res) => {
+      try {
+        const currentEnv = process.env.APP_ENVIRONMENT || 'replit-prod';
+        console.log(`🌍 Current environment: ${currentEnv}`);
+        res.json({ environment: currentEnv });
+      } catch (error: any) {
+        console.error('Error getting environment:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.post("/api/environment", async (req, res) => {
+      try {
+        const { environment } = req.body;
+        
+        if (!['replit-prod', 'replit-dev', 'post-secondary-demo', 'k12-demo', 'tutoring-demo', 'tutoring'].includes(environment)) {
+          return res.status(400).json({ error: 'Invalid environment' });
+        }
+        
+        // Update the environment variable
+        process.env.APP_ENVIRONMENT = environment;
+        
+        // Map demo environments to their respective databases
+        let dbEnvironment = environment;
+        if (environment === 'post-secondary-demo') {
+          dbEnvironment = 'replit-prod';
+        } else if (environment === 'k12-demo') {
+          dbEnvironment = 'k12-demo'; // K-12 demo gets its own database
+        } else if (environment === 'tutoring-demo') {
+          dbEnvironment = 'replit-prod'; // Tutoring demo uses main database
+        } else if (environment === 'tutoring') {
+          dbEnvironment = 'replit-prod'; // Tutoring production uses main database
+        }
+        
+        // Reinitialize storage with new environment
+        const { reinitializeStorage } = await import('../storage');
+        await reinitializeStorage(dbEnvironment);
+        
+        // Reinitialize database connection for environment-specific databases
+        const { reinitializeDatabase } = await import('../db');
+        await reinitializeDatabase();
+        
+        res.json({ 
+          success: true, 
+          environment,
+          message: `Switched to ${environment} environment`
+        });
+      } catch (error: any) {
+        console.error('Error switching environment:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+
+    // Environment configuration endpoint
+    app.get('/api/config/environment', (req: Request, res: Response) => {
+      console.log(`🌍 Environment config requested`);
+      const currentEnv = process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'production';
+
+      const normalized = normalizeEnvironment(currentEnv);
+      const isDemoMode = checkIsDemoEnvironment(currentEnv);
+      const lockedModule = isValidEnvironment(normalized) ? getModuleForEnvironment(normalized) : null;
+
+      // IMPORTANT: Never lock development or production modes - users should be able to switch environments
+      // Demo modes are still functional via URL routes (/post-secondary-demo/*, /k12-demo/*, etc.)
+      const isLocked = false; // Disable locking for integrated development
+
+      res.json({
+        environment: normalized,
+        rawEnvironment: currentEnv,
+        isLocked,
+        isDemoMode, // Flag to indicate demo behavior (read-only) without locking switcher
+        module: lockedModule // Use centralized utility instead of hardcoded checks
+      });
+    });
+
+}

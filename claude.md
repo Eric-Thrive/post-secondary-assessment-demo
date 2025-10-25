@@ -4,6 +4,7 @@ AI-powered educational accessibility platform that dynamically adapts support re
 **Core Modules:**
 - **K-12 Module**: Grade-specific analysis (K-5, 6-8, 9-12, Special Ed), observation templates, barrier identification
 - **Post-Secondary Module**: Higher education accommodations across Academic, Testing, Technology, and Additional Resources
+- **Tutoring Module**: Specialized tutoring assessment and support recommendations
 - **AI Processing Pipeline**: Multi-format document upload (PDF, DOCX, images), OCR, GPT-4 integration with function calling
 - **Report Management**: Version tracking, share tokens, multi-format export (PDF, Word, JSON)
 
@@ -151,14 +152,16 @@ Required in `.env`:
 ## Database Changes
 ```bash
 # Modify schema in shared/schema.ts
-# Push changes to dev database
+# Push changes to database (applies to the single shared database)
 npm run db:push
 
-# For production, generate migration
+# For production deployments, generate migration files for version control
 npx drizzle-kit generate
 # Review migration SQL in migrations/
-# Apply migration in production environment
+# Apply migration: npm run db:push (or run migration in production CI/CD)
 ```
+
+**Note**: All environments use the same database. Schema changes via `db:push` apply to that database immediately. Migrations are for version control and reproducible deployments, not for separating dev/prod databases.
 
 ## Code Review Checklist
 - TypeScript types are properly defined
@@ -362,15 +365,25 @@ npm update
 
 # Architecture Notes
 
-## Monorepo Structure
+## Monorepo Structure (October 2025 Refactor)
+The project was refactored in October 2025 to use a tool-driven monorepo structure managed by **Turborepo**. This provides significant performance gains via caching and improves organization and scalability.
+
+The structure is now organized into `apps` and `packages`:
 ```
-├── client/              # React frontend (Vite)
-├── server/              # Express backend
-├── shared/              # Shared types and schemas
-├── scripts/             # Database utilities
-├── migrations/          # Drizzle migrations
-└── public/              # Static assets
+/
+├── apps/
+│   ├── web/      # The React frontend application
+│   └── server/   # The Express backend server
+├── packages/
+│   ├── db/       # Drizzle ORM schema and database utilities
+│   ├── ui/       # Shared React components (e.g., buttons, cards)
+│   └── config/   # Shared configurations (ESLint, TSConfig, etc.)
+├── package.json  # Root configuration
+└── turbo.json    # Turborepo pipeline configuration
 ```
+
+- **`apps`**: Contain the actual runnable applications.
+- **`packages`**: Contain reusable code (libraries, configs) that the apps depend on.
 
 ## Key Design Patterns
 - **Multi-tenancy**: Customer isolation at database level

@@ -2,6 +2,7 @@
 node_modules/
 dist/
 .cache/
+.turbo/
 
 # Environment files (IMPORTANT: Never commit API keys)
 .env
