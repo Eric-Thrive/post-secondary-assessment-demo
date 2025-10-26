@@ -4,18 +4,18 @@
  * scattered across multiple files in both client and server code.
  */
 
-import { type EnvironmentType, environments } from '../environment';
+import { type EnvironmentType, environments } from "../environment";
 
 /**
  * Demo customer ID used across all demo environments
  * This constant replaces hardcoded 'demo-customer' strings throughout the codebase
  */
-export const DEMO_CUSTOMER_ID = 'demo-customer' as const;
+export const DEMO_CUSTOMER_ID = "demo-customer" as const;
 
 /**
  * Module types supported by the application
  */
-export type ModuleType = 'post_secondary' | 'k12' | 'tutoring';
+export type ModuleType = "post_secondary" | "k12" | "tutoring";
 
 /**
  * Valid environment types (re-exported for convenience)
@@ -26,19 +26,20 @@ export type Environment = EnvironmentType;
  * Mapping of environments to their locked modules
  * Used for enforcing module restrictions in specific environments
  */
-export const MODULE_BY_ENVIRONMENT: Record<EnvironmentType, ModuleType | null> = {
-  'production': null,
-  'development': null,
-  'replit-prod': null,
-  'replit-dev': null,
-  'tutoring': 'tutoring',
-  'post-secondary-demo': 'post_secondary',
-  'post-secondary-dev': 'post_secondary',
-  'k12-demo': 'k12',
-  'k12-dev': 'k12',
-  'tutoring-demo': 'tutoring',
-  'tutoring-dev': 'tutoring',
-};
+export const MODULE_BY_ENVIRONMENT: Record<EnvironmentType, ModuleType | null> =
+  {
+    production: null,
+    development: null,
+    "replit-prod": null,
+    "replit-dev": null,
+    tutoring: "tutoring",
+    "post-secondary-demo": "post_secondary",
+    "post-secondary-dev": "post_secondary",
+    "k12-demo": "k12",
+    "k12-dev": "k12",
+    "tutoring-demo": "tutoring",
+    "tutoring-dev": "tutoring",
+  };
 
 /**
  * Check if an environment is a demo environment
@@ -46,7 +47,7 @@ export const MODULE_BY_ENVIRONMENT: Record<EnvironmentType, ModuleType | null> =
  */
 export function isDemoEnvironment(env: string | undefined): boolean {
   if (!env) return false;
-  return env.includes('demo');
+  return env.endsWith("-demo") || env === "demo";
 }
 
 /**
@@ -61,7 +62,9 @@ export function isReadOnlyEnvironment(env: string | undefined): boolean {
  * Get the locked module for a given environment
  * Returns null if the environment allows all modules
  */
-export function getModuleForEnvironment(env: EnvironmentType): ModuleType | null {
+export function getModuleForEnvironment(
+  env: EnvironmentType
+): ModuleType | null {
   return MODULE_BY_ENVIRONMENT[env] || null;
 }
 
@@ -81,7 +84,7 @@ export function isValidModuleForEnvironment(
  * Get environment configuration by ID
  */
 export function getEnvironmentById(envId: EnvironmentType) {
-  return environments.find(env => env.id === envId);
+  return environments.find((env) => env.id === envId);
 }
 
 /**
@@ -95,16 +98,14 @@ export function hasLockedModule(env: EnvironmentType): boolean {
  * Get all demo environments
  */
 export function getDemoEnvironments() {
-  return environments.filter(env => env.demoMode === true);
+  return environments.filter((env) => env.demoMode === true);
 }
 
 /**
  * Get all development environments
  */
 export function getDevEnvironments() {
-  return environments.filter(env =>
-    env.id.includes('dev') && !env.demoMode
-  );
+  return environments.filter((env) => env.id.includes("dev") && !env.demoMode);
 }
 
 /**
@@ -112,7 +113,7 @@ export function getDevEnvironments() {
  * Handles various environment variable formats
  */
 export function normalizeEnvironment(envString: string | undefined): string {
-  if (!envString) return '';
+  if (!envString) return "";
   return envString.toLowerCase().trim();
 }
 
@@ -120,7 +121,7 @@ export function normalizeEnvironment(envString: string | undefined): string {
  * Validate if a string is a valid environment type
  */
 export function isValidEnvironment(env: string): env is EnvironmentType {
-  return environments.some(e => e.id === env);
+  return environments.some((e) => e.id === env);
 }
 
 /**
@@ -128,11 +129,11 @@ export function isValidEnvironment(env: string): env is EnvironmentType {
  * Falls back to 'development' if not set
  */
 export function getCurrentEnvironment(): EnvironmentType {
-  const env = process.env.APP_ENVIRONMENT || 'development';
-  return isValidEnvironment(env) ? env : 'development';
+  const env = process.env.APP_ENVIRONMENT || "development";
+  return isValidEnvironment(env) ? env : "development";
 }
 
 /**
  * Export all environment types for convenience
  */
-export { type EnvironmentType, environments } from '../environment';
+export { type EnvironmentType, environments } from "../environment";

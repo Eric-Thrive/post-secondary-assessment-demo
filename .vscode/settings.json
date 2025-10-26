@@ -146,10 +146,7 @@
   "typescript.preferences.importModuleSpecifier": "relative",
 
   // Better error visibility for UI work
-  "errorLens.enabledDiagnosticLevels": [
-    "error",
-    "warning"
-  ],
+  "errorLens.enabledDiagnosticLevels": ["error", "warning"],
   "errorLens.fontSize": "0.9em",
 
   // Auto-close tags

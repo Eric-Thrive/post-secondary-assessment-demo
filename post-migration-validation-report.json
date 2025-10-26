@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-10-26T14:50:48.010Z",
+  "summary": {
+    "passed": 26,
+    "errors": 0,
+    "warnings": 2
+  },
+  "validations": [
+    "✅ Environment types cleaned of Replit references",
+    "✅ Standard production/development environments defined",
+    "✅ Deployment configuration cleaned",
+    "✅ Environment context cleaned",
+    "✅ Database constants cleaned",
+    "✅ apps/server/routes/analysis-routes.ts cleaned",
+    "✅ apps/server/routes/assessment-case-routes.ts cleaned",
+    "✅ apps/server/routes/config-routes.ts cleaned",
+    "✅ apps/server/storage.ts cleaned",
+    "✅ .replit configuration file removed",
+    "✅ apps/server directory exists",
+    "✅ apps/web directory exists",
+    "✅ packages/db directory exists",
+    "✅ scripts directory exists",
+    "✅ Workspace configuration valid",
+    "✅ package.json clean of Replit dependencies",
+    "✅ apps/server/package.json clean of Replit dependencies",
+    "✅ apps/web/package.json clean of Replit dependencies",
+    "✅ Essential dependency express present",
+    "✅ Essential dependency openai present",
+    "✅ Essential dependency @google-cloud/storage present",
+    "✅ README.md updated with production references",
+    "✅ claude.md updated with production references",
+    "✅ Dependencies install successfully",
+    "✅ TypeScript compilation successful",
+    "✅ Build process successful"
+  ],
+  "errors": [],
+  "warnings": [
+    "README.md contains 2 Replit references (may be intentional)",
+    "claude.md contains 6 Replit references (may be intentional)"
+  ]
+}
