@@ -72,29 +72,55 @@ export function parsePostSecondaryReportSections(markdownReport: string): Report
     });
   }
   
-  // Strategy B: Try ### N. Title format if Strategy A found no sections
-  if (sections.length === 0 && processedReport.includes('### ')) {
-    console.log('📄 Strategy B: Trying ### N. Title format');
-    parts = processedReport.split(/(?=^### \d+\.)/m);
-    
+  // Strategy B: Try SECTION N: Title format (uppercase, no markdown headers)
+  if (sections.length === 0 && processedReport.match(/SECTION \d+:/i)) {
+    console.log('📄 Strategy B: Trying SECTION N: Title format (uppercase)');
+    parts = processedReport.split(/(?=^SECTION \d+:)/im);
+
     parts.forEach((part, index) => {
       const trimmedPart = part.trim();
       if (!trimmedPart) return;
-      
-      // Extract section title from ### N. Title header
-      const titleMatch = trimmedPart.match(/^### \d+\.\s*(.+?)(?:\n|$)/);
+
+      // Extract section title from SECTION N: Title header
+      const titleMatch = trimmedPart.match(/^SECTION \d+:\s*(.+?)(?:\n|$)/i);
       if (!titleMatch) return;
-      
+
       const title = titleMatch[1].trim();
       const content = trimmedPart.substring(titleMatch[0].length).trim();
-      
+
       sections.push({
         title,
         content,
         index: index + 1
       });
-      
+
       console.log(`📋 Strategy B found section ${index + 1}: "${title}" (${content.length} chars)`);
+    });
+  }
+
+  // Strategy C: Try ### N. Title format if previous strategies found no sections
+  if (sections.length === 0 && processedReport.includes('### ')) {
+    console.log('📄 Strategy C: Trying ### N. Title format');
+    parts = processedReport.split(/(?=^### \d+\.)/m);
+
+    parts.forEach((part, index) => {
+      const trimmedPart = part.trim();
+      if (!trimmedPart) return;
+
+      // Extract section title from ### N. Title header
+      const titleMatch = trimmedPart.match(/^### \d+\.\s*(.+?)(?:\n|$)/);
+      if (!titleMatch) return;
+
+      const title = titleMatch[1].trim();
+      const content = trimmedPart.substring(titleMatch[0].length).trim();
+
+      sections.push({
+        title,
+        content,
+        index: index + 1
+      });
+
+      console.log(`📋 Strategy C found section ${index + 1}: "${title}" (${content.length} chars)`);
     });
   } else if (processedReport.includes('**Section ')) {
     console.log('📄 Using **Section N:** format parser');

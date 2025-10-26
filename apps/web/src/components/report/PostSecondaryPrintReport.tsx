@@ -20,7 +20,11 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
     
     // Parse markdown into structured sections
     const sections = React.useMemo(() => {
-      return parsePostSecondaryReportSections(markdownReport || '');
+      console.log('🖨️ PRINT REPORT: Parsing markdown, length:', markdownReport?.length || 0);
+      console.log('🖨️ PRINT REPORT: First 500 chars of markdown:', markdownReport?.slice(0, 500));
+      const parsed = parsePostSecondaryReportSections(markdownReport || '');
+      console.log('🖨️ PRINT REPORT: Parsed sections:', parsed.map(s => s.title));
+      return parsed;
     }, [markdownReport]);
 
     // Get section content by view name
@@ -55,15 +59,29 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
     // Parse functional impact barriers
     const functionalImpactSection = getSectionForView("functional-impact");
     const functionalImpacts = React.useMemo(() => {
-      if (!functionalImpactSection) return [];
-      return parseFunctionalImpactBarriers(functionalImpactSection.content);
+      console.log('🖨️ PRINT REPORT: Functional impact section found:', !!functionalImpactSection);
+      if (!functionalImpactSection) {
+        console.log('🖨️ PRINT REPORT: No functional impact section!');
+        return [];
+      }
+      console.log('🖨️ PRINT REPORT: Functional impact content length:', functionalImpactSection.content?.length || 0);
+      const parsed = parseFunctionalImpactBarriers(functionalImpactSection.content);
+      console.log('🖨️ PRINT REPORT: Parsed functional impacts:', parsed.length);
+      return parsed;
     }, [functionalImpactSection]);
 
     // Parse accommodation subsections
     const accommodationSection = getSectionForView("accommodations");
     const accommodationSubsections = React.useMemo(() => {
-      if (!accommodationSection) return [];
-      return parseAccommodationSubsections(accommodationSection.content);
+      console.log('🖨️ PRINT REPORT: Accommodation section found:', !!accommodationSection);
+      if (!accommodationSection) {
+        console.log('🖨️ PRINT REPORT: No accommodation section!');
+        return [];
+      }
+      console.log('🖨️ PRINT REPORT: Accommodation content length:', accommodationSection.content?.length || 0);
+      const parsed = parseAccommodationSubsections(accommodationSection.content);
+      console.log('🖨️ PRINT REPORT: Parsed accommodation subsections:', parsed.length);
+      return parsed;
     }, [accommodationSection]);
 
     // Get student information section
@@ -149,7 +167,7 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
           {/* Row 1: Student Information and Documents Reviewed (Blue) */}
           <div className="grid grid-cols-2 gap-2">
             {/* Student Information Card */}
-            <Card className="p-2" style={{ backgroundColor: '#E6F7FA', borderColor: '#1297D2', borderWidth: '1px' }}>
+            <Card className="p-2" style={{ backgroundColor: 'rgba(150, 215, 225, 0.1)', borderColor: '#96D7E1', borderWidth: '1px' }}>
               <h2 className="text-xs font-bold mb-1" style={{ color: '#1297D2' }}>
                 Student Information
               </h2>
@@ -167,8 +185,8 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
                   <span className="font-semibold">Date Issued:</span> {studentInfo.dateIssued || (currentCase?.date_issued ? new Date(currentCase.date_issued).toLocaleDateString() : 'Oct 21, 2025')}
                 </div>
                 <div>
-                  <span className="font-semibold">Status:</span> 
-                  <span className="ml-1 px-1 py-0.5 rounded text-xs" style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}>
+                  <span className="font-semibold">Status:</span>
+                  <span className="ml-1 px-1 py-0.5 rounded text-xs" style={{ backgroundColor: 'rgba(253, 230, 119, 0.5)', color: '#92400E' }}>
                     {studentInfo.status || (currentCase?.status === 'completed' ? 'Completed' : 'In Progress')}
                   </span>
                 </div>
@@ -176,7 +194,7 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
             </Card>
 
             {/* Documents Reviewed Card */}
-            <Card className="p-2" style={{ backgroundColor: '#E6F7FA', borderColor: '#1297D2', borderWidth: '1px' }}>
+            <Card className="p-2" style={{ backgroundColor: 'rgba(150, 215, 225, 0.1)', borderColor: '#96D7E1', borderWidth: '1px' }}>
               <h2 className="text-xs font-bold mb-1" style={{ color: '#1297D2' }}>
                 Documents Reviewed
               </h2>
@@ -199,12 +217,12 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
             </h2>
             <div className="grid grid-cols-2 gap-2">
               {groupedFunctionalImpacts.map((group, groupIdx) => (
-                <Card 
-                  key={groupIdx} 
-                  className="p-2" 
-                  style={{ 
-                    backgroundColor: '#FEF3E8', 
-                    borderColor: '#F89E54', 
+                <Card
+                  key={groupIdx}
+                  className="p-2"
+                  style={{
+                    backgroundColor: 'rgba(248, 158, 84, 0.1)',
+                    borderColor: '#F89E54',
                     borderWidth: '1px'
                   }}
                 >
@@ -240,13 +258,13 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
                 const accommodations = parseAccommodations(subsection.content);
                 
                 return (
-                  <Card 
-                    key={idx} 
-                    className="p-2" 
-                    style={{ 
-                      backgroundColor: '#E6F7FA', 
-                      borderColor: '#1297D2', 
-                      borderWidth: '1px' 
+                  <Card
+                    key={idx}
+                    className="p-2"
+                    style={{
+                      backgroundColor: 'rgba(150, 215, 225, 0.1)',
+                      borderColor: '#96D7E1',
+                      borderWidth: '1px'
                     }}
                   >
                     <h3 className="font-bold text-xs mb-1" style={{ color: '#1297D2' }}>
@@ -256,10 +274,23 @@ const PostSecondaryPrintReport = React.forwardRef<HTMLDivElement, PostSecondaryP
                       <div className="space-y-1">
                         {accommodations.map((acc, accIdx) => (
                           <div key={accIdx} className="text-xs">
-                            <div><span className="font-semibold">{acc.number}.</span> {acc.title}</div>
+                            <div className="flex items-start gap-1">
+                              <span
+                                className="inline-flex items-center justify-center px-1.5 py-0.5 rounded font-semibold flex-shrink-0"
+                                style={{
+                                  backgroundColor: 'rgba(253, 230, 119, 0.5)',
+                                  color: '#92400E',
+                                  fontSize: '10px',
+                                  minWidth: '20px'
+                                }}
+                              >
+                                {accIdx + 1}
+                              </span>
+                              <span className="flex-1">{acc.title}</span>
+                            </div>
                             {acc.barrier && (
-                              <div className="text-gray-600 ml-3" style={{ fontSize: '9px' }}>
-                                <span className="font-medium">Barrier:</span> {stripMarkdownFormatting(acc.barrier)}
+                              <div className="text-gray-600 ml-6 italic" style={{ fontSize: '9px' }}>
+                                {stripMarkdownFormatting(acc.barrier)}
                               </div>
                             )}
                           </div>

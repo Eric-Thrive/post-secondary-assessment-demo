@@ -91,6 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Login Successful",
           description: `Welcome back, ${data.user.username}!`,
         });
+
+        if (data.redirectUrl && typeof data.redirectUrl === 'string') {
+          window.location.assign(data.redirectUrl);
+        }
         return true;
       } else {
         toast({

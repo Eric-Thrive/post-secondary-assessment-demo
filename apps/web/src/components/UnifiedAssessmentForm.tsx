@@ -30,7 +30,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('assessment-info');
   const [activeDocumentSubSection, setActiveDocumentSubSection] = useState<'deidentification' | 'upload'>('deidentification');
-  
+
   const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [documentFiles, setDocumentFiles] = useState<FileList | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<string>('');
@@ -471,9 +471,9 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
               {activeDocumentSubSection === 'deidentification' && (
                 <div className="bg-white rounded-xl shadow-lg p-10 border border-gray-200">
                   <h2 className="text-3xl font-bold text-gray-800 mb-8">Document De-identification</h2>
-                  
+
                   <DeidentificationHeroCard />
-                  
+
                   {/* Navigation Buttons */}
                   <div className="mt-10 flex justify-between">
                     <Button

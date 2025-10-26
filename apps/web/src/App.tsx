@@ -28,6 +28,9 @@ import PostSecondaryDemoLandingPage from "./pages/PostSecondaryDemoLandingPage";
 import K12DemoLandingPage from "./pages/K12DemoLandingPage";
 import TutoringDemoLandingPage from "./pages/TutoringDemoLandingPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import PostSecondaryLoginPage from "./pages/PostSecondaryLoginPage";
+import K12LoginPage from "./pages/K12LoginPage";
+import TutorLoginPage from "./pages/TutorLoginPage";
 import ReviewDocumentsPage from "./pages/ReviewDocumentsPage";
 import { SharedReport } from "./pages/SharedReport";
 import NotFound from "./pages/NotFound";
@@ -189,6 +192,9 @@ const App = () => {
               <Route path="/tutoring-demo" element={<TutoringDemoPage />} />
               
               {/* Password Reset and Demo Landing Pages */}
+              <Route path="/login/post-secondary" element={<PostSecondaryLoginPage />} />
+              <Route path="/login/k12" element={<K12LoginPage />} />
+              <Route path="/login/tutor" element={<TutorLoginPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/post-secondary-demo-login" element={<PostSecondaryDemoLandingPage />} />
               <Route path="/k12-demo-login" element={<K12DemoLandingPage />} />

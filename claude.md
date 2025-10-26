@@ -117,6 +117,12 @@ Required in `.env`:
 - `PORT` - Default: `5001` (avoid macOS ControlCenter conflict on port 5000)
 - `VITE_PI_REDACTOR_URL` - URL to PI Redactor tool (optional)
 
+**Login redirects & cookies**:
+- `LOGIN_REDIRECT_DEFAULT_URL` – fallback path when no demo/role match
+- `LOGIN_REDIRECT_POST_SECONDARY_DEMO_URL`, `LOGIN_REDIRECT_K12_DEMO_URL`, `LOGIN_REDIRECT_TUTORING_DEMO_URL`
+- `LOGIN_REDIRECT_ROLE_SYSTEM_ADMIN_URL`, `LOGIN_REDIRECT_ROLE_CUSTOMER_ADMIN_URL`, `LOGIN_REDIRECT_ROLE_TUTOR_URL`
+- Optional cross-subdomain session config: `SESSION_COOKIE_DOMAIN`, `SESSION_COOKIE_SAMESITE`
+
 **Note**: All environments (dev, prod, demo) use the same Neon database. The `APP_ENVIRONMENT` variable controls application behavior (demo mode = read-only, production = full access).
 
 # Testing Guidelines

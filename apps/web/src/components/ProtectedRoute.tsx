@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEnvironment } from '@/contexts/EnvironmentContext';
-import LoginForm from './LoginForm';
+import LoginForm, { type LoginVariant } from './LoginForm';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -11,6 +11,24 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const { currentEnvironment } = useEnvironment();
+
+  const resolveLoginVariant = (): LoginVariant => {
+    if (!currentEnvironment) {
+      return 'post-secondary';
+    }
+
+    if (currentEnvironment.startsWith('k12')) {
+      return 'k12';
+    }
+
+    if (currentEnvironment.startsWith('tutoring')) {
+      return 'tutor';
+    }
+
+    return 'post-secondary';
+  };
+
+  const loginVariant = resolveLoginVariant();
 
   // Require authentication for all demo environments, dev environments, and tutoring production
   const requiresAuth = currentEnvironment === 'tutoring' || 
@@ -33,7 +51,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If auth is required but user is not authenticated, show login form
   if (requiresAuth && !isAuthenticated) {
-    return <LoginForm />;
+    return <LoginForm variant={loginVariant} />;
   }
 
   // Otherwise, render the protected content

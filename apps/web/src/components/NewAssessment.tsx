@@ -11,6 +11,7 @@ import { useModule } from "@/contexts/ModuleContext";
 import DocumentUpload from './DocumentUpload';
 import { PDFTestWidget } from './PDFTestWidget';
 import { GradeSelection } from './GradeSelection';
+import { DeidentificationHeroCard } from './DeidentificationHeroCard';
 
 const NewAssessment = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const NewAssessment = () => {
   const [gradeError, setGradeError] = useState<string>('');
   const [studentName, setStudentName] = useState<string>('');
   const [nameError, setNameError] = useState<string>('');
+  const [activeDocumentView, setActiveDocumentView] = useState<'deidentification' | 'upload'>('deidentification');
 
   const handleSubmit = async () => {
     // Validate student name (required for all modules)
@@ -167,13 +169,42 @@ const NewAssessment = () => {
         )}
       </div>
 
-      <PDFTestWidget />
+      {/* De-identification Screen */}
+      {activeDocumentView === 'deidentification' && (
+        <div className="space-y-6">
+          <DeidentificationHeroCard />
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setActiveDocumentView('upload')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Next: Upload Documents →
+            </Button>
+          </div>
+        </div>
+      )}
 
-      <DocumentUpload 
-        documents={documents} 
-        setDocuments={setDocuments} 
-        onFilesChange={setDocumentFiles} 
-      />
+      {/* Document Upload Screen */}
+      {activeDocumentView === 'upload' && (
+        <div className="space-y-6">
+          <div className="flex justify-start">
+            <Button
+              variant="outline"
+              onClick={() => setActiveDocumentView('deidentification')}
+            >
+              ← Back to De-identification
+            </Button>
+          </div>
+
+          <PDFTestWidget />
+
+          <DocumentUpload
+            documents={documents}
+            setDocuments={setDocuments}
+            onFilesChange={setDocumentFiles}
+          />
+        </div>
+      )}
     </div>
   );
 };

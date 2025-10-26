@@ -41,67 +41,17 @@ const poolConfig = {
 // Use standard PostgreSQL pool
 export let pool = new Pool(poolConfig);
 
-// Add session-level read-only enforcement for demo environments
+// REMOVED: Connection-level read-only enforcement
+// Demo environments now use selective middleware to protect system configs
+// Demo users can use full app functionality (create assessments, edit reports)
+// See: apps/server/middleware/demoWriteGuard.ts
 if (isReadOnly) {
-  pool.on('connect', async (client) => {
-    try {
-      console.log(`🔒 SECURITY: Setting session to read-only mode...`);
-      await client.query('SET default_transaction_read_only = on');
-      await client.query('SET transaction_read_only = on');
-      console.log(`✅ SECURITY: Session successfully configured as read-only`);
-    } catch (error) {
-      console.error(`🚨 SECURITY ERROR: Failed to set read-only mode:`, error);
-      throw new Error(`Failed to enforce read-only mode: ${error}`);
-    }
-  });
+  console.log(`🔒 DEMO MODE: Selective protection via middleware`);
+  console.log(`   ✅ Allowed: User auth, assessments, reports (full functionality)`);
+  console.log(`   ❌ Blocked: System configs (prompts, AI settings, lookup tables)`);
 }
 
 export let db = drizzle(pool, { schema });
-
-// Verify read-only enforcement on startup
-if (isReadOnly) {
-  verifyReadOnlyMode().catch(error => {
-    console.error('🚨 CRITICAL SECURITY FAILURE: Read-only verification failed:', error);
-    process.exit(1);
-  });
-}
-
-/**
- * Verify that read-only mode is properly enforced
- */
-async function verifyReadOnlyMode(): Promise<void> {
-  console.log('🔍 SECURITY: Verifying read-only enforcement...');
-  
-  try {
-    const client = await pool.connect();
-    try {
-      // Check if default_transaction_read_only is enabled
-      const result = await client.query('SHOW default_transaction_read_only');
-      const readOnlyStatus = result.rows[0]?.default_transaction_read_only;
-      
-      if (readOnlyStatus !== 'on') {
-        throw new Error(`Expected read-only mode 'on', but got '${readOnlyStatus}'`);
-      }
-      
-      console.log('✅ SECURITY: Read-only mode verification successful');
-      console.log(`   default_transaction_read_only: ${readOnlyStatus}`);
-      
-      // Additional test: Try a write operation to ensure it fails
-      try {
-        await client.query('CREATE TEMP TABLE security_test_table (id int)');
-        console.log('⚠️  WARNING: Temporary table creation succeeded - this may be expected in some read-only configs');
-      } catch (writeError) {
-        console.log('✅ SECURITY: Write operations properly blocked - temp table creation failed as expected');
-      }
-      
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error('🚨 CRITICAL: Read-only verification failed:', error);
-    throw error;
-  }
-}
 
 // Function to reinitialize database connection when environment changes
 export async function reinitializeDatabase() {
@@ -135,34 +85,19 @@ export async function reinitializeDatabase() {
   
   // Create new pool with updated database URL
   pool = new Pool(newPoolConfig);
-  
-  // Add session-level read-only enforcement for demo environments
+
+  // REMOVED: Connection-level read-only enforcement
+  // Demo environments now use selective middleware to protect system configs
   if (newIsReadOnly) {
-    pool.on('connect', async (client) => {
-      try {
-        console.log(`🔒 SECURITY: Setting session to read-only mode...`);
-        await client.query('SET default_transaction_read_only = on');
-        await client.query('SET transaction_read_only = on');
-        console.log(`✅ SECURITY: Session successfully configured as read-only`);
-      } catch (error) {
-        console.error(`🚨 SECURITY ERROR: Failed to set read-only mode:`, error);
-        throw new Error(`Failed to enforce read-only mode: ${error}`);
-      }
-    });
+    console.log(`🔒 DEMO MODE: Selective protection via middleware`);
+    console.log(`   ✅ Allowed: User auth, assessments, reports (full functionality)`);
+    console.log(`   ❌ Blocked: System configs (prompts, AI settings, lookup tables)`);
   }
-  
+
   db = drizzle(pool, { schema });
-  
+
   console.log(`🔒 Database reinitialized for environment: ${process.env.APP_ENVIRONMENT}`);
   console.log(`   Database: ${newDbConfig.name}`);
   console.log(`   Read-Only: ${newIsReadOnly}`);
   console.log(`   Demo Environment: ${newIsDemo}`);
-  
-  // Verify read-only enforcement after reinitialize
-  if (newIsReadOnly) {
-    verifyReadOnlyMode().catch(error => {
-      console.error('🚨 CRITICAL SECURITY FAILURE: Read-only verification failed after reinitialize:', error);
-      process.exit(1);
-    });
-  }
 }

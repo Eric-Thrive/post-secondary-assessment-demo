@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { requestTimeout, setupGracefulShutdown, healthCheck } from "./reliability-improvements";
+import { demoWriteGuard } from "./middleware/demoWriteGuard";
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,11 @@ app.use(requestTimeout(30000));
 
 // Add health check endpoint
 app.get('/health', healthCheck);
+
+// Add demo write guard middleware
+// This implements selective read-only mode for demo environments
+// Allows user registration/login while blocking assessment creation
+app.use(demoWriteGuard);
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -34,18 +34,44 @@ const sessionStore = new PgSession({
   ttl: 7 * 24 * 60 * 60, // 7 days in seconds
 });
 
+const sanitizeDomain = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const normalizeSameSite = (
+  value: string | undefined,
+): session.CookieOptions["sameSite"] => {
+  if (!value) return "lax";
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "strict" || normalized === "lax" || normalized === "none") {
+    return normalized;
+  }
+  return "lax";
+};
+
+const sessionCookieDomain = sanitizeDomain(process.env.SESSION_COOKIE_DOMAIN);
+const sessionCookieSameSite = normalizeSameSite(process.env.SESSION_COOKIE_SAMESITE);
+
+const cookieConfig: session.CookieOptions = {
+  secure: process.env.NODE_ENV === 'production', // Enable in production with HTTPS
+  httpOnly: true,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  sameSite: sessionCookieSameSite, // CSRF protection
+};
+
+if (sessionCookieDomain) {
+  cookieConfig.domain = sessionCookieDomain;
+}
+
 export const sessionConfig = session({
   store: sessionStore,
   secret: process.env.SESSION_SECRET || 'default-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
   rolling: true, // Reset session expiration on activity
-  cookie: {
-    secure: process.env.NODE_ENV === 'production', // Enable in production with HTTPS
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: 'lax', // CSRF protection
-  },
+  cookie: cookieConfig,
 });
 
 // Password utilities
@@ -288,7 +314,7 @@ declare module 'express-session' {
       role?: string | null;
       customerId?: string | null;
       customerName?: string | null;
-      demoPermissions?: Record<string, unknown> | null;
+      demoPermissions?: Record<string, boolean>;
     };
   }
 }

@@ -268,6 +268,16 @@ export function registerAnalysisRoutes(app: Express): void {
             console.log(`⚠️  Demo system prompt not found, using fallback: ${systemInstructions.section_key}`);
           }
         }
+
+        const templateFixKeyCandidates = isDemoEnv
+          ? [
+              `system_instructions_${promptModuleType}_template_fix_demo`,
+              `system_instructions_${promptModuleType}_template_fix`
+            ]
+          : [`system_instructions_${promptModuleType}_template_fix`];
+        const templateFixPrompt = templateFixKeyCandidates
+          .map(key => systemPrompts.find(p => p.section_key === key))
+          .find((prompt): prompt is { content: string } => Boolean(prompt?.content));
         
         console.log(`📋 System prompt loaded: ${systemInstructions?.content?.length || 0} characters`);
         
@@ -485,29 +495,21 @@ export function registerAnalysisRoutes(app: Express): void {
           console.log('⚠️ Template violations detected:', templateViolations);
           console.log('🔄 Regenerating with stronger template enforcement...');
           
+          if (!templateFixPrompt?.content) {
+            const missingKey = templateFixKeyCandidates.join(', ');
+            console.error(`❌ Missing template fix system instructions. Expected one of: ${missingKey}`);
+            return res.status(500).json({
+              error: `Template enforcement prompt not configured for module: ${promptModuleType}`,
+              required_prompt_keys: templateFixKeyCandidates
+            });
+          }
+
           const fixedResponse = await openai.chat.completions.create({
             model: 'gpt-4.1',
             messages: [
               {
                 role: 'system',
-                content: `You are a disability services specialist. The previous response violated the template structure. You MUST fix this by following the EXACT template below.
-
-  CRITICAL ERRORS TO AVOID:
-  - DO NOT create sections like "Functional Barriers and Required Accommodations"
-  - DO NOT combine barriers and accommodations in the same section
-  - DO NOT skip any required fields in the template
-
-  You MUST follow this EXACT template structure:
-
-  ${template}
-
-  IMPORTANT REQUIREMENTS:
-  1. Section 2 must list ONLY barriers with evidence - NO accommodations
-  2. Section 3 must include ALL subsections (3.1, 3.2, 3.3, 3.4) with proper accommodation format
-  3. Each accommodation MUST include: Name, Barriers Addressed, Evidence Base, and Implementation Notes
-  4. If no accommodations for a subsection, write "**None at this time.**"
-
-  Follow the template EXACTLY as shown above.`
+                content: templateFixPrompt.content
               },
               {
                 role: 'user',

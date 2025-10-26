@@ -5,14 +5,68 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, LogIn, UserPlus, GraduationCap } from "lucide-react";
+import { Loader2, LogIn, UserPlus, GraduationCap, School, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
+
+export type LoginVariant = 'post-secondary' | 'k12' | 'tutor';
+
+interface BrandConfig {
+  portalTitle: string;
+  heading: string;
+  subtitle: string;
+  gradient: string;
+  description?: string;
+  icon: LucideIcon;
+  accentTextClass: string;
+  accentHoverClass: string;
+  tabTriggerClass: string;
+}
 
 interface LoginFormProps {
   onSuccess?: () => void;
+  variant?: LoginVariant;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
+const BRAND_CONFIG: Record<LoginVariant, BrandConfig> = {
+  'post-secondary': {
+    portalTitle: 'Post-Secondary Portal',
+    heading: 'Welcome Back',
+    subtitle: 'Sign in to access your assessment portal',
+    gradient: 'from-blue-600 via-indigo-700 to-purple-800',
+    description: 'Streamline disability services reporting for colleges and universities.',
+    icon: GraduationCap,
+    accentTextClass: 'text-blue-600',
+    accentHoverClass: 'hover:text-blue-700',
+    tabTriggerClass: 'data-[state=active]:bg-blue-600 data-[state=active]:text-white',
+  },
+  k12: {
+    portalTitle: 'K-12 Educator Portal',
+    heading: 'Welcome, K-12 Team',
+    subtitle: 'Log in to manage student support plans',
+    gradient: 'from-emerald-500 via-green-600 to-teal-700',
+    description: 'Deliver consistent, student-centered plans across your K-12 program.',
+    icon: School,
+    accentTextClass: 'text-emerald-600',
+    accentHoverClass: 'hover:text-emerald-700',
+    tabTriggerClass: 'data-[state=active]:bg-emerald-600 data-[state=active]:text-white',
+  },
+  tutor: {
+    portalTitle: 'Tutoring Portal',
+    heading: 'Welcome, Tutors',
+    subtitle: 'Access your tutoring reports and resources',
+    gradient: 'from-amber-500 via-orange-500 to-rose-600',
+    description: 'Personalize tutoring sessions and keep progress aligned across your team.',
+    icon: Users,
+    accentTextClass: 'text-orange-500',
+    accentHoverClass: 'hover:text-orange-600',
+    tabTriggerClass: 'data-[state=active]:bg-orange-500 data-[state=active]:text-white',
+  },
+};
+
+const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, variant = 'post-secondary' }) => {
+  const brand = BRAND_CONFIG[variant];
+  const Icon = brand.icon;
   const [isLoading, setIsLoading] = useState(false);
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [registerData, setRegisterData] = useState({
@@ -131,14 +185,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   return (
     <div className="h-screen grid lg:grid-cols-[1.1fr_0.9fr] grid-cols-1">
       {/* Brand Panel - Left Side */}
-      <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 flex flex-col justify-center items-center p-8 text-white relative overflow-hidden">
+      <div className={`bg-gradient-to-br ${brand.gradient} flex flex-col justify-center items-center p-8 text-white relative overflow-hidden`}>
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10 max-w-md text-center">
           <div className="mx-auto w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-8">
-            <GraduationCap className="h-10 w-10 text-white" />
+            <Icon className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-4">Post-Secondary Portal</h1>
-          
+          <h1 className="text-4xl font-bold mb-4">{brand.portalTitle}</h1>
+          {brand.description && (
+            <p className="text-lg text-white/80">
+              {brand.description}
+            </p>
+          )}
         </div>
       </div>
 
@@ -146,16 +204,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       <div className="bg-white flex flex-col justify-center p-8 lg:p-12">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{brand.heading}</h2>
             <p className="text-gray-600">
-              Sign in to access your assessment portal
+              {brand.subtitle}
             </p>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Login</TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Register</TabsTrigger>
+              <TabsTrigger value="login" className={`transition-colors ${brand.tabTriggerClass}`}>Login</TabsTrigger>
+              <TabsTrigger value="register" className={`transition-colors ${brand.tabTriggerClass}`}>Register</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
@@ -174,7 +232,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                   <button
                     type="button"
                     onClick={() => setShowUsernameRecovery(true)}
-                    className="text-blue-600 hover:text-blue-700 text-xs font-medium"
+                    className={`${brand.accentTextClass} ${brand.accentHoverClass} text-xs font-medium`}
                     data-testid="link-forgot-username"
                   >
                     Forgot your username?
@@ -210,7 +268,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                     <button
                       type="button"
                       onClick={() => setShowPasswordReset(true)}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      className={`${brand.accentTextClass} ${brand.accentHoverClass} text-sm font-medium`}
                       data-testid="link-forgot-password"
                     >
                       Forgot your password?
@@ -304,7 +362,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             <p className="text-sm text-gray-500">
               Need help accessing your account?
             </p>
-            <a href="#" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+            <a href="#" className={`${brand.accentTextClass} ${brand.accentHoverClass} text-sm font-medium`}>
               Contact Support
             </a>
           </div>

@@ -16,6 +16,10 @@ import {
 } from "../auth";
 import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
 import { isReadOnlyEnvironment } from "../config/database";
+import {
+  normalizeDemoPermissions,
+  resolvePostLoginRedirect,
+} from "../config/loginRedirects";
 
 /**
  * Register authentication-related routes.
@@ -189,6 +193,8 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
+      const parsedDemoPermissions = normalizeDemoPermissions(user.demoPermissions);
+
       // Set userId for auth middleware
       req.session.userId = user.id;
 
@@ -200,7 +206,7 @@ export function registerAuthRoutes(app: Express): void {
         role: user.role,
         customerId: user.customerId,
         customerName: user.customerName,
-        demoPermissions: (user.demoPermissions ?? null) as Record<string, unknown> | null,
+        demoPermissions: parsedDemoPermissions,
       };
 
       if (!isReadOnlyEnvironment()) {
@@ -212,9 +218,16 @@ export function registerAuthRoutes(app: Express): void {
         console.log('ℹ️ Skipping lastLogin update in read-only environment');
       }
 
+      const redirectInfo = resolvePostLoginRedirect({
+        role: user.role,
+        demoPermissions: parsedDemoPermissions,
+      });
+
       res.json({
         message: "Login successful",
         user: req.session.user,
+        redirectUrl: redirectInfo.url,
+        redirectSource: redirectInfo.source,
       });
     } catch (error) {
       console.error("Login error:", error);

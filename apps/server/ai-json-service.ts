@@ -146,23 +146,14 @@ export class AIJSONService {
     
     // Get module-specific prompts
     const reportFormatPrompts = await storage.getPromptSections(moduleType, 'report_format');
-    const systemPrompts = await storage.getPromptSections(moduleType, 'system');
-    
-    // Build JSON generation prompt - use system prompt for tutoring module
-    let jsonPrompt: string;
-    if (moduleType === 'tutoring' && systemPrompts.length > 0) {
-      // Use the comprehensive tutoring system prompt with schema
-      jsonPrompt = systemPrompts[0].content;
-    } else {
-      // Use the generic JSON generation prompt for other modules
-      jsonPrompt = this.buildJSONGenerationPrompt(moduleType, documents, studentName, gradeBand);
-    }
+    const jsonSystemPrompt = await this.loadJSONSystemPrompt(moduleType);
+    const jsonUserPrompt = this.buildJSONUserPrompt(moduleType, documents, studentName, gradeBand);
     
     try {
       // Generate JSON report from OpenAI
       const openaiResponse = await this.callOpenAIDirect([
-        { role: 'system', content: jsonPrompt },
-        { role: 'user', content: `Documents to analyze:\n\n${documents.join('\n\n---\n\n')}` }
+        { role: 'system', content: jsonSystemPrompt },
+        { role: 'user', content: jsonUserPrompt }
       ]);
 
       console.log('📊 Raw OpenAI response received');
@@ -198,12 +189,38 @@ export class AIJSONService {
     }
   }
   
-  private buildJSONGenerationPrompt(moduleType: string, documents: string[], studentName?: string, gradeBand?: string): string {
-    const basePrompt = `You are an educational assessment AI that generates structured JSON reports with quality control metadata.
+  private async loadJSONSystemPrompt(moduleType: string): Promise<string> {
+    const candidateKeys = [
+      `system_instructions_${moduleType}_json`,
+      `system_instructions_${moduleType}_json_report`,
+      `system_instructions_${moduleType}_json_generation`,
+      `json_report_system_prompt_${moduleType}`,
+      `system_instructions_${moduleType}`
+    ];
 
-**CRITICAL: Your response must be valid JSON only. No explanations, no markdown, just JSON.**
+    const jsonScopedPrompts = await storage.getPromptSections(moduleType, 'system', 'json');
+    const systemPrompts = jsonScopedPrompts.length > 0
+      ? jsonScopedPrompts
+      : await storage.getPromptSections(moduleType, 'system');
 
-Generate a JSON report with this structure:
+    for (const key of candidateKeys) {
+      const match = systemPrompts.find((prompt: any) => prompt.section_key === key);
+      if (match?.content) {
+        console.log(`✅ Loaded JSON system prompt for ${moduleType}: ${key}`);
+        return match.content;
+      }
+    }
+
+    throw new Error(`JSON system prompt not found for module: ${moduleType}. Please ensure one of the following keys exists: ${candidateKeys.join(', ')}`);
+  }
+
+  private buildJSONUserPrompt(
+    moduleType: string,
+    documents: string[],
+    studentName?: string,
+    gradeBand?: string
+  ): string {
+    const basePrompt = `Generate a structured JSON report with the following schema:
 {
   "studentOverview": {
     "summary": "Brief 2-3 sentence overview of the student",
@@ -227,7 +244,7 @@ Generate a JSON report with this structure:
   ],
   "challenges": [
     {
-      "title": "Challenge title", 
+      "title": "Challenge title",
       "content": "Detailed description with specific examples",
       "qc": {
         "confidence": 5,
@@ -242,32 +259,56 @@ Generate a JSON report with this structure:
       "content": "Specific, actionable support recommendation",
       "qc": {
         "confidence": 4,
-        "evidenceQuality": "strong", 
+        "evidenceQuality": "strong",
         "uncertaintyFlag": false
       }
     }
   ]
 }
 
-**QC Guidelines:**
-- confidence: 1-5 scale (1=very uncertain, 5=very confident)
-- evidenceQuality: "strong" (clear evidence), "moderate" (some evidence), "limited" (little evidence), "inference" (expert judgment only)
-- uncertaintyFlag: true if confidence < 3 OR evidenceQuality is "limited"/"inference"
-- uncertaintyReason: explain why uncertain (required if uncertaintyFlag is true)
+**CRITICAL FORMAT RULES**
+- Respond with valid JSON only (no Markdown or prose)
+- All required fields must be present using the schema above
+- Keep arrays within the recommended item counts
 
-**Quality Standards:**
-- Flag ANY finding where evidence is unclear or contradictory
-- Mark inferences as uncertain even if educationally sound
-- Be honest about limitations in the document set
-- Generate 2-4 strengths, 2-4 challenges, 3-5 support strategies`;
+**QC GUIDELINES**
+- confidence: integer 1-5 (1=very uncertain, 5=very confident)
+- evidenceQuality: "strong", "moderate", "limited", or "inference"
+- uncertaintyFlag: true when confidence < 3 or evidenceQuality is "limited"/"inference"
+- uncertaintyReason: required when uncertaintyFlag is true
 
+**QUALITY STANDARDS**
+- Flag any finding with limited or conflicting evidence
+- Mark expert inferences as uncertain
+- Clearly state gaps or limitations in the document set
+- Generate 2-4 strengths, 2-4 challenges, and 3-5 support strategies`;
+
+    let moduleContext = '';
     if (moduleType === 'k12') {
-      return basePrompt + `\n\n**K-12 Context:** Focus on classroom behaviors, academic skills, and teacher/parent-friendly language.`;
+      moduleContext = '**Context:** Focus on classroom behaviors, academic skills, and family-friendly language.';
     } else if (moduleType === 'tutoring') {
-      return basePrompt + `\n\n**Tutoring Context:** Focus on one-on-one learning strategies, specific skill gaps, and tutor-implementable approaches.`;
+      moduleContext = '**Context:** Emphasize one-on-one learning strategies, targeted skill gaps, and tutor-implementable actions.';
     } else {
-      return basePrompt + `\n\n**Post-Secondary Context:** Focus on academic accommodations, self-advocacy, and college/university success strategies.`;
+      moduleContext = '**Context:** Prioritize academic accommodations, self-advocacy, and supports suited for college/university settings.';
     }
+
+    const learnerContextParts: string[] = [];
+    if (studentName) {
+      learnerContextParts.push(`Student Name: ${studentName}`);
+    }
+    if (gradeBand) {
+      learnerContextParts.push(`Grade Band: ${gradeBand}`);
+    }
+
+    const documentSection = documents.length > 0
+      ? `Documents to analyze:\n\n${documents.join('\n\n---\n\n')}`
+      : 'No documents were supplied. Base the report on available context.';
+
+    const learnerContext = learnerContextParts.length > 0
+      ? `${learnerContextParts.join('\n')}\n\n`
+      : '';
+
+    return `${basePrompt}\n\n${moduleContext}\n\n${learnerContext}${documentSection}`;
   }
   
   private parseJSONResponse(response: string): JSONReportStructure {

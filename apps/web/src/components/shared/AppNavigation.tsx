@@ -25,15 +25,19 @@ export const AppNavigation: React.FC = () => {
   };
 
   const getLoginPath = () => {
-    // Determine login page based on current environment
-    if (currentEnvironment === 'k12-demo' || currentEnvironment === 'k12-dev') {
-      return '/k12-demo-login';
-    } else if (currentEnvironment === 'tutoring-demo' || currentEnvironment === 'tutoring-dev' || currentEnvironment === 'tutoring') {
-      return '/tutoring-demo-login';
-    } else {
-      // Default to post-secondary demo login
-      return '/post-secondary-demo-login';
+    if (!currentEnvironment) {
+      return '/login/post-secondary';
     }
+
+    if (currentEnvironment.startsWith('k12')) {
+      return '/login/k12';
+    }
+
+    if (currentEnvironment.startsWith('tutoring')) {
+      return '/login/tutor';
+    }
+
+    return '/login/post-secondary';
   };
 
   const handleLogin = () => {

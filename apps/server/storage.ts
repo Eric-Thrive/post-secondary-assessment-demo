@@ -46,32 +46,26 @@ class DemoSecurityValidator {
   
   /**
    * Validates that database writes are allowed in current configuration
-   * Supports controlled access mode for demo operations on shared databases
+   * Demo environments now use selective middleware protection instead of blanket blocking
+   * Middleware allows user auth + app functionality, blocks only system configs
    */
   static validateWritePermissions(operation: string): void {
-    const isControlledAccess = isControlledAccessMode();
     const isDemoEnv = isDemoEnvironment();
-    
-    // Allow writes in controlled access mode for demo operations
-    if (isDemoEnv && isControlledAccess) {
-      logger.debug(`🔒 CONTROLLED ACCESS: Storage write operation approved for demo environment`, {
+
+    // Demo environments are now handled by selective middleware
+    // Storage layer allows all writes - middleware controls what reaches here
+    if (isDemoEnv) {
+      logger.debug(`🔒 DEMO: Storage write operation`, {
         operation,
-        mode: 'controlled_access',
+        mode: 'selective_middleware',
         timestamp: new Date().toISOString(),
-        reason: 'Enhanced security with customer isolation enforced'
+        note: 'Middleware handles selective blocking'
       });
-      return; // Allow the operation
+      return; // Allow - middleware already validated
     }
-    
-    // Apply standard read-only environment checks for non-controlled access
-    if (isReadOnlyEnvironment()) {
-      const connInfo = getDatabaseConnectionInfo();
-      throw new Error(
-        `SECURITY VIOLATION: Write operation '${operation}' blocked in read-only environment. ` +
-        `Environment: ${connInfo.environment}, IsDemo: ${connInfo.isDemoEnvironment}. ` +
-        `Consider enabling controlled access mode for demo operations.`
-      );
-    }
+
+    // Non-demo environments: no restrictions at storage layer
+    // (Future: could add production-specific validations here if needed)
   }
   
   /**
