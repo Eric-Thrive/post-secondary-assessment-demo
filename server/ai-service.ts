@@ -3,7 +3,7 @@
 
 import OpenAI from 'openai';
 import { storage } from './storage';
-import { getEffectivePathway, validateReportCategories, postSecondaryPathwayConfig } from './config/postSecondaryPathways';
+import { getEffectivePathway } from './config/postSecondaryPathways';
 import { isDemoEnvironment } from './utils/environmentDetection';
 
 export interface AIAnalysisRequest {
@@ -54,242 +54,55 @@ export class LocalAIService {
     console.log('Document count:', request.documents.length);
 
     try {
-      // Step 1: Load AI configuration from database
       const aiConfigData = await this.loadAIConfiguration(request.moduleType);
       const aiConfig = aiConfigData || {
-        model_name: 'gpt-4.1',  // Default to GPT-4.1 if no config found
+        model_name: 'gpt-4.1',
         max_tokens: 4000,
         temperature: 0.3
       };
-      
+
       console.log('Using AI Config:', aiConfig);
 
-      // Step 2: Build comprehensive prompt with AI handler logic
-      const systemPrompt = await this.buildSystemPrompt(request.moduleType, request.pathway || 'complex');
+      const effectivePathway = this.determineEffectivePathway(request);
+      const systemPrompt = await this.buildSystemPrompt(request.moduleType, effectivePathway);
       const userPrompt = this.buildUserPrompt(request.documents, request.uniqueId);
 
-      // Step 3: Call GPT-4 with function calling capabilities (AI Handler Implementation)
       const messages = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ];
-      
-      let completion;
-      
-      // Determine pathway using isolated configuration for post-secondary
-      let effectivePathway: string;
-      if (request.moduleType === 'post_secondary') {
-        // Use isolated post-secondary configuration with improved demo detection
-        const isDemoEnv = isDemoEnvironment();
-        effectivePathway = getEffectivePathway(request.pathway, isDemoEnv);
-        console.log(`🎯 Post-Secondary: Using ${effectivePathway} pathway (demo: ${isDemoEnv}, requested: ${request.pathway}, env: ${process.env.NODE_ENV})`);
-      } else if (request.moduleType === 'tutoring') {
-        // Tutoring always uses simple
-        effectivePathway = 'simple';
-        console.log(`🎯 Tutoring: Using simple pathway`);
-      } else {
-        // Other modules (K-12, etc.) use request pathway or default to complex
-        effectivePathway = request.pathway || 'complex';
-        console.log(`🎯 ${request.moduleType}: Using ${effectivePathway} pathway`);
-      }
-      
-      try {
-        // Try primary model (GPT-4.1)
-        console.log(`Attempting AI analysis with primary model: ${aiConfig.model_name}`);
-        
-        if (effectivePathway === 'simple') {
-          console.log('🎯 Simple pathway: Generating complete report without function calls');
-          completion = await this.openai.chat.completions.create({
-            model: aiConfig.model_name,
-            messages: messages,
-            max_tokens: aiConfig.max_tokens,
-            temperature: aiConfig.temperature
-            // No tools - generate complete report directly
+
+      const normalizedPathway = effectivePathway === 'simple' ? 'simple' : 'complex';
+
+      const { markdownReport, itemMasterData } = request.moduleType === 'k12'
+        ? await this.runK12Workflow({
+            aiConfig,
+            messages,
+            request,
+            pathway: normalizedPathway
+          })
+        : await this.runGenericWorkflow({
+            aiConfig,
+            messages,
+            request,
+            pathway: normalizedPathway
           });
-        } else {
-          console.log('🎯 Complex pathway: Using function calls for multi-step analysis');
-          completion = await this.openai.chat.completions.create({
-            model: aiConfig.model_name,
-            messages: messages,
-            max_tokens: aiConfig.max_tokens,
-            temperature: aiConfig.temperature,
-            tools: this.getFunctionDefinitions(request.moduleType),
-            tool_choice: 'auto'
-          });
-        }
-      } catch (primaryError: any) {
-        console.error(`Primary model ${aiConfig.model_name} failed:`, primaryError.message);
-        
-        // Fallback to GPT-4.1
-        const fallbackModel = 'gpt-4.1';
-        console.log(`Attempting fallback with model: ${fallbackModel}`);
-        
-        try {
-          if (effectivePathway === 'simple') {
-            console.log('🎯 Simple pathway fallback: Generating complete report without function calls');
-            completion = await this.openai.chat.completions.create({
-              model: fallbackModel,
-              messages: messages,
-              max_tokens: aiConfig.max_tokens,
-              temperature: aiConfig.temperature
-              // No tools - generate complete report directly
-            });
-          } else {
-            console.log('🎯 Complex pathway fallback: Using function calls for multi-step analysis');
-            completion = await this.openai.chat.completions.create({
-              model: fallbackModel,
-              messages: messages,
-              max_tokens: aiConfig.max_tokens,
-              temperature: aiConfig.temperature,
-              tools: this.getFunctionDefinitions(request.moduleType),
-              tool_choice: 'auto'
-            });
-          }
-          console.log(`Successfully used fallback model: ${fallbackModel}`);
-        } catch (fallbackError) {
-          console.error(`Fallback model ${fallbackModel} also failed:`, fallbackError);
-          throw fallbackError;
-        }
-      }
 
-      let analysisResult = completion.choices[0].message.content;
-      let itemMasterData = [];
-      let assessmentFindings = [];
-
-      // Step 4: Process function calls in a conversation loop for K-12
-      if (request.moduleType === 'k12') {
-        // Process first function call (identifyStrengthsAndWeaknesses)
-        if (completion.choices[0].message.tool_calls) {
-          console.log('Processing AI function calls...');
-          const firstCallResult = await this.processAIFunctionCalls(
-            completion.choices[0].message.tool_calls,
-            request.caseId,
-            request.moduleType
-          );
-          
-          // For K-12, we need to continue the conversation to get the second function call
-          if (completion.choices[0].message.tool_calls[0].function.name === 'identifyStrengthsAndWeaknesses') {
-            // Add the assistant's response with tool calls to the conversation
-            messages.push(completion.choices[0].message);
-            
-            // Add tool response messages for all tool calls
-            for (const toolCall of completion.choices[0].message.tool_calls) {
-              messages.push({
-                role: 'tool',
-                tool_call_id: toolCall.id,
-                content: JSON.stringify({ success: true, message: 'Findings identified and saved. Now please call populateK12ItemMaster with the selected findings and their proposed canonical keys.' })
-              });
-            }
-            
-            // Continue the conversation to get the second function call
-            console.log('Prompting for K-12 item master population...');
-            try {
-              completion = await this.openai.chat.completions.create({
-                model: aiConfig.model_name,
-                messages: messages,
-                max_tokens: aiConfig.max_tokens,
-                temperature: aiConfig.temperature,
-                tools: this.getFunctionDefinitions(request.moduleType),
-                tool_choice: { type: 'function', function: { name: 'populateK12ItemMaster' } }
-              });
-            } catch (continuationError: any) {
-              console.error(`Continuation with ${aiConfig.model_name} failed:`, continuationError.message);
-              
-              // Try fallback model for continuation
-              const fallbackModel = 'gpt-4.1';
-              console.log(`Attempting continuation with fallback model: ${fallbackModel}`);
-              
-              completion = await this.openai.chat.completions.create({
-                model: fallbackModel,
-                messages: messages,
-                max_tokens: aiConfig.max_tokens,
-                temperature: aiConfig.temperature,
-                tools: this.getFunctionDefinitions(request.moduleType),
-                tool_choice: { type: 'function', function: { name: 'populateK12ItemMaster' } }
-              });
-              console.log(`Successfully used fallback model for continuation: ${fallbackModel}`);
-            }
-            
-            // Process the second function call
-            if (completion.choices[0].message.tool_calls) {
-              itemMasterData = await this.processAIFunctionCalls(
-                completion.choices[0].message.tool_calls,
-                request.caseId,
-                request.moduleType
-              );
-              
-              // Add the second response to continue for final report
-              messages.push(completion.choices[0].message);
-              for (const toolCall of completion.choices[0].message.tool_calls) {
-                messages.push({
-                  role: 'tool',
-                  tool_call_id: toolCall.id,
-                  content: JSON.stringify({ success: true, itemMasterData: itemMasterData })
-                });
-              }
-              
-              // Get the final analysis with markdown report
-              console.log('Generating final K-12 markdown report...');
-              const finalCompletion = await this.openai.chat.completions.create({
-                model: aiConfig.model_name,
-                messages: messages,
-                max_tokens: aiConfig.max_tokens,
-                temperature: aiConfig.temperature
-              });
-              
-              analysisResult = finalCompletion.choices[0].message.content;
-            }
-          }
-        }
-      } else {
-        // Non-K-12 modules use the original single-call approach
-        if (completion.choices[0].message.tool_calls) {
-          console.log('Processing AI function calls...');
-          try {
-            itemMasterData = await this.processAIFunctionCalls(
-              completion.choices[0].message.tool_calls,
-              request.caseId,
-              request.moduleType
-            );
-            
-            // For simple pathway, preserve the original analysis instead of adding enhancement content
-            if (effectivePathway === 'simple') {
-              console.log('🎯 Simple pathway: Preserving original AI analysis without enhancement');
-              // Keep analysisResult as-is - it should be a complete report
-            } else {
-              // Complex pathway: Update analysis with function call results
-              analysisResult = await this.enhanceAnalysisWithFunctionResults(
-                analysisResult,
-                itemMasterData,
-                request.moduleType
-              );
-            }
-          } catch (error) {
-            console.log('🎯 Function calls failed, preserving original AI analysis:', error.message);
-            // Keep analysisResult as-is when function calls fail
-          }
-        }
-      }
-
-      // Step 5: Store results in database
       const result: AIAnalysisResult = {
         status: 'completed',
         analysis_date: new Date().toISOString(),
-        markdown_report: analysisResult || 'Analysis completed successfully',
+        markdown_report: markdownReport || 'Analysis completed successfully',
         module_type: request.moduleType,
         item_master_data: itemMasterData
       };
 
-      // Skip database update here - let the calling function handle it
-      // The assessment case doesn't exist yet, so we can't update it
       console.log('✅ AI analysis completed, item master data ready for database save');
-
       console.log('✅ Local AI analysis with handler logic completed successfully');
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Local AI analysis failed:', error);
-      
+
       const errorResult: AIAnalysisResult = {
         status: 'failed',
         analysis_date: new Date().toISOString(),
@@ -298,11 +111,202 @@ export class LocalAIService {
         error_message: error.message
       };
 
-      // Don't try to update assessment case on error - it might not exist yet
       console.log('Analysis failed, returning error result without database update');
 
       return errorResult;
     }
+  }
+
+  private determineEffectivePathway(request: AIAnalysisRequest): 'simple' | 'complex' {
+    if (request.moduleType === 'post_secondary') {
+      const isDemoEnv = isDemoEnvironment();
+      const effectivePathway = getEffectivePathway(request.pathway, isDemoEnv);
+      console.log(`🎯 Post-Secondary: Using ${effectivePathway} pathway (demo: ${isDemoEnv}, requested: ${request.pathway}, env: ${process.env.NODE_ENV})`);
+      return effectivePathway === 'simple' ? 'simple' : 'complex';
+    }
+
+    if (request.moduleType === 'tutoring') {
+      console.log('🎯 Tutoring: Using simple pathway');
+      return 'simple';
+    }
+
+    const fallbackPathway = request.pathway || 'complex';
+    console.log(`🎯 ${request.moduleType}: Using ${fallbackPathway} pathway`);
+    return fallbackPathway === 'simple' ? 'simple' : 'complex';
+  }
+
+  private async requestCompletion(params: {
+    aiConfig: { model_name: string; max_tokens: number; temperature: number };
+    messages: any[];
+    moduleType: string;
+    pathway: 'simple' | 'complex';
+    toolChoice?: any;
+  }) {
+    const { aiConfig, messages, moduleType, pathway, toolChoice } = params;
+
+    const requestOptions: any = {
+      model: aiConfig.model_name,
+      messages,
+      max_tokens: aiConfig.max_tokens,
+      temperature: aiConfig.temperature
+    };
+
+    if (pathway === 'complex') {
+      requestOptions.tools = this.getFunctionDefinitions(moduleType);
+      requestOptions.tool_choice = toolChoice || 'auto';
+    } else if (toolChoice) {
+      requestOptions.tool_choice = toolChoice;
+    }
+
+    try {
+      console.log(`Attempting AI analysis with primary model: ${aiConfig.model_name}`);
+      return await this.openai.chat.completions.create(requestOptions);
+    } catch (primaryError: any) {
+      console.error(`Primary model ${aiConfig.model_name} failed:`, primaryError.message);
+
+      const fallbackModel = 'gpt-4.1';
+      console.log(`Attempting fallback with model: ${fallbackModel}`);
+
+      const fallbackOptions = {
+        ...requestOptions,
+        model: fallbackModel
+      };
+
+      try {
+        const fallbackResult = await this.openai.chat.completions.create(fallbackOptions);
+        console.log(`Successfully used fallback model: ${fallbackModel}`);
+        return fallbackResult;
+      } catch (fallbackError) {
+        console.error(`Fallback model ${fallbackModel} also failed:`, fallbackError);
+        throw fallbackError;
+      }
+    }
+  }
+
+  private async runK12Workflow(params: {
+    aiConfig: { model_name: string; max_tokens: number; temperature: number };
+    messages: any[];
+    request: AIAnalysisRequest;
+    pathway: 'simple' | 'complex';
+  }): Promise<{ markdownReport: string; itemMasterData: any[] }> {
+    const { aiConfig, messages, request, pathway } = params;
+
+    const initialCompletion = await this.requestCompletion({
+      aiConfig,
+      messages,
+      moduleType: request.moduleType,
+      pathway
+    });
+
+    let analysisResult = initialCompletion.choices[0].message.content || '';
+    let itemMasterData: any[] = [];
+
+    if (pathway === 'simple' || !initialCompletion.choices[0].message.tool_calls) {
+      return { markdownReport: analysisResult, itemMasterData };
+    }
+
+    console.log('Processing AI function calls...');
+    await this.processAIFunctionCalls(
+      initialCompletion.choices[0].message.tool_calls,
+      request.caseId,
+      request.moduleType
+    );
+
+    const firstToolCall = initialCompletion.choices[0].message.tool_calls[0];
+    if (!firstToolCall || firstToolCall.function?.name !== 'identifyStrengthsAndWeaknesses') {
+      return { markdownReport: analysisResult, itemMasterData };
+    }
+
+    const conversation = [...messages, initialCompletion.choices[0].message];
+
+    for (const toolCall of initialCompletion.choices[0].message.tool_calls) {
+      conversation.push({
+        role: 'tool',
+        tool_call_id: toolCall.id,
+        content: JSON.stringify({ success: true, message: 'Findings identified and saved. Now please call populateK12ItemMaster with the selected findings and their proposed canonical keys.' })
+      });
+    }
+
+    const continuationCompletion = await this.requestCompletion({
+      aiConfig,
+      messages: conversation,
+      moduleType: request.moduleType,
+      pathway: 'complex',
+      toolChoice: { type: 'function', function: { name: 'populateK12ItemMaster' } }
+    });
+
+    if (continuationCompletion.choices[0].message.tool_calls) {
+      itemMasterData = await this.processAIFunctionCalls(
+        continuationCompletion.choices[0].message.tool_calls,
+        request.caseId,
+        request.moduleType
+      );
+
+      conversation.push(continuationCompletion.choices[0].message);
+      for (const toolCall of continuationCompletion.choices[0].message.tool_calls) {
+        conversation.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: JSON.stringify({ success: true, itemMasterData })
+        });
+      }
+
+      console.log('Generating final K-12 markdown report...');
+      const finalCompletion = await this.requestCompletion({
+        aiConfig,
+        messages: conversation,
+        moduleType: request.moduleType,
+        pathway: 'simple'
+      });
+
+      analysisResult = finalCompletion.choices[0].message.content || analysisResult;
+    }
+
+    return { markdownReport: analysisResult, itemMasterData };
+  }
+
+  private async runGenericWorkflow(params: {
+    aiConfig: { model_name: string; max_tokens: number; temperature: number };
+    messages: any[];
+    request: AIAnalysisRequest;
+    pathway: 'simple' | 'complex';
+  }): Promise<{ markdownReport: string; itemMasterData: any[] }> {
+    const { aiConfig, messages, request, pathway } = params;
+
+    const completion = await this.requestCompletion({
+      aiConfig,
+      messages,
+      moduleType: request.moduleType,
+      pathway
+    });
+
+    let analysisResult = completion.choices[0].message.content || '';
+    let itemMasterData: any[] = [];
+
+    if (completion.choices[0].message.tool_calls) {
+      console.log('Processing AI function calls...');
+      try {
+        itemMasterData = await this.processAIFunctionCalls(
+          completion.choices[0].message.tool_calls,
+          request.caseId,
+          request.moduleType
+        );
+
+        if (pathway === 'simple') {
+          console.log('🎯 Simple pathway: Preserving original AI analysis without enhancement');
+        } else {
+          analysisResult = await this.enhanceAnalysisWithFunctionResults(
+            analysisResult,
+            itemMasterData,
+            request.moduleType
+          );
+        }
+      } catch (error: any) {
+        console.log('🎯 Function calls failed, preserving original AI analysis:', error.message);
+      }
+    }
+
+    return { markdownReport: analysisResult, itemMasterData };
   }
 
   private async loadAIConfiguration(moduleType: string) {
