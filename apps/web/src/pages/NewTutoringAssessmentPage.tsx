@@ -1,13 +1,7 @@
-import NewAssessment from "@/components/NewAssessment";
-import { AppNavigation } from "@/components/shared/AppNavigation";
+import NewTutoringAssessment from "@/components/NewTutoringAssessment";
 
 const NewTutoringAssessmentPage = () => {
-  return (
-    <div>
-      <AppNavigation />
-      <NewAssessment />
-    </div>
-  );
+  return <NewTutoringAssessment />;
 };
 
 export default NewTutoringAssessmentPage;

@@ -14,7 +14,7 @@ import { ProgressSidebar } from "./shared/ProgressSidebar";
 import ThriveLogo from "@assets/isotype Y-NB_1754494460165.png";
 
 interface UnifiedAssessmentFormProps {
-  moduleType: "k12" | "post_secondary";
+  moduleType: "k12" | "post_secondary" | "tutoring";
   pathway: "simple" | "complex";
   onBack: () => void;
 }
@@ -327,7 +327,11 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
       });
 
       const reportsPath =
-        moduleType === "k12" ? "/k12-reports" : "/post-secondary-reports";
+        moduleType === "k12"
+          ? "/k12-reports"
+          : moduleType === "tutoring"
+          ? "/tutoring-reports"
+          : "/post-secondary-reports";
       console.log(`Navigating to ${reportsPath}...`);
       navigate(reportsPath);
     } catch (error) {
@@ -393,7 +397,11 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
           <div className="flex items-center gap-4">
             <img src={ThriveLogo} alt="THRIVE" className="h-12 w-auto" />
             <h1 className="text-3xl font-bold text-white">
-              {moduleType === "k12" ? "K-12" : "Post-Secondary"} Assessment
+              {moduleType === "k12"
+                ? "K-12"
+                : moduleType === "tutoring"
+                ? "Tutoring"
+                : "Post-Secondary"} Assessment
             </h1>
           </div>
           {user && (

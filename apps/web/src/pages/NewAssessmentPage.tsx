@@ -1,14 +1,18 @@
 
-import NewAssessment from "@/components/NewAssessment";
-import { AppNavigation } from "@/components/shared/AppNavigation";
+import { Navigate } from "react-router-dom";
+import { useModule } from "@/contexts/ModuleContext";
 
 const NewAssessmentPage = () => {
-  return (
-    <div>
-      <AppNavigation />
-      <NewAssessment />
-    </div>
-  );
+  const { activeModule } = useModule();
+
+  const targetRoute =
+    activeModule === "k12"
+      ? "/new-k12-assessment"
+      : activeModule === "tutoring"
+      ? "/new-tutoring-assessment"
+      : "/new-post-secondary-assessment";
+
+  return <Navigate to={targetRoute} replace />;
 };
 
 export default NewAssessmentPage;

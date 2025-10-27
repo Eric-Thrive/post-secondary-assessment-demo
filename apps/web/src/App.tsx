@@ -9,7 +9,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { getDefaultEnvironment, shouldForceEnvironment } from "@/config/deployment";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
-import NewAssessmentPage from "./pages/NewAssessmentPage";
 import NewK12AssessmentPage from "./pages/NewK12AssessmentPage";
 import NewK12ComplexAssessmentPage from "./pages/NewK12ComplexAssessmentPage";
 import NewPostSecondaryAssessmentPage from "./pages/NewPostSecondaryAssessmentPage";

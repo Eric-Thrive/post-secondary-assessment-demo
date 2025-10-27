@@ -8,6 +8,12 @@ AI-powered educational accessibility platform that dynamically adapts support re
 - **AI Processing Pipeline**: Multi-format document upload (PDF, DOCX, images), OCR, GPT-4 integration with function calling
 - **Report Management**: Version tracking, share tokens, multi-format export (PDF, Word, JSON)
 
+## Unified Assessment UI
+- `UnifiedAssessmentForm` now supports `"k12"`, `"post_secondary"`, and `"tutoring"` modules with identical THRIVE branding (logo, gradient header, progress sidebar, gradient background, spacious white card layout).
+- Tutoring assessments route through `NewTutoringAssessment`, which mirrors the post-secondary/K-12 structure and relies on `PathwaySelector` auto-selecting the simple pathway.
+- Module-specific navigation still points to `/new-k12-assessment`, `/new-post-secondary-assessment`, and `/new-tutoring-assessment`; the legacy `NewAssessment` component has been removed.
+- Finalized document enforcement remains in `UnifiedAssessmentForm`; users must finalize at least one upload via the PI Redactor before submission.
+
 # Tech Stack
 
 ## Frontend
