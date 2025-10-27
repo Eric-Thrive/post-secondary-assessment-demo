@@ -1,18 +1,27 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { requestTimeout, setupGracefulShutdown, healthCheck } from "./reliability-improvements";
+import {
+  requestTimeout,
+  setupGracefulShutdown,
+  healthCheck,
+} from "./reliability-improvements";
 import { demoWriteGuard } from "./middleware/demoWriteGuard";
+import { performanceMiddleware } from "./middleware/performance-monitoring";
+import { OptimizedPromptService } from "./services/optimized-prompt-service";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add performance monitoring middleware
+app.use(performanceMiddleware);
+
 // Add request timeout for non-AI routes (30 second timeout)
 app.use(requestTimeout(30000));
 
 // Add health check endpoint
-app.get('/health', healthCheck);
+app.get("/health", healthCheck);
 
 // Add demo write guard middleware
 // This implements selective read-only mode for demo environments
@@ -76,16 +85,24 @@ app.use((req, res, next) => {
 
   // For local macOS development, use localhost instead of 0.0.0.0
   // Railway will override this with PORT env var
-  const isLocal = process.env.APP_ENVIRONMENT === 'local';
-  const host = isLocal ? '127.0.0.1' : '0.0.0.0';
+  const isLocal = process.env.APP_ENVIRONMENT === "local";
+  const host = isLocal ? "127.0.0.1" : "0.0.0.0";
 
   // Configure server timeouts for reliability
   server.timeout = 180000; // 3 minutes for AI operations
   server.keepAliveTimeout = 65000; // Slightly longer than ALB timeout
   server.headersTimeout = 66000; // Slightly longer than keepAliveTimeout
 
-  server.listen(port, host, () => {
+  server.listen(port, host, async () => {
     log(`serving on port ${port}`);
+
+    // Warm up prompt cache for better performance
+    try {
+      await OptimizedPromptService.warmUpCache();
+      log("Prompt cache warmed up successfully");
+    } catch (error) {
+      log("Failed to warm up prompt cache:", error);
+    }
   });
 
   // Setup graceful shutdown handlers

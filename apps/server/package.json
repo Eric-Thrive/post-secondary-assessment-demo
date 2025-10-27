@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "tsx --env-file=../../.env index.ts",
     "start": "NODE_ENV=production tsx --env-file=../../.env index.ts",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "optimize-db": "tsx --env-file=../../.env scripts/optimize-rbac-database.ts",
+    "apply-indexes": "tsx --env-file=../../.env scripts/apply-rbac-indexes.ts",
+    "test-performance": "tsx --env-file=../../.env scripts/test-rbac-performance.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.17.1",

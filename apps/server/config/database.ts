@@ -1,16 +1,13 @@
 /**
- * Simplified database configuration
+ * Simplified database configuration for RBAC system
  * All environments use the same Neon database (DATABASE_URL)
- * APP_ENVIRONMENT determines application behavior (demo vs dev vs prod)
+ * Role-based access control replaces environment-based restrictions
  */
-
-import { isDemoEnvironment as checkIsDemoEnvironment, isReadOnlyEnvironment as checkIsReadOnlyEnvironment } from '@shared/constants/environments';
 
 export interface DatabaseConfig {
   url: string;
   name: string;
   description: string;
-  isDemoEnvironment?: boolean;
 }
 
 /**
@@ -18,32 +15,25 @@ export interface DatabaseConfig {
  * All app environments use the same Neon database
  */
 export function getDatabaseConfig(): DatabaseConfig {
-  const databaseUrl = process.env.DATABASE_URL || '';
-  const appEnv = process.env.APP_ENVIRONMENT || 'production';
-  const nodeEnv = process.env.NODE_ENV || 'production';
+  const databaseUrl = process.env.DATABASE_URL || "";
+  const nodeEnv = process.env.NODE_ENV || "production";
 
   if (!databaseUrl) {
     throw new Error(
-      'DATABASE_URL environment variable is required. ' +
-      'Please set it to your Neon database connection string.'
+      "DATABASE_URL environment variable is required. " +
+        "Please set it to your Neon database connection string."
     );
   }
 
-  // Check if this is a demo environment using centralized utility
-  const isDemoEnv = checkIsDemoEnvironment(appEnv);
-
   // Simple logging for debugging
   console.log(`📊 Database Connection:`);
-  console.log(`  - App Environment: ${appEnv}`);
   console.log(`  - Node Environment: ${nodeEnv}`);
-  console.log(`  - Is Demo: ${isDemoEnv}`);
   console.log(`  - Database: Neon PostgreSQL (shared)`);
 
   return {
     url: databaseUrl,
-    name: 'Neon PostgreSQL',
-    description: `Shared database for all environments (${appEnv} mode)`,
-    isDemoEnvironment: isDemoEnv
+    name: "Neon PostgreSQL",
+    description: `Shared database for all environments`,
   };
 }
 
@@ -51,43 +41,44 @@ export function getDatabaseConfig(): DatabaseConfig {
  * Get database URL directly
  */
 export function getDatabaseUrl(): string {
-  return process.env.DATABASE_URL || '';
-}
-
-/**
- * Check if running in demo mode
- * Uses centralized environment utility
- */
-export function isDemoEnvironment(): boolean {
-  return checkIsDemoEnvironment(process.env.APP_ENVIRONMENT);
+  return process.env.DATABASE_URL || "";
 }
 
 /**
  * Check if running in development mode
  */
 export function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development';
+  return process.env.NODE_ENV === "development";
 }
 
 /**
  * Check if running in production mode
  */
 export function isProduction(): boolean {
-  return process.env.NODE_ENV === 'production';
+  return process.env.NODE_ENV === "production";
+}
+
+/**
+ * Check if running in demo mode
+ * In the RBAC system, demo mode is determined by user roles, not environment
+ * This function is kept for backwards compatibility and always returns false
+ */
+export function isDemoEnvironment(): boolean {
+  return false;
 }
 
 /**
  * Check if running in read-only mode
- * Demo environments are read-only
- * Uses centralized environment utility
+ * In the RBAC system, read-only access is determined by user roles, not environment
+ * This function is kept for backwards compatibility and always returns false
  */
 export function isReadOnlyEnvironment(): boolean {
-  return checkIsReadOnlyEnvironment(process.env.APP_ENVIRONMENT);
+  return false;
 }
 
 /**
  * Check if running in controlled access mode
- * For backwards compatibility - returns false since we use simple demo mode
+ * For backwards compatibility - returns false since we use RBAC
  */
 export function isControlledAccessMode(): boolean {
   return false;
@@ -103,16 +94,11 @@ export function getSecureConnectionString(config: DatabaseConfig): string {
 
 /**
  * Assert write permissions
- * Throws error if in demo mode (read-only)
+ * In the RBAC system, write permissions are handled by role-based middleware
+ * This function is kept for backwards compatibility and does nothing
  */
 export function assertWritePermissions(operation: string): void {
-  if (isReadOnlyEnvironment()) {
-    const appEnv = process.env.APP_ENVIRONMENT || 'production';
-    throw new Error(
-      `SECURITY: Write operation "${operation}" blocked in demo mode (${appEnv}). ` +
-      `Demo environments are read-only.`
-    );
-  }
+  // No-op in RBAC system - permissions handled by role-based middleware
 }
 
 /**
@@ -126,16 +112,14 @@ export function getDatabaseConnectionInfo(): {
   isDemoEnvironment: boolean;
   isDemo: boolean; // Alias for compatibility
 } {
-  const nodeEnv = process.env.NODE_ENV || 'production';
-  const appEnv = process.env.APP_ENVIRONMENT || 'production';
-  const isDemo = isDemoEnvironment();
+  const nodeEnv = process.env.NODE_ENV || "production";
 
   return {
-    name: 'Neon PostgreSQL',
+    name: "Neon PostgreSQL",
     description: `Shared database for all environments`,
     environment: nodeEnv,
-    appEnvironment: appEnv,
-    isDemoEnvironment: isDemo,
-    isDemo: isDemo // Add alias for backwards compatibility
+    appEnvironment: "production", // Simplified to single environment
+    isDemoEnvironment: false, // RBAC system handles demo users via roles
+    isDemo: false, // Add alias for backwards compatibility
   };
 }

@@ -11,7 +11,6 @@ import {
 import { useModule } from "@/contexts/ModuleContext";
 import { useModuleAssessmentData } from "@/hooks/useModuleAssessmentData";
 import { useAuth } from "@/contexts/AuthContext";
-import { EnvironmentSwitcher } from "@/components/EnvironmentSwitcher";
 import { FileText, Plus, LogOut, ChevronDown } from "lucide-react";
 
 // THRIVE Logo Component - Updated Brand Design
@@ -148,9 +147,6 @@ export default function ThriveHomeScreen({
           <ThriveLogo />
 
           <div className="flex items-center space-x-4">
-            {/* Environment Switcher - Admin Only */}
-            {user?.role === "system_admin" && <EnvironmentSwitcher />}
-
             {/* User Info */}
             {user && (
               <div className="flex items-center space-x-3">

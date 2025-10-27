@@ -1,18 +1,46 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Users, UserCheck, UserX, AlertTriangle, Settings, Bug } from 'lucide-react';
-import { apiClient } from '@/lib/apiClient';
-import { AdminDebugPanel } from '@/components/AdminDebugPanel';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Users,
+  UserCheck,
+  UserX,
+  AlertTriangle,
+  Settings,
+  Bug,
+  Building2,
+} from "lucide-react";
+import { apiClient } from "@/lib/apiClient";
+import { AdminDebugPanel } from "@/components/AdminDebugPanel";
+import OrganizationManagementPage from "./OrganizationManagementPage";
 
 interface AdminUser {
   id: number;
@@ -21,6 +49,8 @@ interface AdminUser {
   customerId: string;
   customerName?: string;
   role: string;
+  assignedModules?: string[];
+  organizationId?: string;
   isActive: boolean;
   reportCount: number;
   maxReports: number;
@@ -43,28 +73,49 @@ export default function AdminPage() {
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string>("");
+  const [currentUserOrgId, setCurrentUserOrgId] = useState<string | null>(null);
+
+  // Fetch current user info to determine role-based access
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: () => apiClient.request("/auth/me"),
+  });
+
+  useEffect(() => {
+    if (currentUser?.user) {
+      setCurrentUserRole(currentUser.user.role || "");
+      setCurrentUserOrgId(currentUser.user.organizationId || null);
+    }
+  }, [currentUser]);
 
   const { data: adminData, isLoading } = useQuery<AdminStats>({
-    queryKey: ['/api/admin/users'],
-    queryFn: () => apiClient.request('/admin/users'),
+    queryKey: ["/api/admin/users"],
+    queryFn: () => apiClient.request("/admin/users"),
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, updates }: { userId: number; updates: any }) => {
+    mutationFn: async ({
+      userId,
+      updates,
+    }: {
+      userId: number;
+      updates: any;
+    }) => {
       return apiClient.request(`/admin/users/${userId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: JSON.stringify(updates),
       });
     },
     onSuccess: () => {
-      toast({ description: 'User updated successfully' });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({ description: "User updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setEditDialogOpen(false);
       setSelectedUser(null);
     },
     onError: () => {
-      toast({ variant: 'destructive', description: 'Failed to update user' });
+      toast({ variant: "destructive", description: "Failed to update user" });
     },
   });
 
@@ -99,7 +150,9 @@ export default function AdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage users and monitor system usage</p>
+          <p className="text-muted-foreground">
+            Manage users and monitor system usage
+          </p>
         </div>
         <Badge variant="secondary" className="px-3 py-1">
           eric@thriveiep.com
@@ -114,7 +167,9 @@ export default function AdminPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{adminData?.totalUsers || 0}</div>
+            <div className="text-2xl font-bold">
+              {adminData?.totalUsers || 0}
+            </div>
           </CardContent>
         </Card>
 
@@ -124,13 +179,17 @@ export default function AdminPage() {
             <UserCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{adminData?.activeUsers || 0}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {adminData?.activeUsers || 0}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Inactive Users
+            </CardTitle>
             <UserX className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -142,22 +201,35 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">At Report Limit</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              At Report Limit
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{adminData?.usersAtLimit || 0}</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {adminData?.usersAtLimit || 0}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs for Users and Debug */}
+      {/* Tabs for Users, Organizations, and Debug */}
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Users
           </TabsTrigger>
+          {(currentUserRole === "developer" || currentUserRole === "admin") && (
+            <TabsTrigger
+              value="organizations"
+              className="flex items-center gap-2"
+            >
+              <Building2 className="h-4 w-4" />
+              Organizations
+            </TabsTrigger>
+          )}
           <TabsTrigger value="debug" className="flex items-center gap-2">
             <Bug className="h-4 w-4" />
             Debug
@@ -167,98 +239,127 @@ export default function AdminPage() {
         <TabsContent value="users" className="mt-6">
           {/* Users Table */}
           <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>
-            View and manage all registered users, their report usage, and permissions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Username</th>
-                  <th className="text-left py-2">Email</th>
-                  <th className="text-left py-2">Role</th>
-                  <th className="text-left py-2">Status</th>
-                  <th className="text-left py-2">Demo Access</th>
-                  <th className="text-left py-2">Reports</th>
-                  <th className="text-left py-2">Last Login</th>
-                  <th className="text-left py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {adminData?.users.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    <td className="py-3">
-                      <div className="font-medium">{user.username}</div>
-                      <div className="text-sm text-muted-foreground">ID: {user.id}</div>
-                    </td>
-                    <td className="py-3">{user.email}</td>
-                    <td className="py-3">
-                      <Badge variant={user.role === 'system_admin' ? 'default' : 'secondary'}>
-                        {user.role}
-                      </Badge>
-                    </td>
-                    <td className="py-3">
-                      <Badge variant={user.isActive ? 'default' : 'destructive'}>
-                        {user.isActive ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </td>
-                    <td className="py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {user.demoPermissions?.['post-secondary-demo'] && (
-                          <Badge variant="outline" className="text-xs">Post-Sec</Badge>
-                        )}
-                        {user.demoPermissions?.['k12-demo'] && (
-                          <Badge variant="outline" className="text-xs">K-12</Badge>
-                        )}
-                        {user.demoPermissions?.['tutoring-demo'] && (
-                          <Badge variant="outline" className="text-xs">Tutoring</Badge>
-                        )}
-                        {/* Show "None" if no demo permissions are enabled */}
-                        {(!user.demoPermissions || 
-                          Object.values(user.demoPermissions || {}).every(val => !val)) && (
-                          <span className="text-xs text-muted-foreground">None</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <div className="space-y-1">
-                        <div className="text-sm">
-                          {user.reportCount}/{user.maxReports}
-                        </div>
-                        <div className="w-20 bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full ${
-                              user.isLimitReached ? 'bg-red-500' : 'bg-blue-500'
-                            }`}
-                            style={{ width: `${(user.reportCount / user.maxReports) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
-                    </td>
-                    <td className="py-3">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditUser(user)}
-                        data-testid={`edit-user-${user.id}`}
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>
+                View and manage all registered users, their report usage, and
+                permissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2">Username</th>
+                      <th className="text-left py-2">Email</th>
+                      <th className="text-left py-2">Role</th>
+                      <th className="text-left py-2">Status</th>
+                      <th className="text-left py-2">Demo Access</th>
+                      <th className="text-left py-2">Reports</th>
+                      <th className="text-left py-2">Last Login</th>
+                      <th className="text-left py-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminData?.users.map((user) => (
+                      <tr key={user.id} className="border-b">
+                        <td className="py-3">
+                          <div className="font-medium">{user.username}</div>
+                          <div className="text-sm text-muted-foreground">
+                            ID: {user.id}
+                          </div>
+                        </td>
+                        <td className="py-3">{user.email}</td>
+                        <td className="py-3">
+                          <Badge
+                            variant={
+                              user.role === "system_admin"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {user.role}
+                          </Badge>
+                        </td>
+                        <td className="py-3">
+                          <Badge
+                            variant={user.isActive ? "default" : "destructive"}
+                          >
+                            {user.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </td>
+                        <td className="py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {user.demoPermissions?.["post-secondary-demo"] && (
+                              <Badge variant="outline" className="text-xs">
+                                Post-Sec
+                              </Badge>
+                            )}
+                            {user.demoPermissions?.["k12-demo"] && (
+                              <Badge variant="outline" className="text-xs">
+                                K-12
+                              </Badge>
+                            )}
+                            {user.demoPermissions?.["tutoring-demo"] && (
+                              <Badge variant="outline" className="text-xs">
+                                Tutoring
+                              </Badge>
+                            )}
+                            {/* Show "None" if no demo permissions are enabled */}
+                            {(!user.demoPermissions ||
+                              Object.values(user.demoPermissions || {}).every(
+                                (val) => !val
+                              )) && (
+                              <span className="text-xs text-muted-foreground">
+                                None
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          <div className="space-y-1">
+                            <div className="text-sm">
+                              {user.reportCount}/{user.maxReports}
+                            </div>
+                            <div className="w-20 bg-gray-200 rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full ${
+                                  user.isLimitReached
+                                    ? "bg-red-500"
+                                    : "bg-blue-500"
+                                }`}
+                                style={{
+                                  width: `${
+                                    (user.reportCount / user.maxReports) * 100
+                                  }%`,
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          {user.lastLogin
+                            ? new Date(user.lastLogin).toLocaleDateString()
+                            : "Never"}
+                        </td>
+                        <td className="py-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditUser(user)}
+                            data-testid={`edit-user-${user.id}`}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="debug" className="mt-6">
@@ -275,7 +376,7 @@ export default function AdminPage() {
               Modify user settings, report limits, and permissions
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedUser && (
             <UserEditForm
               user={selectedUser}
@@ -319,7 +420,9 @@ function UserEditForm({ user, onSubmit, isLoading }: UserEditFormProps) {
           min="0"
           max="100"
           value={formData.maxReports}
-          onChange={(e) => setFormData({ ...formData, maxReports: parseInt(e.target.value) })}
+          onChange={(e) =>
+            setFormData({ ...formData, maxReports: parseInt(e.target.value) })
+          }
           data-testid="input-max-reports"
         />
       </div>
@@ -331,14 +434,19 @@ function UserEditForm({ user, onSubmit, isLoading }: UserEditFormProps) {
           type="number"
           min="0"
           value={formData.reportCount}
-          onChange={(e) => setFormData({ ...formData, reportCount: parseInt(e.target.value) })}
+          onChange={(e) =>
+            setFormData({ ...formData, reportCount: parseInt(e.target.value) })
+          }
           data-testid="input-report-count"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="role">Role</Label>
-        <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+        <Select
+          value={formData.role}
+          onValueChange={(value) => setFormData({ ...formData, role: value })}
+        >
           <SelectTrigger data-testid="select-role">
             <SelectValue />
           </SelectTrigger>
@@ -354,7 +462,9 @@ function UserEditForm({ user, onSubmit, isLoading }: UserEditFormProps) {
         <Switch
           id="isActive"
           checked={formData.isActive}
-          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+          onCheckedChange={(checked) =>
+            setFormData({ ...formData, isActive: checked })
+          }
           data-testid="switch-active"
         />
         <Label htmlFor="isActive">User Active</Label>
@@ -366,46 +476,52 @@ function UserEditForm({ user, onSubmit, isLoading }: UserEditFormProps) {
           <div className="flex items-center space-x-2">
             <Switch
               id="post-secondary-demo"
-              checked={formData.demoPermissions['post-secondary-demo'] || false}
-              onCheckedChange={(checked) => setFormData({ 
-                ...formData, 
-                demoPermissions: { 
-                  ...formData.demoPermissions, 
-                  'post-secondary-demo': checked 
-                } 
-              })}
+              checked={formData.demoPermissions["post-secondary-demo"] || false}
+              onCheckedChange={(checked) =>
+                setFormData({
+                  ...formData,
+                  demoPermissions: {
+                    ...formData.demoPermissions,
+                    "post-secondary-demo": checked,
+                  },
+                })
+              }
               data-testid="switch-post-secondary-demo"
             />
             <Label htmlFor="post-secondary-demo">Post-Secondary Demo</Label>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Switch
               id="k12-demo"
-              checked={formData.demoPermissions['k12-demo'] || false}
-              onCheckedChange={(checked) => setFormData({ 
-                ...formData, 
-                demoPermissions: { 
-                  ...formData.demoPermissions, 
-                  'k12-demo': checked 
-                } 
-              })}
+              checked={formData.demoPermissions["k12-demo"] || false}
+              onCheckedChange={(checked) =>
+                setFormData({
+                  ...formData,
+                  demoPermissions: {
+                    ...formData.demoPermissions,
+                    "k12-demo": checked,
+                  },
+                })
+              }
               data-testid="switch-k12-demo"
             />
             <Label htmlFor="k12-demo">K-12 Demo</Label>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Switch
               id="tutoring-demo"
-              checked={formData.demoPermissions['tutoring-demo'] || false}
-              onCheckedChange={(checked) => setFormData({ 
-                ...formData, 
-                demoPermissions: { 
-                  ...formData.demoPermissions, 
-                  'tutoring-demo': checked 
-                } 
-              })}
+              checked={formData.demoPermissions["tutoring-demo"] || false}
+              onCheckedChange={(checked) =>
+                setFormData({
+                  ...formData,
+                  demoPermissions: {
+                    ...formData.demoPermissions,
+                    "tutoring-demo": checked,
+                  },
+                })
+              }
               data-testid="switch-tutoring-demo"
             />
             <Label htmlFor="tutoring-demo">Tutoring Demo</Label>
@@ -414,7 +530,7 @@ function UserEditForm({ user, onSubmit, isLoading }: UserEditFormProps) {
       </div>
 
       <Button type="submit" disabled={isLoading} data-testid="button-save-user">
-        {isLoading ? 'Saving...' : 'Save Changes'}
+        {isLoading ? "Saving..." : "Save Changes"}
       </Button>
     </form>
   );

@@ -20,8 +20,6 @@ import {
 } from "lucide-react";
 import { useModule } from "@/contexts/ModuleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEnvironment } from "@/contexts/EnvironmentContext";
-import { EnvironmentSwitcher } from "../EnvironmentSwitcher";
 import thriveIsotype from "@assets/isotype B-W png_1752593825075.png";
 import ThriveLogo from "@assets/primary logo O-W png_1760911234604.png";
 
@@ -36,9 +34,8 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeModule, setActiveModule, isDemoMode } = useModule();
+  const { activeModule, isDemoMode } = useModule();
   const { user, logout, isAuthenticated } = useAuth();
-  const { currentEnvironment } = useEnvironment();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isAdmin = user?.role === "system_admin";
@@ -48,18 +45,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
   };
 
   const getLoginPath = () => {
-    if (!currentEnvironment) {
-      return "/login/post-secondary";
-    }
-
-    if (currentEnvironment.startsWith("k12")) {
-      return "/login/k12";
-    }
-
-    if (currentEnvironment.startsWith("tutoring")) {
-      return "/login/tutor";
-    }
-
+    // Default to post-secondary login since we no longer have environment-based routing
     return "/login/post-secondary";
   };
 
@@ -85,16 +71,6 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
       return "/tutoring-reports";
     } else {
       return "/post-secondary-reports";
-    }
-  };
-
-  const getReviewEditRoute = () => {
-    if (activeModule === "k12") {
-      return "/k12-review-edit";
-    } else if (activeModule === "tutoring") {
-      return "/tutoring-review-edit";
-    } else {
-      return "/post-secondary-review-edit";
     }
   };
 
@@ -156,9 +132,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
       path: "/prompts",
       icon: Settings,
       isActive: isActive("/prompts"),
-      show:
-        !isDemoMode &&
-        (activeModule !== "tutoring" || currentEnvironment === "production"),
+      show: !isDemoMode,
     },
     {
       label: "Admin",
@@ -184,8 +158,6 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
             </Link>
 
             <div className="flex items-center space-x-2 ml-auto">
-              {!isAdmin && <EnvironmentSwitcher />}
-
               {/* Module Switcher */}
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="text-xs">

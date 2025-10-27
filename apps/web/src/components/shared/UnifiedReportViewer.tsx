@@ -26,7 +26,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useNavigate } from "react-router-dom";
 import { useModule } from "@/contexts/ModuleContext";
-import { useEnvironment } from "@/contexts/EnvironmentContext";
 import { useToast } from "@/hooks/use-toast";
 import { AssessmentCase } from "@/types/assessmentCase";
 import { BatchExportModal } from "./BatchExportModal";
@@ -56,17 +55,12 @@ export const UnifiedReportViewer: React.FC<UnifiedReportViewerProps> = ({
 }) => {
   const navigate = useNavigate();
   const { activeModule } = useModule();
-  const { currentEnvironment } = useEnvironment();
   const { toast } = useToast();
   const [currentView, setCurrentView] = useState("overview");
   const [isBatchExportOpen, setIsBatchExportOpen] = useState(false);
 
-  // Check if current environment is a demo mode
-  const isDemoMode =
-    currentEnvironment.endsWith("-demo") ||
-    ["post-secondary-demo", "k12-demo", "tutoring-demo"].includes(
-      currentEnvironment
-    );
+  // In the simplified RBAC system, demo mode will be handled by user roles
+  const isDemoMode = false;
 
   // Module configuration
   const moduleConfig = {

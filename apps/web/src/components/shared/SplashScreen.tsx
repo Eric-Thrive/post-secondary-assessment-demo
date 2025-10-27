@@ -1,14 +1,8 @@
-import React from 'react';
-import { useEnvironment } from '@/contexts/EnvironmentContext';
+import React from "react";
 import thriveLogo from "@assets/primary logo NB-W png_1752592774951.png";
 
 export const SplashScreen = () => {
-  const { currentEnvironment } = useEnvironment();
-
-  console.log('🎨 SplashScreen rendered at:', new Date().toLocaleTimeString());
-
-  const isDemoMode = currentEnvironment === 'post-secondary-demo' || currentEnvironment === 'k12-demo';
-  const isK12Demo = currentEnvironment === 'k12-demo';
+  console.log("🎨 SplashScreen rendered at:", new Date().toLocaleTimeString());
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center">
@@ -16,9 +10,9 @@ export const SplashScreen = () => {
         {/* Logo Section */}
         <div className="mb-8">
           <div className="mx-auto w-fit">
-            <img 
-              src={thriveLogo} 
-              alt="THRIVE Logo" 
+            <img
+              src={thriveLogo}
+              alt="THRIVE Logo"
               className="h-32 w-auto mx-auto filter brightness-0 invert"
             />
           </div>
@@ -29,12 +23,8 @@ export const SplashScreen = () => {
           {/* Call to Action */}
           <div className="mt-12">
             <p className="text-yellow-400 text-sm">
-              {isK12Demo 
-                ? 'Use the navigation menu above to explore our K-12 educational assessment capabilities'
-                : isDemoMode 
-                ? 'Use the navigation menu above to explore our assessment capabilities'
-                : 'Navigate using the menu above'
-              }
+              Use the navigation menu above to explore our assessment
+              capabilities
             </p>
           </div>
         </div>

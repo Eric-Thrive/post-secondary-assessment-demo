@@ -1,13 +1,10 @@
-
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Settings, LogOut, User, Shield, LogIn } from "lucide-react";
-import { ModuleSwitcher } from '../ModuleSwitcher';
-import { EnvironmentSwitcher } from '../EnvironmentSwitcher';
-import { useModule } from '@/contexts/ModuleContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useEnvironment } from '@/contexts/EnvironmentContext';
+import { ModuleSwitcher } from "../ModuleSwitcher";
+import { useModule } from "@/contexts/ModuleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import thriveIsotype from "@assets/isotype B-W png_1752593825075.png";
 
 export const AppNavigation: React.FC = () => {
@@ -15,8 +12,7 @@ export const AppNavigation: React.FC = () => {
   const navigate = useNavigate();
   const { activeModule, isDemoMode } = useModule();
   const { user, logout, isAuthenticated } = useAuth();
-  const { currentEnvironment } = useEnvironment();
-  const isAdmin = user?.role === 'system_admin';
+  const isAdmin = user?.role === "system_admin";
 
   const showLogout = isAuthenticated;
 
@@ -25,19 +21,8 @@ export const AppNavigation: React.FC = () => {
   };
 
   const getLoginPath = () => {
-    if (!currentEnvironment) {
-      return '/login/post-secondary';
-    }
-
-    if (currentEnvironment.startsWith('k12')) {
-      return '/login/k12';
-    }
-
-    if (currentEnvironment.startsWith('tutoring')) {
-      return '/login/tutor';
-    }
-
-    return '/login/post-secondary';
+    // Default to post-secondary login since we no longer have environment-based routing
+    return "/login/post-secondary";
   };
 
   const handleLogin = () => {
@@ -49,21 +34,16 @@ export const AppNavigation: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center h-16 space-x-8">
           <Link to="/" className="flex items-center">
-            <img 
-              src={thriveIsotype} 
-              alt="THRIVE Logo" 
-              className="h-12 w-12"
-            />
+            <img src={thriveIsotype} alt="THRIVE Logo" className="h-12 w-12" />
           </Link>
-          
+
           <div className="flex items-center space-x-2 ml-auto">
-            {!isAdmin && <EnvironmentSwitcher />}
             <ModuleSwitcher variant="full" />
-            
-            {!isDemoMode && (activeModule !== 'tutoring' || currentEnvironment === 'replit-prod') && (
+
+            {!isDemoMode && (
               <Link to="/prompts">
-                <Button 
-                  variant={isActive('/prompts') ? 'default' : 'ghost'}
+                <Button
+                  variant={isActive("/prompts") ? "default" : "ghost"}
                   className="flex items-center space-x-2"
                 >
                   <Settings className="h-4 w-4" />
@@ -71,11 +51,11 @@ export const AppNavigation: React.FC = () => {
                 </Button>
               </Link>
             )}
-            
-            {user?.role === 'system_admin' && (
+
+            {user?.role === "system_admin" && (
               <Link to="/admin">
-                <Button 
-                  variant={isActive('/admin') ? 'default' : 'ghost'}
+                <Button
+                  variant={isActive("/admin") ? "default" : "ghost"}
                   className="flex items-center space-x-2"
                   data-testid="admin-nav-link"
                 >
@@ -84,7 +64,7 @@ export const AppNavigation: React.FC = () => {
                 </Button>
               </Link>
             )}
-            
+
             {showLogout ? (
               <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-gray-200">
                 <div className="flex items-center space-x-2 text-sm text-gray-600">

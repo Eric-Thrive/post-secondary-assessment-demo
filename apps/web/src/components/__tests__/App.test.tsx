@@ -28,12 +28,6 @@ vi.mock("@/contexts/ModuleContext", () => ({
   useModule: () => ({ activeModule: "post-secondary" }),
 }));
 
-vi.mock("@/contexts/EnvironmentContext", () => ({
-  EnvironmentProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="environment-provider">{children}</div>
-  ),
-}));
-
 vi.mock("@/contexts/AuthContext", () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="auth-provider">{children}</div>
@@ -60,7 +54,6 @@ describe("App Component", () => {
   it("should render with proper provider hierarchy", () => {
     const { getByTestId } = render(<App />);
     expect(getByTestId("module-provider")).toBeInTheDocument();
-    expect(getByTestId("environment-provider")).toBeInTheDocument();
     expect(getByTestId("auth-provider")).toBeInTheDocument();
   });
 });

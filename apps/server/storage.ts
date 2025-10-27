@@ -1,49 +1,62 @@
-import { users, type User, type InsertUser, lookupTables, barrierGlossary } from "@shared/schema";
-import { db, pool } from './db';
-import { eq } from 'drizzle-orm';
-import { isReadOnlyEnvironment, isControlledAccessMode, isDemoEnvironment, getDatabaseConnectionInfo } from './config/database';
-import { createLogger } from './reliability-improvements';
-import { DEMO_CUSTOMER_ID } from '@shared/constants/environments';
+import {
+  users,
+  type User,
+  type InsertUser,
+  lookupTables,
+  barrierGlossary,
+} from "@shared/schema";
+import { db, pool } from "./db";
+import { eq } from "drizzle-orm";
+import {
+  isReadOnlyEnvironment,
+  isControlledAccessMode,
+  isDemoEnvironment,
+  getDatabaseConnectionInfo,
+} from "./config/database";
+import { createLogger } from "./reliability-improvements";
+import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
 
 // Create conditional logger based on environment
-const logger = createLogger(process.env.NODE_ENV === 'development');
+const logger = createLogger(process.env.NODE_ENV === "development");
 
 /**
  * SECURITY: Demo operation validation functions
  */
 class DemoSecurityValidator {
-  
   /**
    * Validates that demo operations only access demo customer data
    */
   static validateDemoDataAccess(operation: string, data: any): void {
     if (!isDemoEnvironment()) return; // Only validate in demo environments
-    
+
     // Check for non-demo customer IDs
     if (data?.customerId && data.customerId !== DEMO_CUSTOMER_ID) {
       throw new Error(
         `SECURITY VIOLATION: Demo operation '${operation}' attempted to access customer '${data.customerId}'. ` +
-        `Demo operations are restricted to DEMO_CUSTOMER_ID only.`
+          `Demo operations are restricted to DEMO_CUSTOMER_ID only.`
       );
     }
-    
+
     // Check for nested customer references
     if (data?.customer?.id && data.customer.id !== DEMO_CUSTOMER_ID) {
       throw new Error(
         `SECURITY VIOLATION: Demo operation '${operation}' attempted to access customer '${data.customer.id}'. ` +
-        `Demo operations are restricted to DEMO_CUSTOMER_ID only.`
+          `Demo operations are restricted to DEMO_CUSTOMER_ID only.`
       );
     }
-    
+
     // Check assessment cases
-    if (data?.assessmentCase?.customerId && data.assessmentCase.customerId !== DEMO_CUSTOMER_ID) {
+    if (
+      data?.assessmentCase?.customerId &&
+      data.assessmentCase.customerId !== DEMO_CUSTOMER_ID
+    ) {
       throw new Error(
         `SECURITY VIOLATION: Demo operation '${operation}' attempted to access assessment case for customer '${data.assessmentCase.customerId}'. ` +
-        `Demo operations are restricted to DEMO_CUSTOMER_ID only.`
+          `Demo operations are restricted to DEMO_CUSTOMER_ID only.`
       );
     }
   }
-  
+
   /**
    * Validates that database writes are allowed in current configuration
    * Demo environments now use selective middleware protection instead of blanket blocking
@@ -57,9 +70,9 @@ class DemoSecurityValidator {
     if (isDemoEnv) {
       logger.debug(`🔒 DEMO: Storage write operation`, {
         operation,
-        mode: 'selective_middleware',
+        mode: "selective_middleware",
         timestamp: new Date().toISOString(),
-        note: 'Middleware handles selective blocking'
+        note: "Middleware handles selective blocking",
       });
       return; // Allow - middleware already validated
     }
@@ -67,27 +80,27 @@ class DemoSecurityValidator {
     // Non-demo environments: no restrictions at storage layer
     // (Future: could add production-specific validations here if needed)
   }
-  
+
   /**
    * Forces demo customer ID for all demo operations
    */
   static ensureDemoCustomer(data: any): any {
     if (!isDemoEnvironment()) return data; // Only modify in demo environments
-    
+
     const demoData = { ...data };
-    
+
     // Force demo customer ID
     demoData.customerId = DEMO_CUSTOMER_ID;
-    
+
     // Force demo customer in nested objects
     if (demoData.customer) {
       demoData.customer.id = DEMO_CUSTOMER_ID;
     }
-    
+
     if (demoData.assessmentCase) {
       demoData.assessmentCase.customerId = DEMO_CUSTOMER_ID;
     }
-    
+
     return demoData;
   }
 }
@@ -100,34 +113,50 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Password reset functionality
-  setPasswordResetToken(email: string, token: string, expiry: Date): Promise<boolean>;
+  setPasswordResetToken(
+    email: string,
+    token: string,
+    expiry: Date
+  ): Promise<boolean>;
   getUserByResetToken(token: string): Promise<User | undefined>;
   resetUserPassword(token: string, newPassword: string): Promise<boolean>;
-  
+
   // Assessment Cases
-  getAssessmentCases(moduleType: string, customerId?: string, userId?: number): Promise<any[]>;
+  getAssessmentCases(
+    moduleType: string,
+    customerId?: string,
+    userId?: number
+  ): Promise<any[]>;
   getAssessmentCase(id: string): Promise<any>;
   createAssessmentCase(assessmentCase: any): Promise<any>;
   updateAssessmentCase(id: string, data: any): Promise<any>;
-  
+
   // Version Management
-  finalizeReport(id: string, finalizedContent: string, changesSummary: any[]): Promise<any>;
+  finalizeReport(
+    id: string,
+    finalizedContent: string,
+    changesSummary: any[]
+  ): Promise<any>;
   getReportVersions(id: string): Promise<any>;
   switchToVersion(id: string, version: string): Promise<any>;
-  
+
   // Item Master Data
   getItemMasterData?(caseId: string, moduleType: string): Promise<any[]>;
   getPostSecondaryItemMaster?(): Promise<any[]>;
   insertItemMasterRecord?(record: any): Promise<any>;
-  
+
   // AI Configuration
   getAiConfig(): Promise<any>;
   updateAiConfig(config: any): Promise<any>;
-  
+
   // Prompts
-  getPromptSections(moduleType: string, promptType?: string, pathwayType?: string): Promise<any[]>;
+  getPromptSections(
+    moduleType: string,
+    promptType?: string,
+    pathwayType?: string
+  ): Promise<any[]>;
   updatePromptSection(
     sectionKey: string,
     updates: {
@@ -142,7 +171,7 @@ export interface IStorage {
       pathwayType?: string;
     }
   ): Promise<any>;
-  
+
   // Lookup Tables
   getLookupTables(moduleType: string): Promise<any[]>;
   updateLookupTable(
@@ -153,7 +182,7 @@ export interface IStorage {
       title?: string;
     }
   ): Promise<any>;
-  
+
   // Mapping Configurations
   getMappingConfigurations(moduleType: string): Promise<any[]>;
   updateMappingConfiguration(
@@ -165,36 +194,42 @@ export interface IStorage {
       description?: string;
     }
   ): Promise<any>;
-  
+
   // Plain Language Mappings
   getPlainLanguageMappings(moduleType: string): Promise<any[]>;
   updatePlainLanguageMapping(id: string, updates: any): Promise<any>;
   deletePlainLanguageMapping(id: string): Promise<void>;
-  
+
   // Inference Triggers
   getInferenceTriggers(moduleType: string): Promise<any[]>;
   updateInferenceTrigger(id: string, updates: any): Promise<any>;
   deleteInferenceTrigger(id: string): Promise<void>;
-  
+
   // Barrier Glossary
   getBarrierGlossary(moduleType: string): Promise<any[]>;
   updateBarrierGlossary(id: string, updates: any): Promise<any>;
   deleteBarrierGlossary(id: string): Promise<void>;
-  
+
   // Assessment Findings
   createAssessmentFinding?(finding: any): Promise<any>;
   getAssessmentFindings?(caseId: string): Promise<any[]>;
   updateAssessmentFinding?(id: string, data: any): Promise<any>;
-  
+
   // K-12 Lookup Tables
   getBarrierGlossaryK12?(): Promise<any[]>;
   getSupportLookup?(canonicalKey: string, gradeBand: string): Promise<any[]>;
   getCautionLookup?(canonicalKey: string, gradeBand: string): Promise<any[]>;
-  getObservationTemplate?(canonicalKey: string, gradeBand: string): Promise<any[]>;
-  
+  getObservationTemplate?(
+    canonicalKey: string,
+    gradeBand: string
+  ): Promise<any[]>;
+
   // Report Sharing
   getSharedReport(shareToken: string): Promise<any>;
-  enableReportSharing(caseId: string, customerId?: string): Promise<string | null>;
+  enableReportSharing(
+    caseId: string,
+    customerId?: string
+  ): Promise<string | null>;
   disableReportSharing(caseId: string, customerId?: string): Promise<boolean>;
 }
 
@@ -213,24 +248,26 @@ export class MemStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+      (user) => user.username === username
     );
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    return Array.from(this.users.values()).find((user) => user.email === email);
   }
 
-  async setPasswordResetToken(email: string, token: string, expiry: Date): Promise<boolean> {
+  async setPasswordResetToken(
+    email: string,
+    token: string,
+    expiry: Date
+  ): Promise<boolean> {
     const user = await this.getUserByEmail(email);
     if (!user) return false;
-    
-    const updatedUser = { 
-      ...user, 
-      resetToken: token, 
-      resetTokenExpiry: expiry 
+
+    const updatedUser = {
+      ...user,
+      resetToken: token,
+      resetTokenExpiry: expiry,
     };
     this.users.set(user.id, updatedUser);
     return true;
@@ -239,29 +276,33 @@ export class MemStorage implements IStorage {
   async getUserByResetToken(token: string): Promise<User | undefined> {
     const now = new Date();
     // Hash the incoming token to match what's stored in the database
-    const { hashResetToken } = await import('./auth');
+    const { hashResetToken } = await import("./auth");
     const hashedToken = hashResetToken(token);
-    
+
     return Array.from(this.users.values()).find(
-      (user) => user.resetToken === hashedToken && 
-                user.resetTokenExpiry && 
-                user.resetTokenExpiry > now
+      (user) =>
+        user.resetToken === hashedToken &&
+        user.resetTokenExpiry &&
+        user.resetTokenExpiry > now
     );
   }
 
-  async resetUserPassword(token: string, newPassword: string): Promise<boolean> {
+  async resetUserPassword(
+    token: string,
+    newPassword: string
+  ): Promise<boolean> {
     const user = await this.getUserByResetToken(token);
     if (!user) return false;
-    
+
     // Hash password before storing
-    const bcrypt = await import('bcryptjs');
+    const bcrypt = await import("bcryptjs");
     const hashedPassword = await bcrypt.hash(newPassword, 12);
-    
-    const updatedUser = { 
-      ...user, 
+
+    const updatedUser = {
+      ...user,
       password: hashedPassword,
-      resetToken: null, 
-      resetTokenExpiry: null 
+      resetToken: null,
+      resetTokenExpiry: null,
     };
     this.users.set(user.id, updatedUser);
     return true;
@@ -269,12 +310,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId++;
-    const user: User = { 
-      ...insertUser, 
+    const user: User = {
+      ...insertUser,
       id,
-      customerId: insertUser.customerId || 'system',
+      customerId: insertUser.customerId || "system",
       customerName: insertUser.customerName ?? null,
-      role: insertUser.role || 'tutor',
+      role: insertUser.role || "tutor",
       isActive: insertUser.isActive ?? true,
       reportCount: insertUser.reportCount || 0,
       maxReports: insertUser.maxReports || 5,
@@ -290,52 +331,112 @@ export class MemStorage implements IStorage {
   }
 
   // Stub implementations for other methods
-  async getAssessmentCases(moduleType: string, customerId?: string, userId?: number): Promise<any[]> { return []; }
-  async getAssessmentCase(): Promise<any> { return undefined; }
-  async createAssessmentCase(): Promise<any> { throw new Error('Not implemented'); }
-  async updateAssessmentCase(): Promise<any> { throw new Error('Not implemented'); }
-  async getAiConfig(): Promise<any> { return undefined; }
-  async updateAiConfig(): Promise<any> { throw new Error('Not implemented'); }
-  async getPromptSections(moduleType: string, promptType?: string, pathwayType?: string): Promise<any[]> { return []; }
-  async updatePromptSection(): Promise<any> { throw new Error('Not implemented'); }
-  async getLookupTables(): Promise<any[]> { return []; }
-  async updateLookupTable(): Promise<any> { throw new Error('Not implemented'); }
-  async getMappingConfigurations(): Promise<any[]> { return []; }
-  async updateMappingConfiguration(): Promise<any> { throw new Error('Not implemented'); }
-  async getPlainLanguageMappings(): Promise<any[]> { return []; }
-  async updatePlainLanguageMapping(): Promise<any> { throw new Error('Not implemented'); }
-  async deletePlainLanguageMapping(): Promise<void> { throw new Error('Not implemented'); }
-  async getInferenceTriggers(): Promise<any[]> { return []; }
-  async updateInferenceTrigger(): Promise<any> { throw new Error('Not implemented'); }
-  async deleteInferenceTrigger(): Promise<void> { throw new Error('Not implemented'); }
-  async getBarrierGlossary(): Promise<any[]> { return []; }
-  async updateBarrierGlossary(): Promise<any> { throw new Error('Not implemented'); }
-  async deleteBarrierGlossary(): Promise<void> { throw new Error('Not implemented'); }
-  
+  async getAssessmentCases(
+    moduleType: string,
+    customerId?: string,
+    userId?: number
+  ): Promise<any[]> {
+    return [];
+  }
+  async getAssessmentCase(): Promise<any> {
+    return undefined;
+  }
+  async createAssessmentCase(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async updateAssessmentCase(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async getAiConfig(): Promise<any> {
+    return undefined;
+  }
+  async updateAiConfig(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async getPromptSections(
+    moduleType: string,
+    promptType?: string,
+    pathwayType?: string
+  ): Promise<any[]> {
+    return [];
+  }
+  async updatePromptSection(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async getLookupTables(): Promise<any[]> {
+    return [];
+  }
+  async updateLookupTable(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async getMappingConfigurations(): Promise<any[]> {
+    return [];
+  }
+  async updateMappingConfiguration(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async getPlainLanguageMappings(): Promise<any[]> {
+    return [];
+  }
+  async updatePlainLanguageMapping(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async deletePlainLanguageMapping(): Promise<void> {
+    throw new Error("Not implemented");
+  }
+  async getInferenceTriggers(): Promise<any[]> {
+    return [];
+  }
+  async updateInferenceTrigger(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async deleteInferenceTrigger(): Promise<void> {
+    throw new Error("Not implemented");
+  }
+  async getBarrierGlossary(): Promise<any[]> {
+    return [];
+  }
+  async updateBarrierGlossary(): Promise<any> {
+    throw new Error("Not implemented");
+  }
+  async deleteBarrierGlossary(): Promise<void> {
+    throw new Error("Not implemented");
+  }
+
   // Version Management Methods (stubs for MemStorage)
-  async finalizeReport(id: string, finalizedContent: string, changesSummary: any[]): Promise<any> {
-    throw new Error('Version management not implemented for MemStorage');
+  async finalizeReport(
+    id: string,
+    finalizedContent: string,
+    changesSummary: any[]
+  ): Promise<any> {
+    throw new Error("Version management not implemented for MemStorage");
   }
-  
+
   async getReportVersions(id: string): Promise<any> {
-    throw new Error('Version management not implemented for MemStorage');
+    throw new Error("Version management not implemented for MemStorage");
   }
-  
+
   async switchToVersion(id: string, version: string): Promise<any> {
-    throw new Error('Version management not implemented for MemStorage');
+    throw new Error("Version management not implemented for MemStorage");
   }
 
   // Report Sharing Methods (stubs for MemStorage)
   async getSharedReport(shareToken: string): Promise<any> {
-    throw new Error('Report sharing not implemented for MemStorage');
+    throw new Error("Report sharing not implemented for MemStorage");
   }
 
-  async enableReportSharing(caseId: string, customerId?: string): Promise<string | null> {
-    throw new Error('Report sharing not implemented for MemStorage');
+  async enableReportSharing(
+    caseId: string,
+    customerId?: string
+  ): Promise<string | null> {
+    throw new Error("Report sharing not implemented for MemStorage");
   }
 
-  async disableReportSharing(caseId: string, customerId?: string): Promise<boolean> {
-    throw new Error('Report sharing not implemented for MemStorage');
+  async disableReportSharing(
+    caseId: string,
+    customerId?: string
+  ): Promise<boolean> {
+    throw new Error("Report sharing not implemented for MemStorage");
   }
 }
 
@@ -350,36 +451,45 @@ export class DatabaseStorage implements IStorage {
   private checkWritePermissions(operation: string, data?: any): void {
     // STEP 1: Standard write permission check
     DemoSecurityValidator.validateWritePermissions(operation);
-    
+
     // STEP 2: Demo environment additional validations
     if (isDemoEnvironment()) {
-      console.log(`🔒 DEMO SECURITY: Validating ${operation} in demo environment`);
-      
+      console.log(
+        `🔒 DEMO SECURITY: Validating ${operation} in demo environment`
+      );
+
       // STEP 3: Validate demo data access if data is provided
       if (data) {
         DemoSecurityValidator.validateDemoDataAccess(operation, data);
-        
+
         // STEP 4: Force demo customer ID for safety
-        if (data.customerId || data.customer?.id || data.assessmentCase?.customerId) {
+        if (
+          data.customerId ||
+          data.customer?.id ||
+          data.assessmentCase?.customerId
+        ) {
           const originalData = JSON.stringify(data);
           data = DemoSecurityValidator.ensureDemoCustomer(data);
-          
+
           if (originalData !== JSON.stringify(data)) {
-            console.log(`🔒 DEMO SECURITY: Forced demo customer for ${operation}`, {
-              operation,
-              originalCustomer: JSON.parse(originalData).customerId,
-              enforcedCustomer: data.customerId
-            });
+            console.log(
+              `🔒 DEMO SECURITY: Forced demo customer for ${operation}`,
+              {
+                operation,
+                originalCustomer: JSON.parse(originalData).customerId,
+                enforcedCustomer: data.customerId,
+              }
+            );
           }
         }
       }
-      
+
       // STEP 5: Log demo operation for audit trail
       console.log(`🎯 DEMO STORAGE OPERATION: ${operation}`, {
         operation,
         timestamp: new Date().toISOString(),
         hasData: !!data,
-        environment: getDatabaseConnectionInfo().environment
+        environment: getDatabaseConnectionInfo().environment,
       });
     }
   }
@@ -391,12 +501,12 @@ export class DatabaseStorage implements IStorage {
   private validateAndPrepareData(operation: string, data: any): any {
     // Always validate write permissions first
     this.checkWritePermissions(operation, data);
-    
+
     // In demo environments, ensure demo customer enforcement
     if (isDemoEnvironment()) {
       data = DemoSecurityValidator.ensureDemoCustomer(data);
     }
-    
+
     return data;
   }
   async getUser(id: number): Promise<User | undefined> {
@@ -405,7 +515,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
     return user || undefined;
   }
 
@@ -414,9 +527,13 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async setPasswordResetToken(email: string, token: string, expiry: Date): Promise<boolean> {
+  async setPasswordResetToken(
+    email: string,
+    token: string,
+    expiry: Date
+  ): Promise<boolean> {
     try {
-      this.checkWritePermissions('setPasswordResetToken', { email });
+      this.checkWritePermissions("setPasswordResetToken", { email });
       const result = await db
         .update(users)
         .set({
@@ -427,7 +544,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return result.length > 0;
     } catch (error) {
-      console.error('Error setting password reset token:', error);
+      console.error("Error setting password reset token:", error);
       return false;
     }
   }
@@ -435,16 +552,16 @@ export class DatabaseStorage implements IStorage {
   async getUserByResetToken(token: string): Promise<User | undefined> {
     const now = new Date();
     // Hash the incoming token to match what's stored in the database
-    const { hashResetToken } = await import('./auth');
+    const { hashResetToken } = await import("./auth");
     const hashedToken = hashResetToken(token);
-    
+
     const result = await db
       .select()
       .from(users)
       .where(eq(users.resetToken, hashedToken));
-    
+
     const [user] = result;
-    
+
     // Check if token is valid and not expired
     if (user && user.resetTokenExpiry && user.resetTokenExpiry > now) {
       return user;
@@ -452,15 +569,18 @@ export class DatabaseStorage implements IStorage {
     return undefined;
   }
 
-  async resetUserPassword(token: string, newPassword: string): Promise<boolean> {
+  async resetUserPassword(
+    token: string,
+    newPassword: string
+  ): Promise<boolean> {
     try {
-      this.checkWritePermissions('resetUserPassword', { token });
+      this.checkWritePermissions("resetUserPassword", { token });
       const user = await this.getUserByResetToken(token);
       if (!user) return false;
 
       // Import bcrypt for password hashing and auth utilities
-      const bcrypt = await import('bcryptjs');
-      const { hashResetToken } = await import('./auth');
+      const bcrypt = await import("bcryptjs");
+      const { hashResetToken } = await import("./auth");
       const hashedPassword = await bcrypt.hash(newPassword, 12);
       const hashedToken = hashResetToken(token);
 
@@ -473,109 +593,132 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.resetToken, hashedToken))
         .returning();
-      
+
       return result.length > 0;
     } catch (error) {
-      console.error('Error resetting password:', error);
+      console.error("Error resetting password:", error);
       return false;
     }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     // SECURITY: Enhanced validation with demo customer enforcement
-    const validatedData = this.validateAndPrepareData('createUser', insertUser);
+    const validatedData = this.validateAndPrepareData("createUser", insertUser);
     const [user] = await db.insert(users).values(validatedData).returning();
     return user;
   }
 
   // For now, delegate complex queries to the existing raw SQL implementation
-  async getAssessmentCases(moduleType: string, customerId?: string, userId?: number): Promise<any[]> {
+  async getAssessmentCases(
+    moduleType: string,
+    customerId?: string,
+    userId?: number
+  ): Promise<any[]> {
     console.log(`\n🔍 DatabaseStorage.getAssessmentCases called`);
     console.log(`📋 Module Type Requested: "${moduleType}"`);
-    console.log(`👤 Customer ID Filter: "${customerId || 'NONE - ADMIN MODE'}"`);
-    console.log(`🧑 User ID Filter: "${userId || 'NONE - ALL USERS'}"`);
-    console.log(`🗄️  Database URL: ${process.env.DATABASE_URL?.substring(0, 50)}...`);
-    
+    console.log(
+      `👤 Customer ID Filter: "${customerId || "NONE - ADMIN MODE"}"`
+    );
+    console.log(`🧑 User ID Filter: "${userId || "NONE - ALL USERS"}"`);
+    console.log(
+      `🗄️  Database URL: ${process.env.DATABASE_URL?.substring(0, 50)}...`
+    );
+
     // First, let's check ALL cases in the database to debug
     try {
       const allCasesQuery = `SELECT module_type, status, COUNT(*) as count, COUNT(CASE WHEN report_data IS NOT NULL THEN 1 END) as with_report FROM assessment_cases GROUP BY module_type, status ORDER BY module_type, status`;
       const allCasesResult = await pool.query(allCasesQuery);
       console.log(`\n📊 ALL Cases in Database:`);
-      allCasesResult.rows.forEach(row => {
-        console.log(`   - ${row.module_type} (${row.status}): ${row.count} total, ${row.with_report} with report_data`);
+      allCasesResult.rows.forEach((row) => {
+        console.log(
+          `   - ${row.module_type} (${row.status}): ${row.count} total, ${row.with_report} with report_data`
+        );
       });
     } catch (e) {
-      console.error('All cases check failed:', e);
+      console.error("All cases check failed:", e);
     }
-    
+
     // Now check specifically for the requested module type
     try {
       let checkQuery = `SELECT COUNT(*) as total, COUNT(CASE WHEN report_data IS NOT NULL THEN 1 END) as with_report FROM assessment_cases WHERE module_type = $1 AND status = 'completed'`;
       const checkParams: any[] = [moduleType];
       let paramCount = 1;
-      
+
       if (customerId) {
         checkQuery += ` AND customer_id = $${++paramCount}`;
         checkParams.push(customerId);
       }
-      
+
       if (userId) {
         checkQuery += ` AND created_by_user_id = $${++paramCount}`;
         checkParams.push(userId);
       }
-      
+
       const checkResult = await pool.query(checkQuery, checkParams);
-      console.log(`\n✅ Specific check for "${moduleType}" module${customerId ? ` (customer: ${customerId})` : ''}${userId ? ` (user: ${userId})` : ''}:`);
+      console.log(
+        `\n✅ Specific check for "${moduleType}" module${
+          customerId ? ` (customer: ${customerId})` : ""
+        }${userId ? ` (user: ${userId})` : ""}:`
+      );
       console.log(`   - Total completed: ${checkResult.rows[0].total}`);
       console.log(`   - With report_data: ${checkResult.rows[0].with_report}`);
     } catch (e) {
-      console.error('Specific module check failed:', e);
+      console.error("Specific module check failed:", e);
     }
-    
+
     let query = `SELECT * FROM assessment_cases WHERE module_type = $1 AND status = 'completed' AND report_data IS NOT NULL`;
     const params: any[] = [moduleType];
     let paramCount = 1;
-    
+
     // Add customer filter if provided
     if (customerId) {
       query += ` AND customer_id = $${++paramCount}`;
       params.push(customerId);
     }
-    
+
     // Add user filter if provided (for user isolation in demo mode)
     if (userId) {
       query += ` AND created_by_user_id = $${++paramCount}`;
       params.push(userId);
     }
-    
+
     query += ` ORDER BY created_date DESC`;
-    console.log(`\n🔎 Executing query for "${moduleType}"${customerId ? ` with customer filter "${customerId}"` : ''}${userId ? ` with user filter "${userId}"` : ''}...`);
-    
+    console.log(
+      `\n🔎 Executing query for "${moduleType}"${
+        customerId ? ` with customer filter "${customerId}"` : ""
+      }${userId ? ` with user filter "${userId}"` : ""}...`
+    );
+
     try {
       const result = await pool.query(query, params);
-      console.log(`✅ Query returned ${result.rows.length} rows for "${moduleType}"${customerId ? ` and customer "${customerId}"` : ''}${userId ? ` and user "${userId}"` : ''}`);
-      
+      console.log(
+        `✅ Query returned ${result.rows.length} rows for "${moduleType}"${
+          customerId ? ` and customer "${customerId}"` : ""
+        }${userId ? ` and user "${userId}"` : ""}`
+      );
+
       if (result.rows.length > 0) {
         console.log(`📄 First case ID: ${result.rows[0].id}`);
       }
-      
+
       // Add analysis_result field for compatibility and ensure case_id is used as the primary identifier
-      const cases = result.rows.map(row => ({
+      const cases = result.rows.map((row) => ({
         ...row,
         id: row.case_id, // Use case_id as the primary identifier for frontend
-        analysis_result: row.report_data
+        analysis_result: row.report_data,
       }));
-      
+
       return cases;
     } catch (error) {
-      console.error('DatabaseStorage.getAssessmentCases error:', error);
+      console.error("DatabaseStorage.getAssessmentCases error:", error);
       return [];
     }
   }
 
   // Helper function to detect UUID format
   private isUUIDFormat(id: string): boolean {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(id);
   }
 
@@ -586,58 +729,87 @@ export class DatabaseStorage implements IStorage {
       // UUID format: query by id column (K-12/post-secondary cases)
       query = `SELECT * FROM assessment_cases WHERE id = $1`;
     } else {
-      // String format: query by case_id column (tutoring cases)  
+      // String format: query by case_id column (tutoring cases)
       query = `SELECT * FROM assessment_cases WHERE case_id = $1`;
     }
-    
+
     const result = await pool.query(query, [id]);
     const caseData = result.rows[0];
-    
+
     // Debug: Check if report_data needs JSON parsing
-    if (caseData && caseData.report_data && typeof caseData.report_data === 'string') {
-      console.log('🔍 DEBUG: Parsing report_data from JSON string');
+    if (
+      caseData &&
+      caseData.report_data &&
+      typeof caseData.report_data === "string"
+    ) {
+      console.log("🔍 DEBUG: Parsing report_data from JSON string");
       try {
         caseData.report_data = JSON.parse(caseData.report_data);
       } catch (e) {
-        console.error('❌ Failed to parse report_data JSON:', e);
+        console.error("❌ Failed to parse report_data JSON:", e);
         caseData.report_data = null;
       }
     }
-    
+
     return caseData;
   }
 
   async createAssessmentCase(assessmentCase: any): Promise<any> {
     // SECURITY: Enhanced validation with demo customer enforcement
-    const validatedAssessmentCase = this.validateAndPrepareData('createAssessmentCase', assessmentCase);
-    
+    const validatedAssessmentCase = this.validateAndPrepareData(
+      "createAssessmentCase",
+      assessmentCase
+    );
+
     // Handle both camelCase and snake_case field naming for compatibility
     const caseData = {
       id: validatedAssessmentCase.id,
-      caseId: validatedAssessmentCase.caseId || validatedAssessmentCase.case_id || validatedAssessmentCase.id,
-      moduleType: validatedAssessmentCase.moduleType || validatedAssessmentCase.module_type,
-      status: validatedAssessmentCase.status || 'pending',
-      displayName: validatedAssessmentCase.displayName || validatedAssessmentCase.display_name || `Assessment ${new Date().toLocaleDateString()}`,
-      documentNames: validatedAssessmentCase.documentNames || validatedAssessmentCase.document_names || [],
-      reportData: validatedAssessmentCase.reportData || validatedAssessmentCase.report_data,
+      caseId:
+        validatedAssessmentCase.caseId ||
+        validatedAssessmentCase.case_id ||
+        validatedAssessmentCase.id,
+      moduleType:
+        validatedAssessmentCase.moduleType ||
+        validatedAssessmentCase.module_type,
+      status: validatedAssessmentCase.status || "pending",
+      displayName:
+        validatedAssessmentCase.displayName ||
+        validatedAssessmentCase.display_name ||
+        `Assessment ${new Date().toLocaleDateString()}`,
+      documentNames:
+        validatedAssessmentCase.documentNames ||
+        validatedAssessmentCase.document_names ||
+        [],
+      reportData:
+        validatedAssessmentCase.reportData ||
+        validatedAssessmentCase.report_data,
       customerId: validatedAssessmentCase.customerId || DEMO_CUSTOMER_ID, // Force demo-customer in demo environments
       createdByUserId: validatedAssessmentCase.createdByUserId || null,
       reportDataJson: validatedAssessmentCase.reportDataJson || null,
       qcMetadata: validatedAssessmentCase.qcMetadata || null,
       // New assessment form fields
-      uniqueId: validatedAssessmentCase.uniqueId || validatedAssessmentCase.unique_id || null,
-      programMajor: validatedAssessmentCase.programMajor || validatedAssessmentCase.program_major || null,
-      reportAuthor: validatedAssessmentCase.reportAuthor || validatedAssessmentCase.report_author || null
+      uniqueId:
+        validatedAssessmentCase.uniqueId ||
+        validatedAssessmentCase.unique_id ||
+        null,
+      programMajor:
+        validatedAssessmentCase.programMajor ||
+        validatedAssessmentCase.program_major ||
+        null,
+      reportAuthor:
+        validatedAssessmentCase.reportAuthor ||
+        validatedAssessmentCase.report_author ||
+        null,
     };
-    
-    console.log('📝 Creating assessment case with normalized data:', {
+
+    console.log("📝 Creating assessment case with normalized data:", {
       id: caseData.id,
       caseId: caseData.caseId,
       moduleType: caseData.moduleType,
       customerId: caseData.customerId,
-      displayName: caseData.displayName
+      displayName: caseData.displayName,
     });
-    
+
     const query = `INSERT INTO assessment_cases (
         id, case_id, module_type, status, display_name, document_names, report_data, 
         customer_id, created_by_user_id, report_data_json, qc_metadata,
@@ -659,32 +831,37 @@ export class DatabaseStorage implements IStorage {
       caseData.qcMetadata ? JSON.stringify(caseData.qcMetadata) : null,
       caseData.uniqueId,
       caseData.programMajor,
-      caseData.reportAuthor
+      caseData.reportAuthor,
     ]);
     return result.rows[0];
   }
 
   async updateAssessmentCase(id: string, data: any): Promise<any> {
     // SECURITY: Enhanced validation with demo customer enforcement
-    const validatedData = this.validateAndPrepareData('updateAssessmentCase', data);
-    
+    const validatedData = this.validateAndPrepareData(
+      "updateAssessmentCase",
+      data
+    );
+
     // Get the case first to find the correct database ID
     const currentCase = await this.getAssessmentCase(id);
-    if (!currentCase) throw new Error('Assessment case not found');
-    
+    if (!currentCase) throw new Error("Assessment case not found");
+
     // SECURITY: Additional demo validation for existing case
     if (isDemoEnvironment() && currentCase.customer_id !== DEMO_CUSTOMER_ID) {
       throw new Error(
         `SECURITY VIOLATION: Demo operation attempted to update non-demo case. ` +
-        `Case customer: '${currentCase.customer_id}', Required: DEMO_CUSTOMER_ID`
+          `Case customer: '${currentCase.customer_id}', Required: DEMO_CUSTOMER_ID`
       );
     }
-    
+
     const query = `UPDATE assessment_cases SET report_data = $2, status = $3, last_updated = NOW() WHERE id = $1 RETURNING *`;
     const result = await pool.query(query, [
       currentCase.id, // Use actual database ID, not frontend ID
-      validatedData.report_data ? JSON.stringify(validatedData.report_data) : null,
-      validatedData.status || 'completed'
+      validatedData.report_data
+        ? JSON.stringify(validatedData.report_data)
+        : null,
+      validatedData.status || "completed",
     ]);
     return result.rows[0];
   }
@@ -697,67 +874,82 @@ export class DatabaseStorage implements IStorage {
 
   async updateAiConfig(config: any): Promise<any> {
     // SECURITY: Enhanced validation with demo customer enforcement
-    const validatedConfig = this.validateAndPrepareData('updateAiConfig', config);
-    
+    const validatedConfig = this.validateAndPrepareData(
+      "updateAiConfig",
+      config
+    );
+
     const query = `UPDATE ai_config SET model_name = $1, temperature = $2, max_tokens = $3, last_updated = NOW() WHERE id = $4 RETURNING *`;
-    const result = await pool.query(query, [validatedConfig.model_name, validatedConfig.temperature, validatedConfig.max_tokens, validatedConfig.id]);
+    const result = await pool.query(query, [
+      validatedConfig.model_name,
+      validatedConfig.temperature,
+      validatedConfig.max_tokens,
+      validatedConfig.id,
+    ]);
     return result.rows[0];
   }
 
-  async getPromptSections(moduleType: string, promptType?: string, pathwayType?: string): Promise<any[]> {
+  async getPromptSections(
+    moduleType: string,
+    promptType?: string,
+    pathwayType?: string
+  ): Promise<any[]> {
     let query = `SELECT * FROM prompt_sections WHERE module_type = $1`;
     const params: any[] = [moduleType];
-    
+
     if (promptType) {
       query += ` AND prompt_type = $2`;
       params.push(promptType);
     }
-    
+
     if (pathwayType) {
       query += ` AND pathway_type = $${params.length + 1}`;
       params.push(pathwayType);
     }
-    
+
     query += ` ORDER BY section_key`;
     const result = await pool.query(query, params);
-    
+
     // Check if this is demo environment and we need to include demo templates
-    const currentEnv = process.env.APP_ENVIRONMENT || 'replit-prod';
-    
-    if (currentEnv === 'post-secondary-demo' && moduleType === 'post_secondary') {
+    const currentEnv = process.env.APP_ENVIRONMENT || "replit-prod";
+
+    if (
+      currentEnv === "post-secondary-demo" &&
+      moduleType === "post_secondary"
+    ) {
       // Also fetch demo-specific templates
       let demoQuery = `SELECT * FROM prompt_sections WHERE module_type = $1 AND section_key LIKE '%_demo'`;
       const demoParams: any[] = [moduleType];
-      
+
       if (promptType) {
         demoQuery += ` AND prompt_type = $2`;
         demoParams.push(promptType);
       }
-      
+
       demoQuery += ` ORDER BY section_key`;
       const demoResult = await pool.query(demoQuery, demoParams);
-      
+
       // Merge demo templates with regular templates, prioritizing demo versions
       const allTemplates = [...result.rows, ...demoResult.rows];
       const templateMap = new Map();
-      
+
       // Add regular templates first
-      result.rows.forEach(template => {
+      result.rows.forEach((template) => {
         templateMap.set(template.section_key, template);
       });
-      
+
       // Override with demo templates where available
-      demoResult.rows.forEach(template => {
-        const baseKey = template.section_key.replace('_demo', '');
+      demoResult.rows.forEach((template) => {
+        const baseKey = template.section_key.replace("_demo", "");
         templateMap.set(baseKey, template);
       });
-      
+
       return Array.from(templateMap.values());
     }
-    
+
     // Check if this is K-12 demo environment
-    if (currentEnv === 'k12-demo' && moduleType === 'k12') {
-      logger.debug('K-12 Demo mode detected - using demo prompts');
+    if (currentEnv === "k12-demo" && moduleType === "k12") {
+      logger.debug("K-12 Demo mode detected - using demo prompts");
 
       // Fetch demo-specific templates
       let demoQuery = `SELECT * FROM prompt_sections WHERE module_type = $1 AND section_key LIKE '%_demo'`;
@@ -778,21 +970,23 @@ export class DatabaseStorage implements IStorage {
       const templateMap = new Map();
 
       // Add regular templates first
-      result.rows.forEach(template => {
+      result.rows.forEach((template) => {
         templateMap.set(template.section_key, template);
       });
 
       // Override with demo templates where available
-      demoResult.rows.forEach(template => {
+      demoResult.rows.forEach((template) => {
         // Replace regular K-12 prompts with demo versions
-        const baseKey = template.section_key.replace('_demo', '');
+        const baseKey = template.section_key.replace("_demo", "");
         templateMap.set(baseKey, template);
-        logger.debug(`Replacing ${baseKey} with demo version: ${template.section_key}`);
+        logger.debug(
+          `Replacing ${baseKey} with demo version: ${template.section_key}`
+        );
       });
 
       return Array.from(templateMap.values());
     }
-    
+
     return result.rows;
   }
 
@@ -817,7 +1011,7 @@ export class DatabaseStorage implements IStorage {
     }
   ): Promise<any> {
     if (!updates || Object.keys(updates).length === 0) {
-      throw new Error('No updates provided for prompt section');
+      throw new Error("No updates provided for prompt section");
     }
 
     const normalizedUpdates = {
@@ -833,19 +1027,27 @@ export class DatabaseStorage implements IStorage {
     };
 
     // SECURITY: Enhanced validation with demo customer enforcement
-    this.checkWritePermissions('updatePromptSection', { sectionKey, ...normalizedUpdates });
+    this.checkWritePermissions("updatePromptSection", {
+      sectionKey,
+      ...normalizedUpdates,
+    });
 
     // Determine the effective section key (demo environments rewrite keys)
-    const currentEnv = process.env.APP_ENVIRONMENT || 'replit-prod';
+    const currentEnv = process.env.APP_ENVIRONMENT || "replit-prod";
     let targetSectionKey = sectionKey;
 
     if (
-      currentEnv === 'post-secondary-demo' &&
-      sectionKey.includes('post_secondary') &&
-      !sectionKey.includes('_demo')
+      currentEnv === "post-secondary-demo" &&
+      sectionKey.includes("post_secondary") &&
+      !sectionKey.includes("_demo")
     ) {
-      targetSectionKey = sectionKey.replace('post_secondary', 'post_secondary_demo');
-      logger.debug(`Demo environment detected, redirecting to demo template: ${targetSectionKey}`);
+      targetSectionKey = sectionKey.replace(
+        "post_secondary",
+        "post_secondary_demo"
+      );
+      logger.debug(
+        `Demo environment detected, redirecting to demo template: ${targetSectionKey}`
+      );
     }
 
     const setClauses: string[] = [];
@@ -857,51 +1059,51 @@ export class DatabaseStorage implements IStorage {
     };
 
     if (normalizedUpdates.content !== undefined) {
-      pushUpdate('content', normalizedUpdates.content);
+      pushUpdate("content", normalizedUpdates.content);
     }
 
     if (normalizedUpdates.promptType !== undefined) {
-      pushUpdate('prompt_type', normalizedUpdates.promptType);
+      pushUpdate("prompt_type", normalizedUpdates.promptType);
     }
 
     if (normalizedUpdates.executionOrder !== undefined) {
-      pushUpdate('execution_order', normalizedUpdates.executionOrder);
+      pushUpdate("execution_order", normalizedUpdates.executionOrder);
     }
 
     if (normalizedUpdates.isSystemPrompt !== undefined) {
-      pushUpdate('is_system_prompt', normalizedUpdates.isSystemPrompt);
+      pushUpdate("is_system_prompt", normalizedUpdates.isSystemPrompt);
     }
 
     if (normalizedUpdates.moduleType !== undefined) {
-      pushUpdate('module_type', normalizedUpdates.moduleType);
+      pushUpdate("module_type", normalizedUpdates.moduleType);
     }
 
     if (normalizedUpdates.title !== undefined) {
-      pushUpdate('title', normalizedUpdates.title);
+      pushUpdate("title", normalizedUpdates.title);
     }
 
     if (normalizedUpdates.description !== undefined) {
-      pushUpdate('description', normalizedUpdates.description);
+      pushUpdate("description", normalizedUpdates.description);
     }
 
     if (normalizedUpdates.version !== undefined) {
-      pushUpdate('version', normalizedUpdates.version);
+      pushUpdate("version", normalizedUpdates.version);
     }
 
     if (normalizedUpdates.pathwayType !== undefined) {
-      pushUpdate('pathway_type', normalizedUpdates.pathwayType);
+      pushUpdate("pathway_type", normalizedUpdates.pathwayType);
     }
 
     if (setClauses.length === 0) {
-      throw new Error('No valid prompt section fields provided for update');
+      throw new Error("No valid prompt section fields provided for update");
     }
 
-    setClauses.push('last_updated = NOW()');
+    setClauses.push("last_updated = NOW()");
     params.push(targetSectionKey);
 
-    const query = `UPDATE prompt_sections SET ${setClauses.join(', ')} WHERE section_key = $${
-      params.length
-    } RETURNING *`;
+    const query = `UPDATE prompt_sections SET ${setClauses.join(
+      ", "
+    )} WHERE section_key = $${params.length} RETURNING *`;
     const result = await pool.query(query, params);
     return result.rows[0];
   }
@@ -922,10 +1124,10 @@ export class DatabaseStorage implements IStorage {
     }
   ): Promise<any> {
     if (!updates || updates.content === undefined) {
-      throw new Error('Lookup table update requires content');
+      throw new Error("Lookup table update requires content");
     }
 
-    this.checkWritePermissions('updateLookupTable', { tableKey, ...updates });
+    this.checkWritePermissions("updateLookupTable", { tableKey, ...updates });
 
     const setClauses: string[] = [];
     const params: any[] = [];
@@ -945,12 +1147,12 @@ export class DatabaseStorage implements IStorage {
       setClauses.push(`module_type = $${params.length}`);
     }
 
-    setClauses.push('last_updated = NOW()');
+    setClauses.push("last_updated = NOW()");
     params.push(tableKey);
 
-    const query = `UPDATE lookup_tables SET ${setClauses.join(', ')} WHERE table_key = $${
-      params.length
-    } RETURNING *`;
+    const query = `UPDATE lookup_tables SET ${setClauses.join(
+      ", "
+    )} WHERE table_key = $${params.length} RETURNING *`;
     const result = await pool.query(query, params);
     return result.rows[0];
   }
@@ -971,10 +1173,13 @@ export class DatabaseStorage implements IStorage {
     }
   ): Promise<any> {
     if (!updates || updates.mapping_rules === undefined) {
-      throw new Error('Mapping configuration update requires mapping_rules');
+      throw new Error("Mapping configuration update requires mapping_rules");
     }
 
-    this.checkWritePermissions('updateMappingConfiguration', { mappingKey, ...updates });
+    this.checkWritePermissions("updateMappingConfiguration", {
+      mappingKey,
+      ...updates,
+    });
 
     const setClauses: string[] = [];
     const params: any[] = [];
@@ -1000,12 +1205,12 @@ export class DatabaseStorage implements IStorage {
       setClauses.push(`description = $${params.length}`);
     }
 
-    setClauses.push('last_updated = NOW()');
+    setClauses.push("last_updated = NOW()");
     params.push(mappingKey);
 
-    const query = `UPDATE mapping_configurations SET ${setClauses.join(', ')} WHERE mapping_key = $${
-      params.length
-    } RETURNING *`;
+    const query = `UPDATE mapping_configurations SET ${setClauses.join(
+      ", "
+    )} WHERE mapping_key = $${params.length} RETURNING *`;
     const result = await pool.query(query, params);
     return result.rows[0];
   }
@@ -1018,7 +1223,10 @@ export class DatabaseStorage implements IStorage {
 
   async updatePlainLanguageMapping(id: string, data: any): Promise<any> {
     const query = `UPDATE plain_language_mappings SET plain_language_description = $2, last_updated = NOW() WHERE id = $1 RETURNING *`;
-    const result = await pool.query(query, [id, data.plain_language_description]);
+    const result = await pool.query(query, [
+      id,
+      data.plain_language_description,
+    ]);
     return result.rows[0];
   }
 
@@ -1030,7 +1238,10 @@ export class DatabaseStorage implements IStorage {
 
   async updateInferenceTrigger(id: string, data: any): Promise<any> {
     const query = `UPDATE inference_triggers SET keyword_patterns = $2, last_updated = NOW() WHERE id = $1 RETURNING *`;
-    const result = await pool.query(query, [id, JSON.stringify(data.keyword_patterns)]);
+    const result = await pool.query(query, [
+      id,
+      JSON.stringify(data.keyword_patterns),
+    ]);
     return result.rows[0];
   }
 
@@ -1045,40 +1256,43 @@ export class DatabaseStorage implements IStorage {
     const result = await pool.query(query, [id, data.one_sentence_definition]);
     return result.rows[0];
   }
-  
+
   async insertItemMasterRecord(record: any): Promise<any> {
     try {
-      console.log('💾 DatabaseStorage: Inserting item master record');
-      
+      console.log("💾 DatabaseStorage: Inserting item master record");
+
       const query = `INSERT INTO post_secondary_item_master 
         (id, assessment_case_id, canonical_key, item_label, plain_language_label, 
          evidence_basis, accommodations, qc_flag, module_type, source, created_at, last_updated) 
         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
         RETURNING *`;
-      
+
       const values = [
         record.assessment_case_id,
-        record.canonical_key || '',
-        record.item_label || '',
-        record.plain_language_label || '',
-        record.evidence_basis || '',
-        record.accommodations || '',
-        record.qc_flag || 'needs_review',
-        record.module_type || 'post_secondary',
-        record.source || 'ai_analysis',
+        record.canonical_key || "",
+        record.item_label || "",
+        record.plain_language_label || "",
+        record.evidence_basis || "",
+        record.accommodations || "",
+        record.qc_flag || "needs_review",
+        record.module_type || "post_secondary",
+        record.source || "ai_analysis",
         record.created_at || new Date().toISOString(),
-        new Date().toISOString()
+        new Date().toISOString(),
       ];
-      
+
       const result = await pool.query(query, values);
-      console.log('✅ Item master record inserted successfully');
+      console.log("✅ Item master record inserted successfully");
       return result.rows[0];
     } catch (error) {
-      console.error('❌ DatabaseStorage: Failed to insert item master record:', error);
+      console.error(
+        "❌ DatabaseStorage: Failed to insert item master record:",
+        error
+      );
       throw error;
     }
   }
-  
+
   // Assessment Findings Methods
   async createAssessmentFinding(finding: any): Promise<any> {
     const query = `INSERT INTO assessment_findings 
@@ -1087,7 +1301,7 @@ export class DatabaseStorage implements IStorage {
        item_master_id, module_type, created_at, last_updated)
       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
       RETURNING *`;
-    
+
     const values = [
       finding.assessment_case_id,
       finding.finding_type,
@@ -1098,13 +1312,13 @@ export class DatabaseStorage implements IStorage {
       finding.canonical_key || null,
       finding.matching_method || null,
       finding.item_master_id || null,
-      finding.module_type || 'k12'
+      finding.module_type || "k12",
     ];
-    
+
     const result = await pool.query(query, values);
     return result.rows[0];
   }
-  
+
   async getAssessmentFindings(caseId: string): Promise<any[]> {
     const query = `SELECT * FROM assessment_findings 
       WHERE assessment_case_id = $1 
@@ -1112,87 +1326,107 @@ export class DatabaseStorage implements IStorage {
     const result = await pool.query(query, [caseId]);
     return result.rows;
   }
-  
+
   async updateAssessmentFinding(id: string, data: any): Promise<any> {
     const query = `UPDATE assessment_findings 
       SET canonical_key = $2, matching_method = $3, item_master_id = $4, last_updated = NOW()
       WHERE id = $1 RETURNING *`;
     const result = await pool.query(query, [
-      id, 
-      data.canonical_key, 
+      id,
+      data.canonical_key,
       data.matching_method,
-      data.item_master_id
+      data.item_master_id,
     ]);
     return result.rows[0];
   }
-  
+
   // K-12 Lookup Table Methods
   async getBarrierGlossaryK12(): Promise<any[]> {
     const query = `SELECT * FROM barrier_glossary_k12 ORDER BY canonical_key`;
     const result = await pool.query(query);
     return result.rows;
   }
-  
-  async getSupportLookup(canonicalKey: string, gradeBand: string): Promise<any[]> {
+
+  async getSupportLookup(
+    canonicalKey: string,
+    gradeBand: string
+  ): Promise<any[]> {
     const query = `SELECT * FROM support_lookup 
       WHERE canonical_key = $1 AND grade_band = $2`;
     const result = await pool.query(query, [canonicalKey, gradeBand]);
     return result.rows;
   }
-  
-  async getCautionLookup(canonicalKey: string, gradeBand: string): Promise<any[]> {
+
+  async getCautionLookup(
+    canonicalKey: string,
+    gradeBand: string
+  ): Promise<any[]> {
     const query = `SELECT * FROM caution_lookup 
       WHERE canonical_key = $1 AND grade_band = $2`;
     const result = await pool.query(query, [canonicalKey, gradeBand]);
     return result.rows;
   }
-  
-  async getObservationTemplate(canonicalKey: string, gradeBand: string): Promise<any[]> {
+
+  async getObservationTemplate(
+    canonicalKey: string,
+    gradeBand: string
+  ): Promise<any[]> {
     const query = `SELECT * FROM observation_template 
       WHERE canonical_key = $1 AND grade_band = $2`;
     const result = await pool.query(query, [canonicalKey, gradeBand]);
     return result.rows;
   }
-  
+
   // Version Management Methods
-  async finalizeReport(id: string, finalizedContent: string, changesSummary: any[]): Promise<any> {
+  async finalizeReport(
+    id: string,
+    finalizedContent: string,
+    changesSummary: any[]
+  ): Promise<any> {
     // SECURITY: Enhanced validation with demo customer enforcement
-    this.checkWritePermissions('finalizeReport', { id, finalizedContent, changesSummary });
-    
+    this.checkWritePermissions("finalizeReport", {
+      id,
+      finalizedContent,
+      changesSummary,
+    });
+
     // Get current report data
     const currentCase = await this.getAssessmentCase(id);
-    if (!currentCase) throw new Error('Assessment case not found');
-    
+    if (!currentCase) throw new Error("Assessment case not found");
+
     // SECURITY: Additional demo validation for existing case
     if (isDemoEnvironment() && currentCase.customer_id !== DEMO_CUSTOMER_ID) {
       throw new Error(
         `SECURITY VIOLATION: Demo finalize operation attempted on non-demo case. ` +
-        `Case customer: '${currentCase.customer_id}', Required: DEMO_CUSTOMER_ID`
+          `Case customer: '${currentCase.customer_id}', Required: DEMO_CUSTOMER_ID`
       );
     }
-    
-    logger.debug('Finalizing report for case', {
+
+    logger.debug("Finalizing report for case", {
       caseId: currentCase.id || currentCase.case_id,
-      hasReportData: !!currentCase.report_data
+      hasReportData: !!currentCase.report_data,
     });
 
     // Get current version info from report_data or default to version 1.0
-    const currentVersion = currentCase.report_data?.currentVersion || '1.0';
+    const currentVersion = currentCase.report_data?.currentVersion || "1.0";
     const finalizedVersions = currentCase.report_data?.finalizedVersions || [];
 
     // Create new version entry - V2, V3, V4, etc.
-    const versionNum = currentVersion === '1.0' ? 2 : parseInt(currentVersion.replace('V', '')) + 1;
+    const versionNum =
+      currentVersion === "1.0"
+        ? 2
+        : parseInt(currentVersion.replace("V", "")) + 1;
     const newVersionNumber = `V${versionNum}`;
     const versionEntry = {
       version: newVersionNumber,
       content: finalizedContent,
       timestamp: new Date().toISOString(),
-      changes: changesSummary
+      changes: changesSummary,
     };
 
-    logger.debug('Creating new version', {
+    logger.debug("Creating new version", {
       oldVersion: currentVersion,
-      newVersion: newVersionNumber
+      newVersion: newVersionNumber,
     });
 
     // Update report_data with version tracking
@@ -1201,85 +1435,104 @@ export class DatabaseStorage implements IStorage {
       currentVersion: newVersionNumber,
       finalizedVersions: [...finalizedVersions, versionEntry],
       isFinalized: true,
-      markdown_report: finalizedContent
+      markdown_report: finalizedContent,
     };
-    
+
     const query = `UPDATE assessment_cases 
       SET report_data = $2, last_updated = NOW()
       WHERE id = $1 RETURNING *`;
-    const result = await pool.query(query, [currentCase.id, JSON.stringify(updatedReportData)]);
+    const result = await pool.query(query, [
+      currentCase.id,
+      JSON.stringify(updatedReportData),
+    ]);
     return result.rows[0];
   }
-  
+
   async getReportVersions(id: string): Promise<any> {
     const currentCase = await this.getAssessmentCase(id);
     if (!currentCase) {
       logger.warn(`No case found for ID: ${id}`);
-      return { versions: [], currentVersion: '1.0' };
+      return { versions: [], currentVersion: "1.0" };
     }
 
     const result = {
-      currentVersion: currentCase.report_data?.currentVersion || '1.0',
+      currentVersion: currentCase.report_data?.currentVersion || "1.0",
       versions: currentCase.report_data?.finalizedVersions || [],
-      isFinalized: currentCase.report_data?.isFinalized || false
+      isFinalized: currentCase.report_data?.isFinalized || false,
     };
 
-    logger.debug('Returning versions result', { versionCount: result.versions.length });
+    logger.debug("Returning versions result", {
+      versionCount: result.versions.length,
+    });
     return result;
   }
-  
+
   async switchToVersion(id: string, version: string): Promise<any> {
     // SECURITY: Enhanced validation with demo customer enforcement
-    this.checkWritePermissions('switchToVersion', { id, version });
-    
+    this.checkWritePermissions("switchToVersion", { id, version });
+
     const currentCase = await this.getAssessmentCase(id);
-    if (!currentCase) throw new Error('Assessment case not found');
-    
+    if (!currentCase) throw new Error("Assessment case not found");
+
     // SECURITY: Additional demo validation for existing case
     if (isDemoEnvironment() && currentCase.customer_id !== DEMO_CUSTOMER_ID) {
       throw new Error(
         `SECURITY VIOLATION: Demo version switch attempted on non-demo case. ` +
-        `Case customer: '${currentCase.customer_id}', Required: DEMO_CUSTOMER_ID`
+          `Case customer: '${currentCase.customer_id}', Required: DEMO_CUSTOMER_ID`
       );
     }
-    
+
     let targetContent: string;
-    
-    if (version === 'original') {
+
+    if (version === "original") {
       // Switch back to original version - use backup_report from report_data
-      targetContent = currentCase.report_data?.backup_report || '';
-      console.log(`🔄 Original content retrieved: ${targetContent.substring(0, 100)}...`);
-    } else if (version === '1.0') {
+      targetContent = currentCase.report_data?.backup_report || "";
+      console.log(
+        `🔄 Original content retrieved: ${targetContent.substring(0, 100)}...`
+      );
+    } else if (version === "1.0") {
       // Special case: Version 1.0 refers to the original/current content before finalization
-      targetContent = currentCase.report_data?.markdown_report || '';
-      console.log(`🔄 Version 1.0 content retrieved: ${targetContent.substring(0, 100)}...`);
+      targetContent = currentCase.report_data?.markdown_report || "";
+      console.log(
+        `🔄 Version 1.0 content retrieved: ${targetContent.substring(
+          0,
+          100
+        )}...`
+      );
     } else {
       // Switch to a finalized version (V2, V3, etc.)
-      const finalizedVersions = currentCase.report_data?.finalizedVersions || [];
-      const targetVersion = finalizedVersions.find((v: any) => v.version === version);
-      
-      if (!targetVersion) throw new Error('Version not found');
+      const finalizedVersions =
+        currentCase.report_data?.finalizedVersions || [];
+      const targetVersion = finalizedVersions.find(
+        (v: any) => v.version === version
+      );
+
+      if (!targetVersion) throw new Error("Version not found");
       targetContent = targetVersion.content;
     }
-    
+
     // Update current report with selected version content
     const updatedReportData = {
       ...currentCase.report_data,
-      markdown_report: targetContent
+      markdown_report: targetContent,
     };
-    
+
     // Update both report_data and current_version column
     const query = `UPDATE assessment_cases 
       SET report_data = $2, current_version = $3, last_updated = NOW()
       WHERE id = $1 RETURNING *`;
-    const result = await pool.query(query, [currentCase.id, JSON.stringify(updatedReportData), version]);
+    const result = await pool.query(query, [
+      currentCase.id,
+      JSON.stringify(updatedReportData),
+      version,
+    ]);
     return result.rows[0];
   }
 
   // Report Sharing Methods
   async getSharedReport(shareToken: string): Promise<any> {
     try {
-      logger.debug('Getting shared report for token', { shareToken });
+      logger.debug("Getting shared report for token", { shareToken });
 
       const query = `
         SELECT id, case_id, display_name, module_type, report_data, created_date,
@@ -1291,12 +1544,12 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(query, [shareToken]);
 
       if (result.rows.length === 0) {
-        logger.warn('No shared report found for token', { shareToken });
+        logger.warn("No shared report found for token", { shareToken });
         return null;
       }
 
       const report = result.rows[0];
-      logger.info('Found shared report', { displayName: report.display_name });
+      logger.info("Found shared report", { displayName: report.display_name });
 
       return {
         id: report.id,
@@ -1305,20 +1558,23 @@ export class DatabaseStorage implements IStorage {
         moduleType: report.module_type,
         reportData: report.report_data,
         createdDate: report.created_date,
-        sharedAt: report.shared_at
+        sharedAt: report.shared_at,
       };
     } catch (error) {
-      logger.error('Error getting shared report:', error);
+      logger.error("Error getting shared report:", error);
       throw error;
     }
   }
 
-  async enableReportSharing(caseId: string, customerId?: string): Promise<string | null> {
+  async enableReportSharing(
+    caseId: string,
+    customerId?: string
+  ): Promise<string | null> {
     try {
-      logger.debug('Enabling sharing for case', { caseId });
+      logger.debug("Enabling sharing for case", { caseId });
 
       // Generate a new share token
-      const { randomUUID } = await import('crypto');
+      const { randomUUID } = await import("crypto");
       const shareToken = randomUUID();
 
       // Build query with optional customer filter
@@ -1340,21 +1596,24 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(query, params);
 
       if (result.rows.length === 0) {
-        logger.warn('No report found for case', { caseId });
+        logger.warn("No report found for case", { caseId });
         return null;
       }
 
-      logger.info('Sharing enabled for case', { caseId });
+      logger.info("Sharing enabled for case", { caseId });
       return shareToken;
     } catch (error) {
-      logger.error('Error enabling report sharing:', error);
+      logger.error("Error enabling report sharing:", error);
       throw error;
     }
   }
 
-  async disableReportSharing(caseId: string, customerId?: string): Promise<boolean> {
+  async disableReportSharing(
+    caseId: string,
+    customerId?: string
+  ): Promise<boolean> {
     try {
-      logger.debug('Disabling sharing for case', { caseId });
+      logger.debug("Disabling sharing for case", { caseId });
 
       // Build query with optional customer filter
       let query = `
@@ -1375,14 +1634,14 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(query, params);
 
       if (result.rows.length === 0) {
-        logger.warn('No report found for case', { caseId });
+        logger.warn("No report found for case", { caseId });
         return false;
       }
 
-      logger.info('Sharing disabled for case', { caseId });
+      logger.info("Sharing disabled for case", { caseId });
       return true;
     } catch (error) {
-      logger.error('Error disabling report sharing:', error);
+      logger.error("Error disabling report sharing:", error);
       throw error;
     }
   }
@@ -1394,8 +1653,8 @@ let storage: IStorage;
 function initializeStorage() {
   // Always use DatabaseStorage with Neon PostgreSQL
   storage = new DatabaseStorage();
-  console.log('Storage initialized: DatabaseStorage');
-  console.log('Database: Neon PostgreSQL');
+  console.log("Storage initialized: DatabaseStorage");
+  console.log("Database: Neon PostgreSQL");
   return storage;
 }
 

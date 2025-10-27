@@ -5,11 +5,17 @@ import { LocalAIService, type AIAnalysisRequest } from "../ai-service";
 import { aiJSONService } from "../ai-json-service";
 import { storage } from "../storage";
 import { db } from "../db";
-import { itemMaster } from "@shared/schema";
+import { itemMaster, ModuleType } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { isControlledAccessMode } from "../config/database";
 import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
-import { requireAuth, requireCustomerAccess } from "../auth";
+import {
+  requireAuth,
+  requireCustomerAccess,
+  requireOrganizationAccess,
+  requireOrganizationMembership,
+} from "../auth";
+import { ModuleGate } from "../permissions/gates/module-gate";
 
 export function registerAnalysisRoutes(app: Express): void {
   // Demo analysis endpoint - for public demo mode (no authentication required)
@@ -236,172 +242,184 @@ export function registerAnalysisRoutes(app: Express): void {
   });
 
   // Analysis endpoint - dual pathway routing (simple/complex) with authentication
-  // Note: Auth temporarily disabled for development with single database
-  app.post("/api/analyze-assessment", async (req, res) => {
-    try {
-      const moduleType = req.body.moduleType || "post_secondary";
-      const pathway = req.body.pathway || "simple"; // New: pathway selection
-      const caseId = req.body.caseId || `analysis-${Date.now()}`;
-      const documents = req.body.documents || req.body.documentContents || [];
-      const studentGrade = req.body.studentGrade;
-      const uniqueId = req.body.uniqueId;
-      const programMajor = req.body.programMajor;
-      const reportAuthor = req.body.reportAuthor;
-
-      console.log("=== DUAL PATHWAY ANALYSIS REQUEST ===");
-      console.log(`Module type: ${moduleType}`);
-      console.log(`Pathway: ${pathway}`);
-      console.log(`Case ID: ${caseId}`);
-      console.log(`Documents: ${documents.length}`);
-
-      // Tutoring module always uses simple pathway (JSON-first approach)
-      if (moduleType === "tutoring") {
-        console.log(
-          "🧩 Using JSON-first pipeline for tutoring module (simple-only)"
-        );
-      } else if (
-        pathway === "complex" &&
-        (moduleType === "k12" || moduleType === "post_secondary")
-      ) {
-        console.log(
-          "🔬 Using complex pathway with function calling and lookup tables"
-        );
-
-        // Route to complex pathway using LocalAIService
-        const aiService = new LocalAIService();
-        const analysisRequest: AIAnalysisRequest = {
-          caseId,
-          moduleType: moduleType as "k12" | "post_secondary",
-          pathway: "complex",
-          documents,
-          uniqueId,
-          programMajor,
-          reportAuthor,
-          studentGrade,
-        };
-
-        const result = await aiService.processAnalysis(analysisRequest);
-        return res.json(result);
-      } else {
-        console.log("🚀 Using simple pathway with direct OpenAI analysis");
+  app.post(
+    "/api/analyze-assessment",
+    requireAuth,
+    requireCustomerAccess,
+    (req, res, next) => {
+      // Add module access validation
+      const moduleType =
+        (req.body.moduleType as ModuleType) || ModuleType.POST_SECONDARY;
+      if (Object.values(ModuleType).includes(moduleType)) {
+        return ModuleGate.requireModuleAccess(moduleType)(req, res, next);
       }
+      return res.status(400).json({ error: "Invalid module type" });
+    },
+    async (req, res) => {
+      try {
+        const moduleType = req.body.moduleType || "post_secondary";
+        const pathway = req.body.pathway || "simple"; // New: pathway selection
+        const caseId = req.body.caseId || `analysis-${Date.now()}`;
+        const documents = req.body.documents || req.body.documentContents || [];
+        const studentGrade = req.body.studentGrade;
+        const uniqueId = req.body.uniqueId;
+        const programMajor = req.body.programMajor;
+        const reportAuthor = req.body.reportAuthor;
 
-      // Check if request is from demo environment (frontend can pass this)
-      const requestEnv =
-        req.body.environment ||
-        req.headers["x-environment"] ||
-        process.env.APP_ENVIRONMENT ||
-        "replit-prod";
-      const currentEnv = requestEnv;
-      const promptModuleType =
-        currentEnv === "post-secondary-demo" ? "post_secondary" : moduleType;
+        console.log("=== DUAL PATHWAY ANALYSIS REQUEST ===");
+        console.log(`Module type: ${moduleType}`);
+        console.log(`Pathway: ${pathway}`);
+        console.log(`Case ID: ${caseId}`);
+        console.log(`Documents: ${documents.length}`);
 
-      console.log(
-        `🔄 Environment: ${currentEnv}, Module: ${moduleType}, Prompt Module: ${promptModuleType}`
-      );
-
-      // Get report format template from database (not system prompts)
-      const reportFormatPrompts = await storage.getPromptSections(
-        promptModuleType,
-        "report_format"
-      );
-
-      // Use demo-specific template if in demo environment
-      const isDemoEnv =
-        currentEnv === "post-secondary-demo" || currentEnv === "k12-demo";
-      const templateKey = isDemoEnv
-        ? `markdown_report_template_${promptModuleType}_demo`
-        : `markdown_report_template_${promptModuleType}_format`;
-
-      const templateSection = reportFormatPrompts.find(
-        (p) => p.section_key === templateKey
-      );
-
-      // Fallback to regular template if demo template not found
-      let template = templateSection?.content || "";
-      if (!template && isDemoEnv) {
-        const fallbackSection = reportFormatPrompts.find(
-          (p) =>
-            p.section_key ===
-            `markdown_report_template_${promptModuleType}_format`
-        );
-        if (fallbackSection) {
+        // Tutoring module always uses simple pathway (JSON-first approach)
+        if (moduleType === "tutoring") {
           console.log(
-            `⚠️  Demo template not found, using fallback: ${fallbackSection.section_key}`
+            "🧩 Using JSON-first pipeline for tutoring module (simple-only)"
           );
-          template = fallbackSection.content;
-        }
-      }
-
-      console.log(
-        `📋 Template loaded from database (report_format type): ${template.length} characters`
-      );
-      console.log(`📋 Template preview: ${template.substring(0, 100)}...`);
-
-      // Also load system prompts separately for later use
-      const systemPrompts = await storage.getPromptSections(
-        promptModuleType,
-        "system"
-      );
-
-      // Use demo-specific system prompt if in demo environment
-      const systemPromptKey = isDemoEnv
-        ? `system_instructions_${promptModuleType}_demo`
-        : `system_instructions_${promptModuleType}_${pathway}`;
-
-      let systemInstructions = systemPrompts.find(
-        (p) => p.section_key === systemPromptKey
-      );
-
-      // Fallback to regular system prompt if demo prompt not found
-      if (!systemInstructions && isDemoEnv) {
-        systemInstructions = systemPrompts.find(
-          (p) =>
-            p.section_key ===
-            `system_instructions_${promptModuleType}_${pathway}`
-        );
-        if (systemInstructions) {
+        } else if (
+          pathway === "complex" &&
+          (moduleType === "k12" || moduleType === "post_secondary")
+        ) {
           console.log(
-            `⚠️  Demo system prompt not found, using fallback: ${systemInstructions.section_key}`
+            "🔬 Using complex pathway with function calling and lookup tables"
           );
+
+          // Route to complex pathway using LocalAIService
+          const aiService = new LocalAIService();
+          const analysisRequest: AIAnalysisRequest = {
+            caseId,
+            moduleType: moduleType as "k12" | "post_secondary",
+            pathway: "complex",
+            documents,
+            uniqueId,
+            programMajor,
+            reportAuthor,
+            studentGrade,
+          };
+
+          const result = await aiService.processAnalysis(analysisRequest);
+          return res.json(result);
+        } else {
+          console.log("🚀 Using simple pathway with direct OpenAI analysis");
         }
-      }
 
-      const templateFixKeyCandidates = isDemoEnv
-        ? [
-            `system_instructions_${promptModuleType}_template_fix_demo`,
-            `system_instructions_${promptModuleType}_template_fix`,
-          ]
-        : [`system_instructions_${promptModuleType}_template_fix`];
-      const templateFixPrompt = templateFixKeyCandidates
-        .map((key) => systemPrompts.find((p) => p.section_key === key))
-        .find((prompt): prompt is { content: string } =>
-          Boolean(prompt?.content)
+        // Check if request is from demo environment (frontend can pass this)
+        const requestEnv =
+          req.body.environment ||
+          req.headers["x-environment"] ||
+          process.env.APP_ENVIRONMENT ||
+          "replit-prod";
+        const currentEnv = requestEnv;
+        const promptModuleType =
+          currentEnv === "post-secondary-demo" ? "post_secondary" : moduleType;
+
+        console.log(
+          `🔄 Environment: ${currentEnv}, Module: ${moduleType}, Prompt Module: ${promptModuleType}`
         );
 
-      console.log(
-        `📋 System prompt loaded: ${
-          systemInstructions?.content?.length || 0
-        } characters`
-      );
-
-      // Check if we got a valid template from database
-      if (!template || template.length === 0) {
-        console.error(
-          `❌ No template found for prompt module type: ${promptModuleType}`
+        // Get report format template from database (not system prompts)
+        const reportFormatPrompts = await storage.getPromptSections(
+          promptModuleType,
+          "report_format"
         );
-        return res.status(500).json({
-          error: `No report template found for module type: ${promptModuleType}. Please ensure templates are configured in the database.`,
-        });
-      }
 
-      console.log(
-        `✅ Using database template for ${promptModuleType}: ${template.length} characters`
-      );
-      console.log(`📋 Template preview: ${template.substring(0, 200)}...`);
+        // Use demo-specific template if in demo environment
+        const isDemoEnv =
+          currentEnv === "post-secondary-demo" || currentEnv === "k12-demo";
+        const templateKey = isDemoEnv
+          ? `markdown_report_template_${promptModuleType}_demo`
+          : `markdown_report_template_${promptModuleType}_format`;
 
-      // Build analysis prompt - just provide documents and template
-      const analysisPrompt = `DOCUMENTS TO ANALYZE:
+        const templateSection = reportFormatPrompts.find(
+          (p) => p.section_key === templateKey
+        );
+
+        // Fallback to regular template if demo template not found
+        let template = templateSection?.content || "";
+        if (!template && isDemoEnv) {
+          const fallbackSection = reportFormatPrompts.find(
+            (p) =>
+              p.section_key ===
+              `markdown_report_template_${promptModuleType}_format`
+          );
+          if (fallbackSection) {
+            console.log(
+              `⚠️  Demo template not found, using fallback: ${fallbackSection.section_key}`
+            );
+            template = fallbackSection.content;
+          }
+        }
+
+        console.log(
+          `📋 Template loaded from database (report_format type): ${template.length} characters`
+        );
+        console.log(`📋 Template preview: ${template.substring(0, 100)}...`);
+
+        // Also load system prompts separately for later use
+        const systemPrompts = await storage.getPromptSections(
+          promptModuleType,
+          "system"
+        );
+
+        // Use demo-specific system prompt if in demo environment
+        const systemPromptKey = isDemoEnv
+          ? `system_instructions_${promptModuleType}_demo`
+          : `system_instructions_${promptModuleType}_${pathway}`;
+
+        let systemInstructions = systemPrompts.find(
+          (p) => p.section_key === systemPromptKey
+        );
+
+        // Fallback to regular system prompt if demo prompt not found
+        if (!systemInstructions && isDemoEnv) {
+          systemInstructions = systemPrompts.find(
+            (p) =>
+              p.section_key ===
+              `system_instructions_${promptModuleType}_${pathway}`
+          );
+          if (systemInstructions) {
+            console.log(
+              `⚠️  Demo system prompt not found, using fallback: ${systemInstructions.section_key}`
+            );
+          }
+        }
+
+        const templateFixKeyCandidates = isDemoEnv
+          ? [
+              `system_instructions_${promptModuleType}_template_fix_demo`,
+              `system_instructions_${promptModuleType}_template_fix`,
+            ]
+          : [`system_instructions_${promptModuleType}_template_fix`];
+        const templateFixPrompt = templateFixKeyCandidates
+          .map((key) => systemPrompts.find((p) => p.section_key === key))
+          .find((prompt): prompt is { content: string } =>
+            Boolean(prompt?.content)
+          );
+
+        console.log(
+          `📋 System prompt loaded: ${
+            systemInstructions?.content?.length || 0
+          } characters`
+        );
+
+        // Check if we got a valid template from database
+        if (!template || template.length === 0) {
+          console.error(
+            `❌ No template found for prompt module type: ${promptModuleType}`
+          );
+          return res.status(500).json({
+            error: `No report template found for module type: ${promptModuleType}. Please ensure templates are configured in the database.`,
+          });
+        }
+
+        console.log(
+          `✅ Using database template for ${promptModuleType}: ${template.length} characters`
+        );
+        console.log(`📋 Template preview: ${template.substring(0, 200)}...`);
+
+        // Build analysis prompt - just provide documents and template
+        const analysisPrompt = `DOCUMENTS TO ANALYZE:
   ${documents
     .map(
       (doc: any, index: number) => `
@@ -417,261 +435,404 @@ export function registerAnalysisRoutes(app: Express): void {
 
   ${template}`;
 
-      // Call OpenAI directly with simple approach using environment variable
-      const OpenAI = (await import("openai")).default;
-      const apiKey = process.env.OPENAI_API_KEY;
+        // Call OpenAI directly with simple approach using environment variable
+        const OpenAI = (await import("openai")).default;
+        const apiKey = process.env.OPENAI_API_KEY;
 
-      if (!apiKey) {
-        console.error("❌ OPENAI_API_KEY environment variable not found");
-        return res.status(500).json({
-          error:
-            "OpenAI API key not configured. Please check environment variables.",
-        });
-      }
-
-      console.log("✅ Using OPENAI_API_KEY from environment in routes.ts");
-
-      const openai = new OpenAI({
-        apiKey: apiKey,
-      });
-
-      // Build system prompt - require database system instructions
-      if (!systemInstructions?.content) {
-        console.error(
-          `❌ No system instructions found for prompt module type: ${promptModuleType}`
-        );
-        return res.status(500).json({
-          error: `No system instructions found for module type: ${promptModuleType}. Please ensure system_instructions_${promptModuleType} exists in the database.`,
-        });
-      }
-
-      // Handle tutoring module with JSON-first approach
-      if (moduleType === "tutoring") {
-        console.log(
-          "🧩 Processing tutoring module with JSON-first pipeline..."
-        );
-
-        try {
-          // Convert documents to simple string array for JSON service
-          const documentStrings = documents.map(
-            (doc: any) => `${doc.filename}:\n${doc.content}`
-          );
-
-          // Generate JSON report with QC metadata
-          const { jsonReport, markdownReport } =
-            await aiJSONService.generateJSONReport(
-              documentStrings,
-              moduleType,
-              uniqueId,
-              studentGrade
-            );
-
-          console.log("✅ JSON report generated successfully");
-          if (moduleType === "tutoring") {
-            console.log(
-              `📊 Tutoring schema enforced: strict format with comprehensive sections`
-            );
-          } else {
-            console.log(
-              `📊 QC Summary: Avg Confidence: ${
-                (jsonReport as any).overallQC.averageConfidence
-              }, Uncertainties: ${
-                (jsonReport as any).overallQC.totalUncertainties
-              }`
-            );
-          }
-
-          // Create assessment case with both JSON and markdown data
-          const generatedId = crypto.randomUUID();
-          console.log("🆔 Generated UUID:", generatedId);
-
-          const assessmentCase = {
-            id: generatedId,
-            case_id: caseId,
-            display_name: `Tutoring Analysis - ${uniqueId || "Student"}`,
-            module_type: moduleType,
-            status: "completed",
-            created_date: new Date().toISOString(),
-            last_updated: new Date().toISOString(),
-            unique_id: uniqueId,
-            program_major: programMajor,
-            report_author: reportAuthor,
-            student_grade: studentGrade,
-            report_data: markdownReport,
-            reportDataJson: jsonReport,
-            qcMetadata:
-              moduleType === "tutoring"
-                ? {
-                    schema_enforced: true,
-                    schema_version:
-                      (jsonReport as any).meta?.schema_version || "1.0.0",
-                    strict_structure: true,
-                    generatedAt: new Date().toISOString(),
-                  }
-                : {
-                    averageConfidence: (jsonReport as any).overallQC
-                      .averageConfidence,
-                    totalUncertainties: (jsonReport as any).overallQC
-                      .totalUncertainties,
-                    recommendsReview: (jsonReport as any).overallQC
-                      .recommendsReview,
-                    generatedAt: new Date().toISOString(),
-                  },
-            customerId: req.user?.customerId,
-            createdByUserId: req.user?.id,
-          };
-
-          // Save to database
-          const savedCase = await storage.createAssessmentCase(assessmentCase);
-
-          return res.json({
-            success: true,
-            analysis_date: new Date().toISOString(),
-            status: "completed",
-            markdown_report: markdownReport,
-            json_report: jsonReport,
-            qc_metadata: assessmentCase.qcMetadata,
-            case_id: savedCase.id || caseId,
-            module_type: moduleType,
-          });
-        } catch (error) {
-          console.error("❌ Tutoring module analysis failed:", error);
-          const errorMessage =
-            error instanceof Error
-              ? error.message
-              : "Unknown error in tutoring analysis";
+        if (!apiKey) {
+          console.error("❌ OPENAI_API_KEY environment variable not found");
           return res.status(500).json({
-            success: false,
-            error: errorMessage,
-            status: "failed",
+            error:
+              "OpenAI API key not configured. Please check environment variables.",
           });
         }
-      }
 
-      // Continue with existing logic for other modules
-      // Use system prompt directly from database without modifications
-      const systemPromptContent = systemInstructions.content;
+        console.log("✅ Using OPENAI_API_KEY from environment in routes.ts");
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4.1", // using GPT-4.1 for better instruction following
-        messages: [
-          {
-            role: "system",
-            content: systemPromptContent,
-          },
-          {
-            role: "user",
-            content: analysisPrompt,
-          },
-        ],
-        max_tokens: 4500,
-        temperature: 0.1,
-      });
-
-      let markdownReport = response.choices[0].message.content || "";
-
-      console.log("🔍 Validating template adherence...");
-      console.log(
-        `📄 Original report preview (first 200 chars): ${markdownReport.substring(
-          0,
-          200
-        )}`
-      );
-
-      // Validate template adherence - check for common template violations
-      const templateViolations = [];
-
-      // Only validate post-secondary reports
-      if (moduleType === "post_secondary") {
-        // Check for any combined sections (case-insensitive and comprehensive)
-        const combinedSectionPatterns = [
-          /functional barriers and required accommodations/i,
-          /summary of functional barriers and required/i,
-          /summary of functional barriers and accommodations/i,
-          /barriers and accommodations/i,
-          /functional barriers & accommodations/i,
-          /functional barriers & required accommodations/i,
-          /barriers & accommodations/i,
-          /functional limitations and accommodations/i,
-          /impairments and accommodations/i,
-        ];
-
-        combinedSectionPatterns.forEach((pattern, index) => {
-          if (markdownReport && pattern.test(markdownReport)) {
-            templateViolations.push(
-              `Combined section pattern ${index + 1} detected: ${
-                pattern.source
-              }`
-            );
-          }
+        const openai = new OpenAI({
+          apiKey: apiKey,
         });
 
-        // Check for wrong section headings
-        const wrongHeadingPatterns = [
-          /## summary of functional barriers/i,
-          /### summary of functional barriers/i,
-          /## functional barriers/i,
-          /## barriers and accommodations/i,
-          /## disability accommodation report:/i, // should not have colon and name
-        ];
-
-        wrongHeadingPatterns.forEach((pattern, index) => {
-          if (markdownReport && pattern.test(markdownReport)) {
-            templateViolations.push(
-              `Wrong heading pattern ${index + 1} detected: ${pattern.source}`
-            );
-          }
-        });
-      }
-
-      // Check for required section headings (only for post-secondary)
-      if (moduleType === "post_secondary" && markdownReport) {
-        if (!markdownReport.includes("## 2. Functional Impact Summary")) {
-          templateViolations.push("Missing required Section 2 heading");
-        }
-
-        if (!markdownReport.includes("## 3. Accommodation & Support Plan")) {
-          templateViolations.push("Missing required Section 3 heading");
-        }
-      }
-
-      console.log(`🔍 Template violations found: ${templateViolations.length}`);
-      console.log("🔍 Template violations:", templateViolations);
-
-      // If template violations detected, regenerate with stronger enforcement (post-secondary only)
-      if (templateViolations.length > 0 && moduleType === "post_secondary") {
-        console.log("⚠️ Template violations detected:", templateViolations);
-        console.log("🔄 Regenerating with stronger template enforcement...");
-
-        if (!templateFixPrompt?.content) {
-          const missingKey = templateFixKeyCandidates.join(", ");
-          console.warn(
-            `⚠️ Template fix system instructions not found. Expected one of: ${missingKey}. Skipping template enforcement.`
+        // Build system prompt - require database system instructions
+        if (!systemInstructions?.content) {
+          console.error(
+            `❌ No system instructions found for prompt module type: ${promptModuleType}`
           );
-          // Skip template enforcement and return the original report
+          return res.status(500).json({
+            error: `No system instructions found for module type: ${promptModuleType}. Please ensure system_instructions_${promptModuleType} exists in the database.`,
+          });
+        }
+
+        // Handle tutoring module with JSON-first approach
+        if (moduleType === "tutoring") {
           console.log(
-            "📋 Returning original report without template enforcement"
+            "🧩 Processing tutoring module with JSON-first pipeline..."
           );
 
+          try {
+            // Convert documents to simple string array for JSON service
+            const documentStrings = documents.map(
+              (doc: any) => `${doc.filename}:\n${doc.content}`
+            );
+
+            // Generate JSON report with QC metadata
+            const { jsonReport, markdownReport } =
+              await aiJSONService.generateJSONReport(
+                documentStrings,
+                moduleType,
+                uniqueId,
+                studentGrade
+              );
+
+            console.log("✅ JSON report generated successfully");
+            if (moduleType === "tutoring") {
+              console.log(
+                `📊 Tutoring schema enforced: strict format with comprehensive sections`
+              );
+            } else {
+              console.log(
+                `📊 QC Summary: Avg Confidence: ${
+                  (jsonReport as any).overallQC.averageConfidence
+                }, Uncertainties: ${
+                  (jsonReport as any).overallQC.totalUncertainties
+                }`
+              );
+            }
+
+            // Create assessment case with both JSON and markdown data
+            const generatedId = crypto.randomUUID();
+            console.log("🆔 Generated UUID:", generatedId);
+
+            const assessmentCase = {
+              id: generatedId,
+              case_id: caseId,
+              display_name: `Tutoring Analysis - ${uniqueId || "Student"}`,
+              module_type: moduleType,
+              status: "completed",
+              created_date: new Date().toISOString(),
+              last_updated: new Date().toISOString(),
+              unique_id: uniqueId,
+              program_major: programMajor,
+              report_author: reportAuthor,
+              student_grade: studentGrade,
+              report_data: markdownReport,
+              reportDataJson: jsonReport,
+              qcMetadata:
+                moduleType === "tutoring"
+                  ? {
+                      schema_enforced: true,
+                      schema_version:
+                        (jsonReport as any).meta?.schema_version || "1.0.0",
+                      strict_structure: true,
+                      generatedAt: new Date().toISOString(),
+                    }
+                  : {
+                      averageConfidence: (jsonReport as any).overallQC
+                        .averageConfidence,
+                      totalUncertainties: (jsonReport as any).overallQC
+                        .totalUncertainties,
+                      recommendsReview: (jsonReport as any).overallQC
+                        .recommendsReview,
+                      generatedAt: new Date().toISOString(),
+                    },
+              customerId: req.user?.customerId,
+              createdByUserId: req.user?.id,
+            };
+
+            // Save to database
+            const savedCase = await storage.createAssessmentCase(
+              assessmentCase
+            );
+
+            return res.json({
+              success: true,
+              analysis_date: new Date().toISOString(),
+              status: "completed",
+              markdown_report: markdownReport,
+              json_report: jsonReport,
+              qc_metadata: assessmentCase.qcMetadata,
+              case_id: savedCase.id || caseId,
+              module_type: moduleType,
+            });
+          } catch (error) {
+            console.error("❌ Tutoring module analysis failed:", error);
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : "Unknown error in tutoring analysis";
+            return res.status(500).json({
+              success: false,
+              error: errorMessage,
+              status: "failed",
+            });
+          }
+        }
+
+        // Continue with existing logic for other modules
+        // Use system prompt directly from database without modifications
+        const systemPromptContent = systemInstructions.content;
+
+        const response = await openai.chat.completions.create({
+          model: "gpt-4.1", // using GPT-4.1 for better instruction following
+          messages: [
+            {
+              role: "system",
+              content: systemPromptContent,
+            },
+            {
+              role: "user",
+              content: analysisPrompt,
+            },
+          ],
+          max_tokens: 4500,
+          temperature: 0.1,
+        });
+
+        let markdownReport = response.choices[0].message.content || "";
+
+        console.log("🔍 Validating template adherence...");
+        console.log(
+          `📄 Original report preview (first 200 chars): ${markdownReport.substring(
+            0,
+            200
+          )}`
+        );
+
+        // Validate template adherence - check for common template violations
+        const templateViolations = [];
+
+        // Only validate post-secondary reports
+        if (moduleType === "post_secondary") {
+          // Check for any combined sections (case-insensitive and comprehensive)
+          const combinedSectionPatterns = [
+            /functional barriers and required accommodations/i,
+            /summary of functional barriers and required/i,
+            /summary of functional barriers and accommodations/i,
+            /barriers and accommodations/i,
+            /functional barriers & accommodations/i,
+            /functional barriers & required accommodations/i,
+            /barriers & accommodations/i,
+            /functional limitations and accommodations/i,
+            /impairments and accommodations/i,
+          ];
+
+          combinedSectionPatterns.forEach((pattern, index) => {
+            if (markdownReport && pattern.test(markdownReport)) {
+              templateViolations.push(
+                `Combined section pattern ${index + 1} detected: ${
+                  pattern.source
+                }`
+              );
+            }
+          });
+
+          // Check for wrong section headings
+          const wrongHeadingPatterns = [
+            /## summary of functional barriers/i,
+            /### summary of functional barriers/i,
+            /## functional barriers/i,
+            /## barriers and accommodations/i,
+            /## disability accommodation report:/i, // should not have colon and name
+          ];
+
+          wrongHeadingPatterns.forEach((pattern, index) => {
+            if (markdownReport && pattern.test(markdownReport)) {
+              templateViolations.push(
+                `Wrong heading pattern ${index + 1} detected: ${pattern.source}`
+              );
+            }
+          });
+        }
+
+        // Check for required section headings (only for post-secondary)
+        if (moduleType === "post_secondary" && markdownReport) {
+          if (!markdownReport.includes("## 2. Functional Impact Summary")) {
+            templateViolations.push("Missing required Section 2 heading");
+          }
+
+          if (!markdownReport.includes("## 3. Accommodation & Support Plan")) {
+            templateViolations.push("Missing required Section 3 heading");
+          }
+        }
+
+        console.log(
+          `🔍 Template violations found: ${templateViolations.length}`
+        );
+        console.log("🔍 Template violations:", templateViolations);
+
+        // If template violations detected, regenerate with stronger enforcement (post-secondary only)
+        if (templateViolations.length > 0 && moduleType === "post_secondary") {
+          console.log("⚠️ Template violations detected:", templateViolations);
+          console.log("🔄 Regenerating with stronger template enforcement...");
+
+          if (!templateFixPrompt?.content) {
+            const missingKey = templateFixKeyCandidates.join(", ");
+            console.warn(
+              `⚠️ Template fix system instructions not found. Expected one of: ${missingKey}. Skipping template enforcement.`
+            );
+            // Skip template enforcement and return the original report
+            console.log(
+              "📋 Returning original report without template enforcement"
+            );
+
+            const caseData = {
+              id: caseId,
+              moduleType: moduleType,
+              pathway: pathway,
+              displayName:
+                uniqueId?.trim() ||
+                documents[0]?.filename ||
+                "Post-Secondary Analysis",
+              reportData: markdownReport,
+              status: "completed",
+              createdAt: new Date().toISOString(),
+              analysisDate: new Date().toISOString(),
+              itemMasterData: JSON.stringify([]),
+              customerId: req.session?.userId || 1,
+              createdByUserId: req.session?.userId,
+              environment: "development",
+              uniqueId: uniqueId?.trim() || null,
+              programMajor: programMajor?.trim() || null,
+              reportAuthor: reportAuthor?.trim() || null,
+              documentNames: documents
+                .map(
+                  (d: any) =>
+                    d.filename ||
+                    d.name ||
+                    `document_${documents.indexOf(d) + 1}.txt`
+                )
+                .filter(Boolean),
+            };
+
+            try {
+              await storage.createAssessmentCase(caseData);
+              console.log("✅ Assessment case created successfully:", caseId);
+            } catch (dbError: any) {
+              console.warn(
+                "⚠️ Failed to save case to database:",
+                dbError.message
+              );
+            }
+
+            return res.json({
+              success: true,
+              markdown_report: markdownReport,
+              analysis_result: markdownReport,
+              case_id: caseId,
+              template_violations: templateViolations,
+              template_enforcement_skipped: true,
+            });
+          }
+
+          const fixedResponse = await openai.chat.completions.create({
+            model: "gpt-4.1",
+            messages: [
+              {
+                role: "system",
+                content: templateFixPrompt.content,
+              },
+              {
+                role: "user",
+                content: `Fix this report to follow the correct template structure:\n\n${markdownReport}\n\nRemember: Section 2 is ONLY barriers, Section 3 is ONLY accommodations. Keep them completely separate.`,
+              },
+            ],
+            max_tokens: 4500,
+            temperature: 0.1,
+          });
+
+          markdownReport =
+            fixedResponse.choices[0].message.content || markdownReport;
+          console.log("✅ Template enforcement correction applied");
+          console.log(
+            `📄 Fixed report preview (first 200 chars): ${markdownReport.substring(
+              0,
+              200
+            )}`
+          );
+        } else {
+          console.log(
+            "✅ No template violations detected, proceeding with original report"
+          );
+        }
+
+        // Demo Mode Enhancement: Flag functional impairment 3 for review in demo mode only
+        if (
+          currentEnv === "post-secondary-demo" &&
+          moduleType === "post_secondary"
+        ) {
+          console.log(
+            "🔍 Demo Mode: Adding review flag to functional impairment 3..."
+          );
+
+          // Parse the markdown report to find functional barriers
+          const barrierPattern = /\*\*(\d+):\*\*\s*([^*]+?)(?=Evidence:|$)/g;
+          let match;
+          let barrierCount = 0;
+          let modifiedReport = markdownReport || "";
+
+          // Find barrier 3 and add review flag
+          while ((match = barrierPattern.exec(markdownReport)) !== null) {
+            const barrierNumber = parseInt(match[1]);
+            if (barrierNumber === 3) {
+              console.log(
+                "✅ Found functional barrier 3, adding review flag..."
+              );
+
+              // Add review flag marker to barrier 3
+              const flaggedBarrierText = `**3:** ${match[2].trim()} *(Flagged for Review - Demo Mode)*`;
+              modifiedReport = modifiedReport.replace(
+                match[0],
+                flaggedBarrierText
+              );
+
+              console.log("📝 Barrier 3 flagged for review in demo mode");
+              break;
+            }
+          }
+
+          markdownReport = modifiedReport;
+        }
+
+        // Create result structure
+        const result = {
+          status: "completed",
+          analysis_date: new Date().toISOString(),
+          markdown_report: markdownReport,
+          module_type: moduleType,
+          item_master_data: [], // Simple pathway - no structured data
+          processing_method: "simple_pathway",
+          template_used: template.length > 0,
+          template_violations: templateViolations,
+          demo_flags:
+            currentEnv === "post-secondary-demo"
+              ? ["functional_barrier_3_flagged"]
+              : [],
+        };
+
+        console.log("✅ Simple analysis completed successfully");
+        console.log(`- Status: ${result.status}`);
+        console.log(
+          `- Report Length: ${result.markdown_report?.length || 0} chars`
+        );
+        console.log(`- Processing Method: ${result.processing_method}`);
+        console.log(`- Template Used: ${result.template_used}`);
+
+        // Save the analysis result to the database
+        try {
+          console.log("💾 Saving analysis result to database...");
+
+          // Create the assessment case if it doesn't exist
           const caseData = {
-            id: caseId,
-            moduleType: moduleType,
-            pathway: pathway,
-            displayName:
-              uniqueId?.trim() ||
+            case_id: caseId,
+            display_name:
+              uniqueId ||
               documents[0]?.filename ||
-              "Post-Secondary Analysis",
-            reportData: markdownReport,
+              (moduleType === "k12"
+                ? "K-12 Analysis"
+                : "Post-Secondary Analysis"),
+            module_type: moduleType,
+            grade_band: studentGrade,
             status: "completed",
-            createdAt: new Date().toISOString(),
-            analysisDate: new Date().toISOString(),
-            itemMasterData: JSON.stringify([]),
-            customerId: req.session?.userId || 1,
-            createdByUserId: req.session?.userId,
-            environment: "development",
-            uniqueId: uniqueId?.trim() || null,
-            programMajor: programMajor?.trim() || null,
-            reportAuthor: reportAuthor?.trim() || null,
             documentNames: documents
               .map(
                 (d: any) =>
@@ -682,210 +843,77 @@ export function registerAnalysisRoutes(app: Express): void {
               .filter(Boolean),
           };
 
-          try {
-            await storage.createAssessmentCase(caseData);
-            console.log("✅ Assessment case created successfully:", caseId);
-          } catch (dbError: any) {
-            console.warn(
-              "⚠️ Failed to save case to database:",
-              dbError.message
-            );
-          }
+          // Simplified save approach - create case with report data in one operation
+          console.log("Creating assessment case with report data...");
 
-          return res.json({
-            success: true,
-            markdown_report: markdownReport,
-            analysis_result: markdownReport,
+          // Create backup when first generating report
+          const reportDataWithBackup = {
+            ...result,
+            backup_report: result.markdown_report || result,
+            is_edited: false,
+          };
+
+          const caseWithReport = {
+            id: crypto.randomUUID(),
             case_id: caseId,
-            template_violations: templateViolations,
-            template_enforcement_skipped: true,
-          });
-        }
+            display_name: uniqueId || caseData.display_name,
+            module_type: moduleType,
+            status: "completed",
+            grade_band: studentGrade,
+            documentNames: documents
+              .map(
+                (d: any) =>
+                  d.filename ||
+                  d.name ||
+                  `document_${documents.indexOf(d) + 1}.txt`
+              )
+              .filter(Boolean),
+            report_data: reportDataWithBackup,
+            // Add the missing new fields
+            unique_id: uniqueId?.trim() || null,
+            program_major: programMajor?.trim() || null,
+            report_author: reportAuthor?.trim() || null,
+          };
 
-        const fixedResponse = await openai.chat.completions.create({
-          model: "gpt-4.1",
-          messages: [
-            {
-              role: "system",
-              content: templateFixPrompt.content,
-            },
-            {
-              role: "user",
-              content: `Fix this report to follow the correct template structure:\n\n${markdownReport}\n\nRemember: Section 2 is ONLY barriers, Section 3 is ONLY accommodations. Keep them completely separate.`,
-            },
-          ],
-          max_tokens: 4500,
-          temperature: 0.1,
-        });
+          // Use direct SQL to create case with report data in one transaction
+          const createdId = await createAssessmentCaseDirectly(caseWithReport);
 
-        markdownReport =
-          fixedResponse.choices[0].message.content || markdownReport;
-        console.log("✅ Template enforcement correction applied");
-        console.log(
-          `📄 Fixed report preview (first 200 chars): ${markdownReport.substring(
-            0,
-            200
-          )}`
-        );
-      } else {
-        console.log(
-          "✅ No template violations detected, proceeding with original report"
-        );
-      }
-
-      // Demo Mode Enhancement: Flag functional impairment 3 for review in demo mode only
-      if (
-        currentEnv === "post-secondary-demo" &&
-        moduleType === "post_secondary"
-      ) {
-        console.log(
-          "🔍 Demo Mode: Adding review flag to functional impairment 3..."
-        );
-
-        // Parse the markdown report to find functional barriers
-        const barrierPattern = /\*\*(\d+):\*\*\s*([^*]+?)(?=Evidence:|$)/g;
-        let match;
-        let barrierCount = 0;
-        let modifiedReport = markdownReport || "";
-
-        // Find barrier 3 and add review flag
-        while ((match = barrierPattern.exec(markdownReport)) !== null) {
-          const barrierNumber = parseInt(match[1]);
-          if (barrierNumber === 3) {
-            console.log("✅ Found functional barrier 3, adding review flag...");
-
-            // Add review flag marker to barrier 3
-            const flaggedBarrierText = `**3:** ${match[2].trim()} *(Flagged for Review - Demo Mode)*`;
-            modifiedReport = modifiedReport.replace(
-              match[0],
-              flaggedBarrierText
+          if (createdId) {
+            console.log(
+              "✅ Assessment case created with report data:",
+              createdId
             );
-
-            console.log("📝 Barrier 3 flagged for review in demo mode");
-            break;
+          } else {
+            console.log(
+              "⚠️ Failed to save assessment case, but analysis completed"
+            );
           }
+
+          console.log("✅ Analysis result saved to database successfully");
+        } catch (dbError) {
+          console.error("⚠️ Failed to save to database:", dbError);
+          // Continue anyway - the analysis is complete
         }
 
-        markdownReport = modifiedReport;
+        res.json(result);
+      } catch (error: any) {
+        console.error("❌ Simple analysis failed:", error);
+        res.status(500).json({
+          status: "error",
+          error: error.message,
+          analysis_date: new Date().toISOString(),
+          processing_method: "simple_pathway",
+        });
       }
-
-      // Create result structure
-      const result = {
-        status: "completed",
-        analysis_date: new Date().toISOString(),
-        markdown_report: markdownReport,
-        module_type: moduleType,
-        item_master_data: [], // Simple pathway - no structured data
-        processing_method: "simple_pathway",
-        template_used: template.length > 0,
-        template_violations: templateViolations,
-        demo_flags:
-          currentEnv === "post-secondary-demo"
-            ? ["functional_barrier_3_flagged"]
-            : [],
-      };
-
-      console.log("✅ Simple analysis completed successfully");
-      console.log(`- Status: ${result.status}`);
-      console.log(
-        `- Report Length: ${result.markdown_report?.length || 0} chars`
-      );
-      console.log(`- Processing Method: ${result.processing_method}`);
-      console.log(`- Template Used: ${result.template_used}`);
-
-      // Save the analysis result to the database
-      try {
-        console.log("💾 Saving analysis result to database...");
-
-        // Create the assessment case if it doesn't exist
-        const caseData = {
-          case_id: caseId,
-          display_name:
-            uniqueId ||
-            documents[0]?.filename ||
-            (moduleType === "k12"
-              ? "K-12 Analysis"
-              : "Post-Secondary Analysis"),
-          module_type: moduleType,
-          grade_band: studentGrade,
-          status: "completed",
-          documentNames: documents
-            .map(
-              (d: any) =>
-                d.filename ||
-                d.name ||
-                `document_${documents.indexOf(d) + 1}.txt`
-            )
-            .filter(Boolean),
-        };
-
-        // Simplified save approach - create case with report data in one operation
-        console.log("Creating assessment case with report data...");
-
-        // Create backup when first generating report
-        const reportDataWithBackup = {
-          ...result,
-          backup_report: result.markdown_report || result,
-          is_edited: false,
-        };
-
-        const caseWithReport = {
-          id: crypto.randomUUID(),
-          case_id: caseId,
-          display_name: uniqueId || caseData.display_name,
-          module_type: moduleType,
-          status: "completed",
-          grade_band: studentGrade,
-          documentNames: documents
-            .map(
-              (d: any) =>
-                d.filename ||
-                d.name ||
-                `document_${documents.indexOf(d) + 1}.txt`
-            )
-            .filter(Boolean),
-          report_data: reportDataWithBackup,
-          // Add the missing new fields
-          unique_id: uniqueId?.trim() || null,
-          program_major: programMajor?.trim() || null,
-          report_author: reportAuthor?.trim() || null,
-        };
-
-        // Use direct SQL to create case with report data in one transaction
-        const createdId = await createAssessmentCaseDirectly(caseWithReport);
-
-        if (createdId) {
-          console.log(
-            "✅ Assessment case created with report data:",
-            createdId
-          );
-        } else {
-          console.log(
-            "⚠️ Failed to save assessment case, but analysis completed"
-          );
-        }
-
-        console.log("✅ Analysis result saved to database successfully");
-      } catch (dbError) {
-        console.error("⚠️ Failed to save to database:", dbError);
-        // Continue anyway - the analysis is complete
-      }
-
-      res.json(result);
-    } catch (error: any) {
-      console.error("❌ Simple analysis failed:", error);
-      res.status(500).json({
-        status: "error",
-        error: error.message,
-        analysis_date: new Date().toISOString(),
-        processing_method: "simple_pathway",
-      });
     }
-  });
+  );
 
   // NEW: K-12 Complex Analysis Route
   app.post(
     "/api/analyze-assessment-k12",
+    requireAuth,
+    requireCustomerAccess,
+    ModuleGate.requireModuleAccess(ModuleType.K12),
     async (req: Request, res: Response) => {
       console.log("🎯 K-12 Complex Analysis endpoint called");
 

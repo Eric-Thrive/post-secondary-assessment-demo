@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import UnifiedNewAssessmentForm from "../UnifiedNewAssessmentForm";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ModuleProvider } from "@/contexts/ModuleContext";
-import { EnvironmentProvider } from "@/contexts/EnvironmentContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,11 +15,9 @@ const queryClient = new QueryClient({
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <EnvironmentProvider>
-        <AuthProvider>
-          <ModuleProvider>{children}</ModuleProvider>
-        </AuthProvider>
-      </EnvironmentProvider>
+      <AuthProvider>
+        <ModuleProvider>{children}</ModuleProvider>
+      </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );

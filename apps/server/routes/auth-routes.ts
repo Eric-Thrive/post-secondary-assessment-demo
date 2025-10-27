@@ -14,6 +14,7 @@ import {
   sendRegistrationNotification,
   verifyPassword,
 } from "../auth";
+import { UserRole, ModuleType } from "@shared/schema";
 import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
 import { isReadOnlyEnvironment } from "../config/database";
 import {
@@ -37,7 +38,8 @@ export function registerAuthRoutes(app: Express): void {
 
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { username, password, email, customerId, customerName, role } = req.body;
+      const { username, password, email, customerId, customerName, role } =
+        req.body;
 
       if (!username || !password || !email) {
         return res
@@ -49,9 +51,9 @@ export function registerAuthRoutes(app: Express): void {
       const trimmedEmail = email.trim();
 
       if (!trimmedUsername) {
-        return res
-          .status(400)
-          .json({ error: "Username cannot be empty or contain only whitespace" });
+        return res.status(400).json({
+          error: "Username cannot be empty or contain only whitespace",
+        });
       }
 
       if (!trimmedEmail) {
@@ -96,10 +98,15 @@ export function registerAuthRoutes(app: Express): void {
 
       let assignedCustomerId = customerId || "system";
       let assignedRole = role || "tutor";
-      const environment = req.headers["x-environment"] || process.env.APP_ENVIRONMENT;
+      const environment =
+        req.headers["x-environment"] || process.env.APP_ENVIRONMENT;
 
       let demoPermissions = {};
-      if (environment && typeof environment === "string" && environment.includes("demo")) {
+      if (
+        environment &&
+        typeof environment === "string" &&
+        environment.includes("demo")
+      ) {
         assignedCustomerId = DEMO_CUSTOMER_ID;
         assignedRole = "tutor";
 
@@ -170,7 +177,9 @@ export function registerAuthRoutes(app: Express): void {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        return res.status(400).json({ error: "Username and password are required" });
+        return res
+          .status(400)
+          .json({ error: "Username and password are required" });
       }
 
       const [user] = await db
@@ -193,7 +202,9 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
-      const parsedDemoPermissions = normalizeDemoPermissions(user.demoPermissions);
+      const parsedDemoPermissions = normalizeDemoPermissions(
+        user.demoPermissions
+      );
 
       // Set userId for auth middleware
       req.session.userId = user.id;
@@ -203,7 +214,9 @@ export function registerAuthRoutes(app: Express): void {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
+        role: user.role as UserRole,
+        assignedModules: (user.assignedModules as ModuleType[]) || [],
+        organizationId: user.organizationId,
         customerId: user.customerId,
         customerName: user.customerName,
         demoPermissions: parsedDemoPermissions,
@@ -215,7 +228,7 @@ export function registerAuthRoutes(app: Express): void {
           .set({ lastLogin: new Date() })
           .where(eq(users.id, user.id));
       } else {
-        console.log('ℹ️ Skipping lastLogin update in read-only environment');
+        console.log("ℹ️ Skipping lastLogin update in read-only environment");
       }
 
       const redirectInfo = resolvePostLoginRedirect({
@@ -346,7 +359,9 @@ export function registerAuthRoutes(app: Express): void {
         const emailParams = generateForgotUsernameEmail(email, usernames);
         const emailSent = await sendEmail(emailParams);
         if (!emailSent) {
-          console.error("Failed to send forgot username email - delivery error");
+          console.error(
+            "Failed to send forgot username email - delivery error"
+          );
         } else {
           console.log("Forgot username email sent successfully");
         }
@@ -369,7 +384,9 @@ export function registerAuthRoutes(app: Express): void {
       const { token, newPassword } = req.body;
 
       if (!token || !newPassword) {
-        return res.status(400).json({ error: "Token and new password are required" });
+        return res
+          .status(400)
+          .json({ error: "Token and new password are required" });
       }
 
       const hashedToken = hashResetToken(token);
@@ -380,7 +397,9 @@ export function registerAuthRoutes(app: Express): void {
         .where(eq(users.resetToken, hashedToken));
 
       if (!user || !user.isActive) {
-        return res.status(400).json({ error: "Invalid or expired reset token" });
+        return res
+          .status(400)
+          .json({ error: "Invalid or expired reset token" });
       }
 
       if (!isResetTokenValid(user.resetTokenExpiry)) {
@@ -421,7 +440,7 @@ export function registerAdminRoutes(app: Express): void {
   app.get(
     "/api/admin/users",
     requireAuth,
-    requireRole(["system_admin"]),
+    requireRole([UserRole.ADMIN, UserRole.DEVELOPER]),
     async (_req, res) => {
       try {
         const allUsers = await db
@@ -464,18 +483,28 @@ export function registerAdminRoutes(app: Express): void {
   app.patch(
     "/api/admin/users/:userId",
     requireAuth,
-    requireRole(["system_admin"]),
+    requireRole([UserRole.ADMIN, UserRole.DEVELOPER]),
     async (req, res) => {
       try {
         const { userId } = req.params;
-        const { maxReports, reportCount, isActive, role, demoPermissions } = req.body;
+        const {
+          maxReports,
+          reportCount,
+          isActive,
+          role,
+          demoPermissions,
+          customerId,
+        } = req.body;
 
         const updateData: any = {};
         if (typeof maxReports === "number") updateData.maxReports = maxReports;
-        if (typeof reportCount === "number") updateData.reportCount = reportCount;
+        if (typeof reportCount === "number")
+          updateData.reportCount = reportCount;
         if (typeof isActive === "boolean") updateData.isActive = isActive;
         if (typeof role === "string") updateData.role = role;
-        if (demoPermissions !== undefined) updateData.demoPermissions = demoPermissions;
+        if (demoPermissions !== undefined)
+          updateData.demoPermissions = demoPermissions;
+        if (typeof customerId === "string") updateData.customerId = customerId;
 
         await db
           .update(users)

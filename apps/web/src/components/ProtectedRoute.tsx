@@ -1,8 +1,7 @@
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useEnvironment } from '@/contexts/EnvironmentContext';
-import LoginForm, { type LoginVariant } from './LoginForm';
-import { Loader2 } from 'lucide-react';
+import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginForm, { type LoginVariant } from "./LoginForm";
+import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,32 +9,12 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  const { currentEnvironment } = useEnvironment();
 
-  const resolveLoginVariant = (): LoginVariant => {
-    if (!currentEnvironment) {
-      return 'post-secondary';
-    }
+  // Default to post-secondary login variant since we no longer have environment-based routing
+  const loginVariant: LoginVariant = "post-secondary";
 
-    if (currentEnvironment.startsWith('k12')) {
-      return 'k12';
-    }
-
-    if (currentEnvironment.startsWith('tutoring')) {
-      return 'tutor';
-    }
-
-    return 'post-secondary';
-  };
-
-  const loginVariant = resolveLoginVariant();
-
-  // Require authentication for all demo environments, dev environments, and tutoring production
-  const requiresAuth = currentEnvironment === 'tutoring' || 
-                      currentEnvironment === 'post-secondary-demo' ||
-                      currentEnvironment === 'post-secondary-dev' ||
-                      currentEnvironment === 'k12-demo' ||
-                      currentEnvironment === 'tutoring-demo';
+  // Always require authentication in the simplified RBAC system
+  const requiresAuth = true;
 
   // Show loading spinner while checking auth status
   if (requiresAuth && isLoading) {

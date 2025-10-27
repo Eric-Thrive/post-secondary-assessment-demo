@@ -1,22 +1,33 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { useEnvironment } from '@/contexts/EnvironmentContext';
-import { useModule } from '@/contexts/ModuleContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { Copy, Trash2, RefreshCw, Bug, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { useModule } from "@/contexts/ModuleContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Copy,
+  Trash2,
+  RefreshCw,
+  Bug,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 
 export function AdminDebugPanel() {
-  const { currentEnvironment, isCustomerMode, isDeveloperMode } = useEnvironment();
   const { activeModule, isDemoMode, isModuleLocked } = useModule();
   const { user } = useAuth();
   const { toast } = useToast();
   const [debugLogging, setDebugLogging] = useState(
-    localStorage.getItem('app-debug-logging') === 'true'
+    localStorage.getItem("app-debug-logging") === "true"
   );
   const [localStorageKeys, setLocalStorageKeys] = useState<string[]>([]);
 
@@ -29,14 +40,14 @@ export function AdminDebugPanel() {
   const handleToggleDebugLogging = (enabled: boolean) => {
     setDebugLogging(enabled);
     if (enabled) {
-      localStorage.setItem('app-debug-logging', 'true');
-      console.log('🐛 Debug logging enabled');
+      localStorage.setItem("app-debug-logging", "true");
+      console.log("🐛 Debug logging enabled");
       toast({
         title: "Debug Logging Enabled",
         description: "Verbose console logs are now visible",
       });
     } else {
-      localStorage.removeItem('app-debug-logging');
+      localStorage.removeItem("app-debug-logging");
       toast({
         title: "Debug Logging Disabled",
         description: "Console logs minimized",
@@ -53,18 +64,13 @@ export function AdminDebugPanel() {
         role: user?.role,
         customerId: user?.customerId,
       },
-      environment: {
-        current: currentEnvironment,
-        isCustomerMode,
-        isDeveloperMode,
-      },
       module: {
         active: activeModule,
         isDemoMode,
         isModuleLocked,
       },
       localStorage: Object.fromEntries(
-        Object.keys(localStorage).map(key => [key, localStorage.getItem(key)])
+        Object.keys(localStorage).map((key) => [key, localStorage.getItem(key)])
       ),
     };
 
@@ -76,7 +82,7 @@ export function AdminDebugPanel() {
   };
 
   const handleClearOverride = () => {
-    localStorage.removeItem('app-environment-override');
+    localStorage.removeItem("app-environment-override");
     toast({
       title: "Override Cleared",
       description: "Page will reload to apply changes",
@@ -93,7 +99,8 @@ export function AdminDebugPanel() {
     setTimeout(() => window.location.reload(), 1000);
   };
 
-  const overrideEnabled = localStorage.getItem('app-environment-override') === 'true';
+  const overrideEnabled =
+    localStorage.getItem("app-environment-override") === "true";
 
   return (
     <div className="space-y-6">
@@ -176,44 +183,28 @@ export function AdminDebugPanel() {
             <h4 className="text-sm font-semibold mb-2">User</h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-muted-foreground">Username:</div>
-              <div className="font-mono">{user?.username || 'N/A'}</div>
+              <div className="font-mono">{user?.username || "N/A"}</div>
               <div className="text-muted-foreground">Role:</div>
               <div>
-                <Badge variant={user?.role === 'system_admin' ? 'default' : 'secondary'}>
-                  {user?.role || 'N/A'}
+                <Badge
+                  variant={
+                    user?.role === "system_admin" ? "default" : "secondary"
+                  }
+                >
+                  {user?.role || "N/A"}
                 </Badge>
               </div>
               <div className="text-muted-foreground">Customer ID:</div>
-              <div className="font-mono text-xs">{user?.customerId || 'N/A'}</div>
+              <div className="font-mono text-xs">
+                {user?.customerId || "N/A"}
+              </div>
             </div>
           </div>
 
-          {/* Environment Info */}
+          {/* System Info */}
           <div>
-            <h4 className="text-sm font-semibold mb-2">Environment</h4>
+            <h4 className="text-sm font-semibold mb-2">System</h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-muted-foreground">Current:</div>
-              <div>
-                <Badge variant="outline">{currentEnvironment}</Badge>
-              </div>
-              <div className="text-muted-foreground">Customer Mode:</div>
-              <div className="flex items-center gap-2">
-                {isCustomerMode ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-600" />
-                )}
-                <span>{isCustomerMode ? 'Yes' : 'No'}</span>
-              </div>
-              <div className="text-muted-foreground">Developer Mode:</div>
-              <div className="flex items-center gap-2">
-                {isDeveloperMode ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-600" />
-                )}
-                <span>{isDeveloperMode ? 'Yes' : 'No'}</span>
-              </div>
               <div className="text-muted-foreground">Override Enabled:</div>
               <div className="flex items-center gap-2">
                 {overrideEnabled ? (
@@ -221,7 +212,7 @@ export function AdminDebugPanel() {
                 ) : (
                   <XCircle className="h-4 w-4 text-red-600" />
                 )}
-                <span>{overrideEnabled ? 'Yes' : 'No'}</span>
+                <span>{overrideEnabled ? "Yes" : "No"}</span>
               </div>
             </div>
           </div>
@@ -241,7 +232,7 @@ export function AdminDebugPanel() {
                 ) : (
                   <XCircle className="h-4 w-4 text-red-600" />
                 )}
-                <span>{isDemoMode ? 'Yes' : 'No'}</span>
+                <span>{isDemoMode ? "Yes" : "No"}</span>
               </div>
               <div className="text-muted-foreground">Module Locked:</div>
               <div className="flex items-center gap-2">
@@ -250,7 +241,7 @@ export function AdminDebugPanel() {
                 ) : (
                   <XCircle className="h-4 w-4 text-gray-600" />
                 )}
-                <span>{isModuleLocked ? 'Yes' : 'No'}</span>
+                <span>{isModuleLocked ? "Yes" : "No"}</span>
               </div>
             </div>
           </div>
@@ -262,7 +253,8 @@ export function AdminDebugPanel() {
         <CardHeader>
           <CardTitle>localStorage Inspector</CardTitle>
           <CardDescription>
-            All keys stored in browser localStorage ({localStorageKeys.length} total)
+            All keys stored in browser localStorage ({localStorageKeys.length}{" "}
+            total)
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -11,10 +11,14 @@ import {
 } from "../config/database";
 import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
 import { registerAuthRoutes, registerAdminRoutes } from "./auth-routes";
+import { registerAdminDashboardRoutes } from "./admin-routes";
 import { registerStatusRoutes } from "./status-routes";
 import { registerAssessmentCaseRoutes } from "./assessment-case-routes";
 import { registerAnalysisRoutes } from "./analysis-routes";
 import { registerConfigRoutes } from "./config-routes";
+import { registerModuleRoutes } from "./module-routes";
+import { registerOrganizationRoutes } from "./organization-routes";
+import performanceRoutes from "./performance";
 function isDemoOperationAllowed(method: string, path: string): boolean {
   // Define explicit allowed operations with HTTP method restrictions
   // Note: path comes without /api prefix from the middleware
@@ -313,10 +317,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register feature-specific route modules
   registerAuthRoutes(app);
   registerAdminRoutes(app);
+  registerAdminDashboardRoutes(app);
+  registerOrganizationRoutes(app);
   registerStatusRoutes(app);
   registerAssessmentCaseRoutes(app);
   registerAnalysisRoutes(app);
   registerConfigRoutes(app);
+  registerModuleRoutes(app);
+
+  // Register performance monitoring routes
+  app.use("/api/performance", performanceRoutes);
 
   // Debug routes (development only)
   if (process.env.NODE_ENV === "development") {
