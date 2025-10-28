@@ -1,7 +1,10 @@
 // Dashboard components barrel export
-export { default as ModuleDashboard } from "./ModuleDashboard";
-export { default as ModuleCard } from "./ModuleCard";
-export { default as WelcomeHeader } from "./WelcomeHeader";
-export { default as AdminQuickActions } from "./AdminQuickActions";
-export { default as RecentActivity } from "./RecentActivity";
+export { ModuleDashboard, default as ModuleDashboard } from "./ModuleDashboard";
+export { ModuleCard, default as ModuleCard } from "./ModuleCard";
+export { WelcomeHeader, default as WelcomeHeader } from "./WelcomeHeader";
+export {
+  AdminQuickActions,
+  default as AdminQuickActions,
+} from "./AdminQuickActions";
+export { RecentActivity, default as RecentActivity } from "./RecentActivity";
 export * from "./types";

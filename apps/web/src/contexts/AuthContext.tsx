@@ -1,7 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useToast } from "@/hooks/use-toast";
+import { unifiedAuthIntegration } from "@/services/auth/unified-auth-integration";
+import { AuthenticatedUser } from "@/types/unified-auth";
 
-interface User {
+// Legacy User interface for backward compatibility
+interface LegacyUser {
   id: number;
   username: string;
   customerId: string;
@@ -9,13 +18,24 @@ interface User {
   role: string;
 }
 
+// Support both legacy and unified user types during transition
+type User = LegacyUser | AuthenticatedUser;
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string, environment?: string) => Promise<boolean>;
+  login: (
+    username: string,
+    password: string,
+    environment?: string
+  ) => Promise<boolean>;
   logout: () => Promise<void>;
-  register: (username: string, password: string, email: string) => Promise<boolean>;
+  register: (
+    username: string,
+    password: string,
+    email: string
+  ) => Promise<boolean>;
   getLogoutRedirectPath: () => string;
 }
 
@@ -33,73 +53,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include',
-      });
+      const result = await unifiedAuthIntegration.checkAuthStatus();
 
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
+      if (result.isAuthenticated && result.user) {
+        setUser(result.user);
 
         // Enable environment override for system admins on page load/refresh
-        if (data.user.role === 'system_admin') {
-          localStorage.setItem('app-environment-override', 'true');
-          if (localStorage.getItem('app-debug-logging') === 'true') {
-            console.log('🔓 System Admin detected on page load - environment override enabled');
-          }
-        }
+        unifiedAuthIntegration.enableAdminOverride(result.user);
       }
     } catch (error) {
-      console.error('Auth status check failed:', error);
+      console.error("Auth status check failed:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (username: string, password: string, environment?: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string,
+    environment?: string
+  ): Promise<boolean> => {
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      // Add environment header if provided (for demo-specific authentication)
-      if (environment) {
-        headers['x-environment'] = environment;
-      }
-
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ username, password }),
+      const result = await unifiedAuthIntegration.authenticate({
+        username,
+        password,
+        environment,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setUser(data.user);
+      if (result.success && result.user) {
+        setUser(result.user);
 
         // Enable environment override for system admins immediately after login
-        if (data.user.role === 'system_admin') {
-          localStorage.setItem('app-environment-override', 'true');
-          if (localStorage.getItem('app-debug-logging') === 'true') {
-            console.log('🔓 System Admin login detected - environment override enabled');
-          }
-        }
+        unifiedAuthIntegration.enableAdminOverride(result.user);
 
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${data.user.username}!`,
+          description: `Welcome back, ${result.user.username}!`,
         });
 
-        if (data.redirectUrl && typeof data.redirectUrl === 'string') {
-          window.location.assign(data.redirectUrl);
+        if (result.redirectUrl && typeof result.redirectUrl === "string") {
+          window.location.assign(result.redirectUrl);
         }
         return true;
       } else {
         toast({
           title: "Login Failed",
-          description: data.error || "Invalid credentials",
+          description: result.error || "Invalid credentials",
           variant: "destructive",
         });
         return false;
@@ -115,27 +114,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (
-    username: string, 
-    password: string, 
+    username: string,
+    password: string,
     email: string
   ): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ 
-          username, 
-          password, 
-          email
-        }),
-      });
+      const result = await unifiedAuthIntegration.register(
+        username,
+        password,
+        email
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (result.success) {
         toast({
           title: "Registration Successful",
           description: `Account created for ${username}. Please log in.`,
@@ -144,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         toast({
           title: "Registration Failed",
-          description: data.error || "Failed to create account",
+          description: result.error || "Failed to create account",
           variant: "destructive",
         });
         return false;
@@ -162,39 +152,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const getLogoutRedirectPath = (): string => {
     // Detect current path to determine redirect destination
     const currentPath = window.location.pathname;
-    
+
     // Check if we're in a demo environment
-    if (currentPath.startsWith('/post-secondary-demo')) {
-      return '/post-secondary-demo';
-    } else if (currentPath.startsWith('/k12-demo')) {
-      return '/k12-demo';
-    } else if (currentPath.startsWith('/tutoring-demo')) {
-      return '/tutoring-demo';
+    if (currentPath.startsWith("/post-secondary-demo")) {
+      return "/post-secondary-demo";
+    } else if (currentPath.startsWith("/k12-demo")) {
+      return "/k12-demo";
+    } else if (currentPath.startsWith("/tutoring-demo")) {
+      return "/tutoring-demo";
     }
-    
+
     // Default to root for developer mode
-    return '/';
+    return "/";
   };
 
   const logout = async (): Promise<void> => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      // Clear admin override and debug state
-      localStorage.removeItem('app-environment-override');
+      const result = await unifiedAuthIntegration.logout();
 
       setUser(null);
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
-      });
+
+      if (result.success) {
+        toast({
+          title: "Logged Out",
+          description: "You have been successfully logged out.",
+        });
+      }
     } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear the user state and admin overrides even if the request fails
-      localStorage.removeItem('app-environment-override');
+      console.error("Logout error:", error);
+      // Still clear the user state even if the request fails
       setUser(null);
     }
   };
@@ -209,17 +195,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getLogoutRedirectPath,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

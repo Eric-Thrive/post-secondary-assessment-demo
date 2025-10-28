@@ -1,0 +1,611 @@
+/* THRIVE Design System - Brand Styling */
+
+/* THRIVE Button Components */
+.thrive-btn {
+  font-family: var(--thrive-font-family);
+  font-weight: 500;
+  border-radius: var(--thrive-radius-md);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--thrive-space-xs);
+  text-decoration: none;
+  border: none;
+  outline: none;
+}
+
+.thrive-btn:focus {
+  outline: 2px solid var(--thrive-primary);
+  outline-offset: 2px;
+}
+
+.thrive-btn:disabled {
+  opacity: var(--thrive-disabled-opacity);
+  cursor: not-allowed;
+}
+
+/* Primary Button - Navy Blue */
+.thrive-btn-primary {
+  background-color: var(--thrive-primary);
+  color: white;
+  padding: var(--thrive-space-sm) var(--thrive-space-lg);
+  font-size: var(--thrive-font-size-base);
+  box-shadow: var(--thrive-shadow-sm);
+}
+
+.thrive-btn-primary:hover:not(:disabled) {
+  opacity: var(--thrive-hover-opacity);
+  box-shadow: var(--thrive-shadow-md);
+  transform: translateY(-1px);
+}
+
+.thrive-btn-primary:active:not(:disabled) {
+  opacity: var(--thrive-active-opacity);
+  transform: translateY(0);
+}
+
+/* Secondary Button - Sky Blue */
+.thrive-btn-secondary {
+  background-color: var(--thrive-secondary);
+  color: var(--thrive-text-primary);
+  padding: var(--thrive-space-sm) var(--thrive-space-lg);
+  font-size: var(--thrive-font-size-base);
+  box-shadow: var(--thrive-shadow-sm);
+}
+
+.thrive-btn-secondary:hover:not(:disabled) {
+  opacity: var(--thrive-hover-opacity);
+  box-shadow: var(--thrive-shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Accent Button - Orange */
+.thrive-btn-accent {
+  background-color: var(--thrive-accent);
+  color: white;
+  padding: var(--thrive-space-sm) var(--thrive-space-lg);
+  font-size: var(--thrive-font-size-base);
+  box-shadow: var(--thrive-shadow-sm);
+}
+
+.thrive-btn-accent:hover:not(:disabled) {
+  opacity: var(--thrive-hover-opacity);
+  box-shadow: var(--thrive-shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Outline Button */
+.thrive-btn-outline {
+  background-color: transparent;
+  color: var(--thrive-primary);
+  border: 2px solid var(--thrive-primary);
+  padding: calc(var(--thrive-space-sm) - 2px) calc(var(--thrive-space-lg) - 2px);
+  font-size: var(--thrive-font-size-base);
+}
+
+.thrive-btn-outline:hover:not(:disabled) {
+  background-color: var(--thrive-primary);
+  color: white;
+}
+
+/* Button Sizes */
+.thrive-btn-sm {
+  padding: var(--thrive-space-xs) var(--thrive-space-sm);
+  font-size: var(--thrive-font-size-sm);
+}
+
+.thrive-btn-lg {
+  padding: var(--thrive-space-md) var(--thrive-space-xl);
+  font-size: var(--thrive-font-size-lg);
+}
+
+/* THRIVE Card Components */
+.thrive-card {
+  background-color: var(--thrive-background);
+  border-radius: var(--thrive-radius-lg);
+  box-shadow: var(--thrive-shadow-md);
+  border: 1px solid var(--thrive-border-light);
+  transition: all 0.2s ease-in-out;
+}
+
+.thrive-card:hover {
+  box-shadow: var(--thrive-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.thrive-card-header {
+  padding: var(--thrive-space-lg);
+  border-bottom: 1px solid var(--thrive-border-light);
+}
+
+.thrive-card-body {
+  padding: var(--thrive-space-lg);
+}
+
+.thrive-card-footer {
+  padding: var(--thrive-space-lg);
+  border-top: 1px solid var(--thrive-border-light);
+  background-color: var(--thrive-surface);
+  border-radius: 0 0 var(--thrive-radius-lg) var(--thrive-radius-lg);
+}
+
+/* THRIVE Form Components */
+.thrive-input {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-base);
+  padding: var(--thrive-space-sm);
+  border: 2px solid var(--thrive-border);
+  border-radius: var(--thrive-radius-md);
+  background-color: var(--thrive-background);
+  color: var(--thrive-text-primary);
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+}
+
+.thrive-input:focus {
+  outline: none;
+  border-color: var(--thrive-primary);
+  box-shadow: 0 0 0 3px rgba(18, 151, 210, 0.1);
+}
+
+.thrive-input::placeholder {
+  color: var(--thrive-text-muted);
+}
+
+.thrive-label {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-sm);
+  font-weight: 500;
+  color: var(--thrive-text-primary);
+  margin-bottom: var(--thrive-space-xs);
+  display: block;
+}
+
+/* THRIVE Layout Components */
+.thrive-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--thrive-space-lg);
+}
+
+.thrive-section {
+  padding: var(--thrive-space-xl) 0;
+}
+
+.thrive-grid {
+  display: grid;
+  gap: var(--thrive-space-lg);
+}
+
+.thrive-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.thrive-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.thrive-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* THRIVE Utility Classes */
+.thrive-text-primary {
+  color: var(--thrive-text-primary);
+}
+
+.thrive-text-secondary {
+  color: var(--thrive-text-secondary);
+}
+
+.thrive-text-muted {
+  color: var(--thrive-text-muted);
+}
+
+.thrive-bg-primary {
+  background-color: var(--thrive-primary);
+}
+
+.thrive-bg-secondary {
+  background-color: var(--thrive-secondary);
+}
+
+.thrive-bg-accent {
+  background-color: var(--thrive-accent);
+}
+
+.thrive-bg-highlight {
+  background-color: var(--thrive-highlight);
+}
+
+.thrive-border-primary {
+  border-color: var(--thrive-primary);
+}
+
+.thrive-border-secondary {
+  border-color: var(--thrive-secondary);
+}
+
+/* THRIVE Animation Classes */
+.thrive-fade-in {
+  animation: thriveeFadeIn 0.3s ease-in-out;
+}
+
+.thrive-slide-up {
+  animation: thriveSlideUp 0.3s ease-out;
+}
+
+.thrive-bounce-in {
+  animation: thriveBounceIn 0.5s ease-out;
+}
+
+@keyframes thriveFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes thriveSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes thriveBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* THRIVE Responsive Utilities */
+@media (max-width: 768px) {
+  .thrive-grid-2,
+  .thrive-grid-3,
+  .thrive-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .thrive-container {
+    padding: 0 var(--thrive-space-sm);
+  }
+
+  .thrive-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .thrive-heading-1 {
+    font-size: var(--thrive-font-size-3xl);
+  }
+
+  .thrive-heading-2 {
+    font-size: var(--thrive-font-size-2xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .thrive-section {
+    padding: var(--thrive-space-lg) 0;
+  }
+
+  .thrive-card-header,
+  .thrive-card-body,
+  .thrive-card-footer {
+    padding: var(--thrive-space-sm);
+  }
+}
+
+/* THRIVE Responsive Design - Desktop First */
+
+/* Desktop Layout (Default - 1200px+) */
+.thrive-desktop-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.thrive-main-content {
+  padding: var(--thrive-space-xl);
+  overflow-y: auto;
+}
+
+.thrive-sidebar {
+  background: var(--thrive-background);
+  border-right: 2px solid var(--thrive-border);
+  padding: var(--thrive-space-lg);
+}
+
+/* Tablet Layout (768px - 1199px) */
+@media (max-width: 1199px) {
+  .thrive-desktop-layout {
+    grid-template-columns: 240px 1fr;
+  }
+
+  .thrive-main-content {
+    padding: var(--thrive-space-lg);
+  }
+
+  .thrive-container {
+    padding: 0 var(--thrive-space-md);
+  }
+
+  .thrive-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .thrive-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small Tablet Layout (768px - 991px) */
+@media (max-width: 991px) {
+  .thrive-desktop-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .thrive-sidebar {
+    display: none; /* Hidden by default, can be toggled */
+  }
+
+  .thrive-sidebar.mobile-open {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 1000;
+    box-shadow: var(--thrive-shadow-xl);
+  }
+
+  .thrive-grid-2,
+  .thrive-grid-3,
+  .thrive-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile Layout (480px - 767px) */
+@media (max-width: 767px) {
+  .thrive-main-content {
+    padding: var(--thrive-space-md);
+  }
+
+  .thrive-container {
+    padding: 0 var(--thrive-space-sm);
+  }
+
+  .thrive-heading-1 {
+    font-size: var(--thrive-font-size-3xl);
+  }
+
+  .thrive-heading-2 {
+    font-size: var(--thrive-font-size-2xl);
+  }
+
+  .thrive-card-header,
+  .thrive-card-body,
+  .thrive-card-footer {
+    padding: var(--thrive-space-md);
+  }
+}
+
+/* Small Mobile Layout (320px - 479px) */
+@media (max-width: 479px) {
+  .thrive-main-content {
+    padding: var(--thrive-space-sm);
+  }
+
+  .thrive-section {
+    padding: var(--thrive-space-lg) 0;
+  }
+
+  .thrive-card-header,
+  .thrive-card-body,
+  .thrive-card-footer {
+    padding: var(--thrive-space-sm);
+  }
+
+  .thrive-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Touch-Friendly Interface Elements */
+@media (hover: none) and (pointer: coarse) {
+  .thrive-btn {
+    min-height: 44px; /* iOS recommended touch target */
+    padding: var(--thrive-space-sm) var(--thrive-space-lg);
+  }
+
+  .thrive-input {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .nav-button,
+  .thrive-card {
+    min-height: 44px;
+  }
+
+  /* Larger touch targets for mobile */
+  .mobile-nav-item {
+    padding: var(--thrive-space-md);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+}
+/* THRIVE Icon System */
+
+/* Base icon styling */
+.thrive-icon {
+  display: inline-block;
+  object-fit: contain;
+  transition: all 0.2s ease-in-out;
+}
+
+.thrive-icon:hover {
+  transform: scale(1.05);
+}
+
+/* Logo styling */
+.thrive-logo {
+  display: inline-block;
+  object-fit: contain;
+}
+
+.thrive-logo-primary {
+  display: inline-block;
+  object-fit: contain;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Navigation icon styling */
+.thrive-nav-icon {
+  filter: grayscale(0.3);
+  opacity: 0.8;
+  transition: all 0.2s ease-in-out;
+}
+
+.thrive-nav-icon:hover {
+  filter: grayscale(0);
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.thrive-nav-icon.active {
+  filter: grayscale(0);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Icon wrapper styling */
+.thrive-icon-wrapper {
+  transition: all 0.2s ease-in-out;
+  box-shadow: var(--thrive-shadow-sm);
+}
+
+.thrive-icon-wrapper:hover {
+  box-shadow: var(--thrive-shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Module-specific icon colors */
+.icon-student {
+  filter: hue-rotate(0deg);
+}
+
+.icon-document {
+  filter: hue-rotate(90deg);
+}
+
+.icon-functional {
+  filter: hue-rotate(180deg);
+}
+
+.icon-accommodations {
+  filter: hue-rotate(270deg);
+}
+
+/* Icon sizes */
+.thrive-icon-xs {
+  width: 16px;
+  height: 16px;
+}
+
+.thrive-icon-sm {
+  width: 20px;
+  height: 20px;
+}
+
+.thrive-icon-md {
+  width: 24px;
+  height: 24px;
+}
+
+.thrive-icon-lg {
+  width: 32px;
+  height: 32px;
+}
+
+.thrive-icon-xl {
+  width: 48px;
+  height: 48px;
+}
+
+/* Icon states */
+.thrive-icon-disabled {
+  opacity: var(--thrive-disabled-opacity);
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+.thrive-icon-loading {
+  animation: thriveIconPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes thriveIconPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Icon button combinations */
+.thrive-icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--thrive-space-xs);
+  padding: var(--thrive-space-xs) var(--thrive-space-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--thrive-radius-md);
+  transition: all 0.2s ease-in-out;
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-sm);
+  color: var(--thrive-text-primary);
+}
+
+.thrive-icon-button:hover {
+  background-color: var(--thrive-surface);
+  transform: translateY(-1px);
+}
+
+.thrive-icon-button:active {
+  transform: translateY(0);
+}
+
+.thrive-icon-button.active {
+  background-color: var(--thrive-secondary);
+  color: var(--thrive-text-primary);
+}
