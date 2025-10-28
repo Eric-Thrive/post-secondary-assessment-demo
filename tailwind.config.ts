@@ -11,6 +11,18 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        // THRIVE Brand Colors
+        thrive: {
+          navy: "var(--thrive-navy)",
+          "sky-blue": "var(--thrive-sky-blue)",
+          orange: "var(--thrive-orange)",
+          yellow: "var(--thrive-yellow)",
+          primary: "var(--thrive-primary)",
+          secondary: "var(--thrive-secondary)",
+          accent: "var(--thrive-accent)",
+          highlight: "var(--thrive-highlight)",
+        },
+        // Existing shadcn/ui colors
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -61,6 +73,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      fontFamily: {
+        thrive: ["Montserrat", "system-ui", "sans-serif"],
+      },
+      spacing: {
+        "thrive-xs": "0.5rem",
+        "thrive-sm": "1rem",
+        "thrive-md": "1.5rem",
+        "thrive-lg": "2rem",
+        "thrive-xl": "3rem",
       },
       keyframes: {
         "accordion-down": {

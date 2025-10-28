@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import THRIVE Design System */
+@import "./styles/thrive-design-system.css";
+
 /* K-12 Report Specific Styles */
 .k12-report-content table {
   @apply w-full border-collapse;
@@ -142,33 +145,136 @@ body {
   @apply bg-background text-foreground;
 }
 
-/* THRIVE Post-Secondary UI Styles */
+/* THRIVE Brand Design System */
 
-/* THRIVE Brand Color Palette */
+/* THRIVE Brand Color Palette - Official Colors */
 :root {
   /* Primary Brand Colors - Official THRIVE Sunwashed Palette */
-  --thrive-navy: #1297D2;         /* Navy Blue - Primary */
-  --thrive-sky-blue: #96D7E1;     /* Sky Blue - Secondary */
-  --thrive-orange: #F89E54;       /* Orange - Accent */
-  --thrive-yellow: #FDE677;       /* Yellow - Highlight */
-  
+  --thrive-navy: #1297d2; /* Navy Blue - Primary brand color */
+  --thrive-sky-blue: #96d7e1; /* Sky Blue - Secondary color */
+  --thrive-orange: #f89e54; /* Orange - Accent color */
+  --thrive-yellow: #fde677; /* Yellow - Highlight color */
+
   /* Semantic Color Mapping for THRIVE */
   --thrive-primary: var(--thrive-navy);
   --thrive-secondary: var(--thrive-sky-blue);
   --thrive-accent: var(--thrive-orange);
   --thrive-highlight: var(--thrive-yellow);
-  
-  /* UI Colors for Post-Secondary */
-  --ps-background: #ffffff;
-  --ps-surface: #f8fafc;
-  --ps-text-primary: #1e293b;
-  --ps-text-secondary: #64748b;
-  --ps-border: #e2e8f0;
+
+  /* THRIVE Typography Scale */
+  --thrive-font-family: "Montserrat", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --thrive-font-size-xs: 0.75rem; /* 12px */
+  --thrive-font-size-sm: 0.875rem; /* 14px */
+  --thrive-font-size-base: 1rem; /* 16px */
+  --thrive-font-size-lg: 1.125rem; /* 18px */
+  --thrive-font-size-xl: 1.25rem; /* 20px */
+  --thrive-font-size-2xl: 1.5rem; /* 24px */
+  --thrive-font-size-3xl: 1.875rem; /* 30px */
+  --thrive-font-size-4xl: 2.25rem; /* 36px */
+
+  /* THRIVE Spacing System */
+  --thrive-space-xs: 0.5rem; /* 8px */
+  --thrive-space-sm: 1rem; /* 16px */
+  --thrive-space-md: 1.5rem; /* 24px */
+  --thrive-space-lg: 2rem; /* 32px */
+  --thrive-space-xl: 3rem; /* 48px */
+  --thrive-space-2xl: 4rem; /* 64px */
+
+  /* THRIVE Border Radius */
+  --thrive-radius-sm: 0.375rem; /* 6px */
+  --thrive-radius-md: 0.5rem; /* 8px */
+  --thrive-radius-lg: 0.75rem; /* 12px */
+  --thrive-radius-xl: 1rem; /* 16px */
+
+  /* THRIVE Shadow System */
+  --thrive-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --thrive-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --thrive-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --thrive-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* UI Colors for consistent theming */
+  --thrive-background: #ffffff;
+  --thrive-surface: #f8fafc;
+  --thrive-text-primary: #1e293b;
+  --thrive-text-secondary: #64748b;
+  --thrive-text-muted: #94a3b8;
+  --thrive-border: #e2e8f0;
+  --thrive-border-light: #f1f5f9;
+
+  /* Interactive States */
+  --thrive-hover-opacity: 0.8;
+  --thrive-active-opacity: 0.9;
+  --thrive-disabled-opacity: 0.5;
+}
+
+/* THRIVE Typography Classes */
+.thrive-font-family {
+  font-family: var(--thrive-font-family);
+}
+
+.thrive-heading-1 {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-4xl);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--thrive-text-primary);
+}
+
+.thrive-heading-2 {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-3xl);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--thrive-text-primary);
+}
+
+.thrive-heading-3 {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-2xl);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--thrive-text-primary);
+}
+
+.thrive-body-large {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-lg);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--thrive-text-primary);
+}
+
+.thrive-body {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-base);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--thrive-text-primary);
+}
+
+.thrive-body-small {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-sm);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--thrive-text-secondary);
+}
+
+.thrive-caption {
+  font-family: var(--thrive-font-family);
+  font-size: var(--thrive-font-size-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--thrive-text-muted);
 }
 
 /* Figma Enhanced Report Viewer Styles */
 .figma-enhanced-report {
-  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Montserrat", -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--ps-background);
   min-height: 100vh;
 }
@@ -195,7 +301,11 @@ body {
 }
 
 .figma-enhanced-report .header {
-  background: linear-gradient(to right, var(--thrive-navy), var(--thrive-sky-blue));
+  background: linear-gradient(
+    to right,
+    var(--thrive-navy),
+    var(--thrive-sky-blue)
+  );
 }
 
 /* Navigation Icons */
@@ -207,23 +317,43 @@ body {
 
 /* Section Backgrounds */
 .section-student-info {
-  background: linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1));
+  background: linear-gradient(
+    to right,
+    rgba(150, 215, 225, 0.2),
+    rgba(150, 215, 225, 0.3),
+    rgba(150, 215, 225, 0.1)
+  );
 }
 
 .section-document-review {
-  background: linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1));
+  background: linear-gradient(
+    to right,
+    rgba(248, 158, 84, 0.2),
+    rgba(248, 158, 84, 0.3),
+    rgba(248, 158, 84, 0.1)
+  );
 }
 
 .section-functional-impact {
-  background: linear-gradient(to right, rgba(150, 215, 225, 0.2), rgba(150, 215, 225, 0.3), rgba(150, 215, 225, 0.1));
+  background: linear-gradient(
+    to right,
+    rgba(150, 215, 225, 0.2),
+    rgba(150, 215, 225, 0.3),
+    rgba(150, 215, 225, 0.1)
+  );
 }
 
 .section-accommodations {
-  background: linear-gradient(to right, rgba(248, 158, 84, 0.2), rgba(248, 158, 84, 0.3), rgba(248, 158, 84, 0.1));
+  background: linear-gradient(
+    to right,
+    rgba(248, 158, 84, 0.2),
+    rgba(248, 158, 84, 0.3),
+    rgba(248, 158, 84, 0.1)
+  );
 }
 
 .section-complete {
-  background: #FEF9F0;
+  background: #fef9f0;
 }
 
 /* Content Area Styling */

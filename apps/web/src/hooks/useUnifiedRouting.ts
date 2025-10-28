@@ -1,30 +1,26 @@
 import { useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigation } from "@/contexts/NavigationContext";
-import {
-  getPostLoginRoute,
-  hasModuleAccess,
-  shouldShowDashboard,
-  getLoginRedirectPath,
-} from "@/utils/routing";
-import { ModuleType } from "@/types/unified-auth";
-import { getModuleHomeRoute, AUTH_ROUTES } from "@/config/routes";
+import { unifiedRoutingService } from "@/services/routing/unified-routing-service";
+import { ModuleType, AuthenticatedUser } from "@/types/unified-auth";
+import { AUTH_ROUTES } from "@/config/routes";
 import { adaptLegacyUser, isLegacyUser } from "@/utils/auth-adapter";
 
 export const useUnifiedRouting = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: legacyUser, isAuthenticated } = useAuth();
   const { setRedirectAfterLogin, clearRedirect, navigationState } =
     useNavigation();
 
   // Convert legacy user to AuthenticatedUser format
-  const user = useMemo(() => {
+  const user = useMemo((): AuthenticatedUser | null => {
     if (!legacyUser) return null;
     if (isLegacyUser(legacyUser)) {
       return adaptLegacyUser(legacyUser);
     }
-    return legacyUser;
+    return legacyUser as AuthenticatedUser;
   }, [legacyUser]);
 
   // Navigate to appropriate route after successful login
@@ -37,7 +33,8 @@ export const useUnifiedRouting = () => {
     if (redirectPath) {
       navigate(redirectPath, { replace: true });
     } else {
-      const defaultRoute = getPostLoginRoute(user);
+      const defaultRoute =
+        unifiedRoutingService.handlePostLoginNavigation(user);
       navigate(defaultRoute, { replace: true });
     }
   }, [user, navigate, navigationState.redirectAfterLogin, clearRedirect]);
@@ -45,13 +42,20 @@ export const useUnifiedRouting = () => {
   // Navigate to a specific module
   const navigateToModule = useCallback(
     (moduleType: ModuleType) => {
-      if (!user || !hasModuleAccess(user, moduleType)) {
-        console.warn(`User does not have access to module: ${moduleType}`);
+      if (!user) {
+        console.warn("User not authenticated");
         return;
       }
 
-      const moduleRoute = getModuleHomeRoute(moduleType);
-      navigate(moduleRoute);
+      try {
+        const moduleRoute = unifiedRoutingService.navigateToModule(
+          moduleType,
+          user
+        );
+        navigate(moduleRoute);
+      } catch (error) {
+        console.warn(`User does not have access to module: ${moduleType}`);
+      }
     },
     [user, navigate]
   );
@@ -60,11 +64,16 @@ export const useUnifiedRouting = () => {
   const navigateToDashboard = useCallback(() => {
     if (!user) return;
 
-    if (shouldShowDashboard(user)) {
+    const accessibleModules = user.moduleAccess.map(
+      (access) => access.moduleType
+    );
+
+    if (accessibleModules.length > 1) {
       navigate(AUTH_ROUTES.DASHBOARD);
     } else {
-      // If user shouldn't see dashboard, redirect to their default module
-      const defaultRoute = getPostLoginRoute(user);
+      // If user has only one module, redirect to that module
+      const defaultRoute =
+        unifiedRoutingService.handlePostLoginNavigation(user);
       navigate(defaultRoute);
     }
   }, [user, navigate]);
@@ -73,12 +82,16 @@ export const useUnifiedRouting = () => {
   const handleUnauthorizedAccess = useCallback(
     (intendedPath?: string) => {
       if (!isAuthenticated) {
-        const redirectPath = intendedPath || getLoginRedirectPath();
+        const redirectPath = intendedPath || location.pathname;
         setRedirectAfterLogin(redirectPath);
-        navigate(AUTH_ROUTES.LOGIN, { replace: true });
+        const loginRoute = unifiedRoutingService.getUnauthorizedRedirect(
+          user,
+          redirectPath
+        );
+        navigate(loginRoute, { replace: true });
       }
     },
-    [isAuthenticated, navigate, setRedirectAfterLogin]
+    [isAuthenticated, navigate, setRedirectAfterLogin, location.pathname, user]
   );
 
   // Check if current route is accessible
@@ -86,23 +99,38 @@ export const useUnifiedRouting = () => {
     (requiredRoles?: string[], requiredModules?: ModuleType[]): boolean => {
       if (!user) return false;
 
-      // Check role requirements
-      if (requiredRoles && !requiredRoles.includes(user.role)) {
-        return false;
-      }
+      return unifiedRoutingService.hasRouteAccess(
+        user,
+        location.pathname,
+        requiredRoles as any,
+        requiredModules
+      );
+    },
+    [user, location.pathname]
+  );
 
-      // Check module requirements
-      if (
-        requiredModules &&
-        !requiredModules.some((module) => hasModuleAccess(user, module))
-      ) {
-        return false;
-      }
+  // Get breadcrumbs for current route
+  const getBreadcrumbs = useCallback(() => {
+    if (!user) return [];
+    return unifiedRoutingService.getBreadcrumbs(location.pathname, user);
+  }, [user, location.pathname]);
 
-      return true;
+  // Check if user can access a specific module
+  const canAccessModule = useCallback(
+    (moduleType: ModuleType): boolean => {
+      if (!user) return false;
+      return user.moduleAccess.some(
+        (access) => access.moduleType === moduleType
+      );
     },
     [user]
   );
+
+  // Check if user should see dashboard
+  const shouldShowDashboard = useCallback((): boolean => {
+    if (!user) return false;
+    return user.moduleAccess.length > 1;
+  }, [user]);
 
   return {
     handlePostLoginNavigation,
@@ -110,8 +138,10 @@ export const useUnifiedRouting = () => {
     navigateToDashboard,
     handleUnauthorizedAccess,
     isRouteAccessible,
-    canAccessModule: (moduleType: ModuleType) =>
-      user ? hasModuleAccess(user, moduleType) : false,
-    shouldShowDashboard: user ? shouldShowDashboard(user) : false,
+    getBreadcrumbs,
+    canAccessModule,
+    shouldShowDashboard: shouldShowDashboard(),
+    isLegacyRoute: (path: string) => unifiedRoutingService.isLegacyRoute(path),
+    getLogoutRedirect: () => unifiedRoutingService.getLogoutRedirect(user),
   };
 };

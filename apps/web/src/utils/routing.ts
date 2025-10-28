@@ -8,6 +8,7 @@ import { getModuleHomeRoute, AUTH_ROUTES } from "@/config/routes";
 
 /**
  * Determines the appropriate route for a user after successful authentication
+ * @deprecated Use IntelligentRouter.getPostLoginRoute instead
  */
 export const getPostLoginRoute = (user: AuthenticatedUser): string => {
   // Check if user has access to multiple modules

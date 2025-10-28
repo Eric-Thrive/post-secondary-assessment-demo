@@ -6,6 +6,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ModuleProvider, useModule } from "@/contexts/ModuleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { PerformanceWrapper } from "@/components/performance/PerformanceWrapper";
+import {
+  RouteMigration,
+  LegacyRouteRedirect,
+} from "@/components/routing/RouteMigration";
+import { AUTH_ROUTES } from "@/config/routes";
+import UnifiedLoginPage from "@/components/auth/UnifiedLoginPage";
 import Index from "./pages/Index";
 import NewK12AssessmentPage from "./pages/NewK12AssessmentPage";
 import NewK12ComplexAssessmentPage from "./pages/NewK12ComplexAssessmentPage";
@@ -73,193 +80,246 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/new-assessment"
-                  element={
-                    <ProtectedRoute>
-                      <AssessmentRouteHandler />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/new-k12-assessment"
-                  element={
-                    <ProtectedRoute>
-                      <NewK12AssessmentPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/new-k12-complex-assessment"
-                  element={
-                    <ProtectedRoute>
-                      <NewK12ComplexAssessmentPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/new-post-secondary-assessment"
-                  element={
-                    <ProtectedRoute>
-                      <NewPostSecondaryAssessmentPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/new-tutoring-assessment"
-                  element={
-                    <ProtectedRoute>
-                      <NewTutoringAssessmentPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/review-documents"
-                  element={
-                    <ProtectedRoute>
-                      <ReviewDocumentsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/reports"
-                  element={
-                    <ProtectedRoute>
-                      <ReportRouteHandler />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/post-secondary-reports"
-                  element={
-                    <ProtectedRoute>
-                      <PostSecondaryReportsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/k12-reports"
-                  element={
-                    <ProtectedRoute>
-                      <K12ReportsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/tutoring-reports"
-                  element={
-                    <ProtectedRoute>
-                      <TutoringReportsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/post-secondary-review-edit"
-                  element={
-                    <ProtectedRoute>
-                      <PostSecondaryReviewEditPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/k12-review-edit"
-                  element={
-                    <ProtectedRoute>
-                      <K12ReviewEditPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/tutoring-review-edit"
-                  element={
-                    <ProtectedRoute>
-                      <TutoringReviewEditPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/prompts"
-                  element={
-                    <ProtectedRoute>
-                      <PromptsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute>
-                      <AdminPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/users"
-                  element={
-                    <ProtectedRoute>
-                      <UserManagementPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/organizations"
-                  element={
-                    <ProtectedRoute>
-                      <OrganizationManagementPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/performance"
-                  element={
-                    <ProtectedRoute>
-                      <AdminPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/tutoring-demo" element={<TutoringDemoPage />} />
+              <PerformanceWrapper>
+                <RouteMigration />
+                <Routes>
+                  {/* Legacy route redirects for backward compatibility */}
+                  <Route
+                    path="/login/post-secondary"
+                    element={<Navigate to={AUTH_ROUTES.LOGIN} replace />}
+                  />
+                  <Route
+                    path="/login/k12"
+                    element={<Navigate to={AUTH_ROUTES.LOGIN} replace />}
+                  />
+                  <Route
+                    path="/login/tutor"
+                    element={<Navigate to={AUTH_ROUTES.LOGIN} replace />}
+                  />
+                  <Route
+                    path="/post-secondary-demo-login"
+                    element={
+                      <Navigate
+                        to={`${AUTH_ROUTES.LOGIN}?demo=post-secondary`}
+                        replace
+                      />
+                    }
+                  />
+                  <Route
+                    path="/k12-demo-login"
+                    element={
+                      <Navigate to={`${AUTH_ROUTES.LOGIN}?demo=k12`} replace />
+                    }
+                  />
+                  <Route
+                    path="/tutoring-demo-login"
+                    element={
+                      <Navigate
+                        to={`${AUTH_ROUTES.LOGIN}?demo=tutoring`}
+                        replace
+                      />
+                    }
+                  />
 
-                {/* Password Reset and Demo Landing Pages */}
-                <Route
-                  path="/login/post-secondary"
-                  element={<PostSecondaryLoginPage />}
-                />
-                <Route path="/login/k12" element={<K12LoginPage />} />
-                <Route path="/login/tutor" element={<TutorLoginPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route
-                  path="/post-secondary-demo-login"
-                  element={<PostSecondaryDemoLandingPage />}
-                />
-                <Route
-                  path="/k12-demo-login"
-                  element={<K12DemoLandingPage />}
-                />
-                <Route
-                  path="/tutoring-demo-login"
-                  element={<TutoringDemoLandingPage />}
-                />
+                  {/* Unified login route */}
+                  <Route
+                    path={AUTH_ROUTES.LOGIN}
+                    element={<UnifiedLoginPage />}
+                  />
 
-                <Route path="/shared/:shareToken" element={<SharedReport />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/new-assessment"
+                    element={
+                      <ProtectedRoute>
+                        <AssessmentRouteHandler />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/new-k12-assessment"
+                    element={
+                      <ProtectedRoute>
+                        <NewK12AssessmentPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/new-k12-complex-assessment"
+                    element={
+                      <ProtectedRoute>
+                        <NewK12ComplexAssessmentPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/new-post-secondary-assessment"
+                    element={
+                      <ProtectedRoute>
+                        <NewPostSecondaryAssessmentPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/new-tutoring-assessment"
+                    element={
+                      <ProtectedRoute>
+                        <NewTutoringAssessmentPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/review-documents"
+                    element={
+                      <ProtectedRoute>
+                        <ReviewDocumentsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/reports"
+                    element={
+                      <ProtectedRoute>
+                        <ReportRouteHandler />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/post-secondary-reports"
+                    element={
+                      <ProtectedRoute>
+                        <PostSecondaryReportsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/k12-reports"
+                    element={
+                      <ProtectedRoute>
+                        <K12ReportsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tutoring-reports"
+                    element={
+                      <ProtectedRoute>
+                        <TutoringReportsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/post-secondary-review-edit"
+                    element={
+                      <ProtectedRoute>
+                        <PostSecondaryReviewEditPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/k12-review-edit"
+                    element={
+                      <ProtectedRoute>
+                        <K12ReviewEditPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tutoring-review-edit"
+                    element={
+                      <ProtectedRoute>
+                        <TutoringReviewEditPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/prompts"
+                    element={
+                      <ProtectedRoute>
+                        <PromptsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute>
+                        <AdminPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/users"
+                    element={
+                      <ProtectedRoute>
+                        <UserManagementPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/organizations"
+                    element={
+                      <ProtectedRoute>
+                        <OrganizationManagementPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/performance"
+                    element={
+                      <ProtectedRoute>
+                        <AdminPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/tutoring-demo" element={<TutoringDemoPage />} />
+
+                  {/* Password Reset and Demo Landing Pages */}
+                  <Route
+                    path="/login/post-secondary"
+                    element={<PostSecondaryLoginPage />}
+                  />
+                  <Route path="/login/k12" element={<K12LoginPage />} />
+                  <Route path="/login/tutor" element={<TutorLoginPage />} />
+                  <Route
+                    path="/reset-password"
+                    element={<ResetPasswordPage />}
+                  />
+                  <Route
+                    path="/post-secondary-demo-login"
+                    element={<PostSecondaryDemoLandingPage />}
+                  />
+                  <Route
+                    path="/k12-demo-login"
+                    element={<K12DemoLandingPage />}
+                  />
+                  <Route
+                    path="/tutoring-demo-login"
+                    element={<TutoringDemoLandingPage />}
+                  />
+
+                  <Route
+                    path="/shared/:shareToken"
+                    element={<SharedReport />}
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </PerformanceWrapper>
             </BrowserRouter>
           </TooltipProvider>
         </ModuleProvider>
