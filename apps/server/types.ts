@@ -3,6 +3,9 @@
  * Adds custom properties used by the security middleware
  */
 
+import "express-session";
+import { UserRole, ModuleType } from "@shared/schema";
+
 declare global {
   namespace Express {
     interface Request {
@@ -11,13 +14,30 @@ declare global {
        * Set by security middleware to identify demo analysis workflows
        */
       isDemoOperation?: boolean;
-      
+
       /**
        * Flag to enforce demo customer isolation
        * Ensures demo operations only access demo customer data
        */
       enforceDemoCustomer?: boolean;
     }
+  }
+}
+
+declare module "express-session" {
+  interface SessionData {
+    userId?: number;
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+      role: UserRole;
+      assignedModules: ModuleType[];
+      organizationId?: string;
+      customerId: string;
+      customerName?: string;
+      demoPermissions?: Record<string, boolean>;
+    };
   }
 }
 

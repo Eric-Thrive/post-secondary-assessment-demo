@@ -1,9 +1,9 @@
+/* Import THRIVE Design System */
+@import "./styles/thrive-design-system.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import THRIVE Design System */
-@import "./styles/thrive-design-system.css";
 
 /* K-12 Report Specific Styles */
 .k12-report-content table {

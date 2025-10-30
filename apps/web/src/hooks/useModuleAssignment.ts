@@ -194,17 +194,35 @@ export function useModuleAssignment() {
   /**
    * Check if user can switch modules
    */
-  const canSwitchModules = (): boolean => {
-    if (!user) return false;
-    return user.role === UserRole.DEVELOPER || user.role === UserRole.ADMIN;
+  const getAssignedModules = (): ModuleType[] => {
+    if (assignmentData?.assignedModules?.length) {
+      return assignmentData.assignedModules;
+    }
+
+    if (availableModules?.assignedModules?.length) {
+      return availableModules.assignedModules;
+    }
+
+    const legacyUser: any = user;
+    if (legacyUser?.moduleAccess?.length) {
+      return legacyUser.moduleAccess.map((access: any) => access.moduleType);
+    }
+
+    return [];
   };
 
   /**
-   * Get assigned modules from current data
+   * Determine if the current user can switch modules
    */
-  const getAssignedModules = (): ModuleType[] => {
+  const canSwitchModules = (): boolean => {
+    const assigned = getAssignedModules();
+    if (assigned.length > 1) {
+      return true;
+    }
+
+    if (!user) return false;
     return (
-      assignmentData?.assignedModules || availableModules?.assignedModules || []
+      user.role === UserRole.DEVELOPER || user.role === UserRole.SYSTEM_ADMIN
     );
   };
 
@@ -212,11 +230,26 @@ export function useModuleAssignment() {
    * Get default module for user
    */
   const getDefaultModule = (): ModuleType => {
-    return (
-      assignmentData?.defaultModule ||
-      availableModules?.defaultModule ||
-      ModuleType.POST_SECONDARY
-    );
+    if (assignmentData?.defaultModule) {
+      return assignmentData.defaultModule;
+    }
+
+    if (availableModules?.defaultModule) {
+      return availableModules.defaultModule;
+    }
+
+    const legacyUser: any = user;
+    const preferencesModule = legacyUser?.preferences?.defaultModule;
+    if (preferencesModule && getAssignedModules().includes(preferencesModule)) {
+      return preferencesModule;
+    }
+
+    const assigned = getAssignedModules();
+    if (assigned.length > 0) {
+      return assigned[0];
+    }
+
+    return ModuleType.POST_SECONDARY;
   };
 
   /**

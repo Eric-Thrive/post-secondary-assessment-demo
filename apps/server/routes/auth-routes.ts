@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import "../types";
 import { db } from "../db";
-import { users } from "@shared/schema";
+import { users, organizations } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import {
   generateRegistrationToken,
@@ -38,8 +38,15 @@ export function registerAuthRoutes(app: Express): void {
 
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { username, password, email, customerId, customerName, role } =
-        req.body;
+      const {
+        username,
+        password,
+        email,
+        customerId,
+        customerName,
+        role,
+        assignedModules,
+      } = req.body;
 
       if (!username || !password || !email) {
         return res
@@ -96,29 +103,41 @@ export function registerAuthRoutes(app: Express): void {
       const hashedPassword = await hashPassword(password);
       const registrationToken = generateRegistrationToken();
 
-      let assignedCustomerId = customerId || "system";
-      let assignedRole = role || "tutor";
-      const environment =
-        req.headers["x-environment"] || process.env.APP_ENVIRONMENT;
+      let assignedRole = role || "customer";
+      let assignedCustomerId: string;
+      let assignedOrganizationId: string | null = null;
+      const userModules = assignedModules || ["post_secondary"];
 
-      let demoPermissions = {};
+      // Create organization for non-admin users
       if (
-        environment &&
-        typeof environment === "string" &&
-        environment.includes("demo")
+        assignedRole !== "system_admin" &&
+        assignedRole !== "developer" &&
+        assignedRole !== "admin"
       ) {
-        assignedCustomerId = DEMO_CUSTOMER_ID;
-        assignedRole = "tutor";
+        const orgId = `org-${trimmedUsername.toLowerCase()}-${Date.now()}`;
+        assignedCustomerId = `customer-${trimmedUsername.toLowerCase()}-${Date.now()}`;
 
-        if (environment.includes("post-secondary-demo")) {
-          demoPermissions = { "post-secondary-demo": true };
-        } else if (environment.includes("k12-demo")) {
-          demoPermissions = { "k12-demo": true };
-        } else if (environment.includes("tutoring-demo")) {
-          demoPermissions = { "tutoring-demo": true };
-        } else {
-          demoPermissions = { "post-secondary-demo": true };
+        // Handle demo user registration
+        if (assignedRole === "demo") {
+          assignedCustomerId = DEMO_CUSTOMER_ID;
         }
+
+        const [newOrg] = await db
+          .insert(organizations)
+          .values({
+            id: orgId,
+            name: `${trimmedUsername}'s Organization`,
+            customerId: assignedCustomerId,
+            assignedModules: userModules,
+            maxUsers: assignedRole === "demo" ? 1 : 10,
+            isActive: true,
+          })
+          .returning();
+
+        assignedOrganizationId = newOrg.id;
+      } else {
+        // Admins don't need organizations
+        assignedCustomerId = customerId || "system";
       }
 
       const [newUser] = await db
@@ -130,18 +149,18 @@ export function registerAuthRoutes(app: Express): void {
           customerId: assignedCustomerId,
           customerName,
           role: assignedRole,
+          assignedModules: userModules,
+          organizationId: assignedOrganizationId,
           isActive: true,
           registrationToken,
           reportCount: 0,
-          maxReports: 5,
-          demoPermissions,
+          maxReports: assignedRole === "demo" ? 5 : -1, // Demo users get 5 reports, others unlimited
         })
         .returning({
           id: users.id,
           username: users.username,
           email: users.email,
-          customerId: users.customerId,
-          customerName: users.customerName,
+          organizationId: users.organizationId,
           role: users.role,
           registrationToken: users.registrationToken,
         });
@@ -149,10 +168,9 @@ export function registerAuthRoutes(app: Express): void {
       await sendRegistrationNotification({
         username: newUser.username,
         email: newUser.email || "",
-        customerId: newUser.customerId,
+        organizationId: newUser.organizationId || undefined,
         role: newUser.role,
         registrationToken: newUser.registrationToken || "",
-        environment: typeof environment === "string" ? environment : "unknown",
       });
 
       res.status(201).json({
@@ -161,8 +179,7 @@ export function registerAuthRoutes(app: Express): void {
           id: newUser.id,
           username: newUser.username,
           email: newUser.email,
-          customerId: newUser.customerId,
-          customerName: newUser.customerName,
+          organizationId: newUser.organizationId,
           role: newUser.role,
         },
       });
@@ -402,7 +419,11 @@ export function registerAuthRoutes(app: Express): void {
           .json({ error: "Invalid or expired reset token" });
       }
 
-      if (!isResetTokenValid(user.resetTokenExpiry)) {
+      if (
+        !user.resetToken ||
+        !user.resetTokenExpiry ||
+        !isResetTokenValid(token, user.resetToken, user.resetTokenExpiry)
+      ) {
         await db
           .update(users)
           .set({
@@ -440,7 +461,7 @@ export function registerAdminRoutes(app: Express): void {
   app.get(
     "/api/admin/users",
     requireAuth,
-    requireRole([UserRole.ADMIN, UserRole.DEVELOPER]),
+    requireRole([UserRole.SYSTEM_ADMIN, UserRole.DEVELOPER]),
     async (_req, res) => {
       try {
         const allUsers = await db
@@ -483,7 +504,7 @@ export function registerAdminRoutes(app: Express): void {
   app.patch(
     "/api/admin/users/:userId",
     requireAuth,
-    requireRole([UserRole.ADMIN, UserRole.DEVELOPER]),
+    requireRole([UserRole.SYSTEM_ADMIN, UserRole.DEVELOPER]),
     async (req, res) => {
       try {
         const { userId } = req.params;

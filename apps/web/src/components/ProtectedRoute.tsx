@@ -1,6 +1,6 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import LoginForm, { type LoginVariant } from "./LoginForm";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -10,14 +10,8 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Default to post-secondary login variant since we no longer have environment-based routing
-  const loginVariant: LoginVariant = "post-secondary";
-
-  // Always require authentication in the simplified RBAC system
-  const requiresAuth = true;
-
   // Show loading spinner while checking auth status
-  if (requiresAuth && isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -28,9 +22,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // If auth is required but user is not authenticated, show login form
-  if (requiresAuth && !isAuthenticated) {
-    return <LoginForm variant={loginVariant} />;
+  // If user is not authenticated, redirect to login page
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   // Otherwise, render the protected content

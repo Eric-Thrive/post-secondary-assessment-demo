@@ -9,6 +9,27 @@ import type {
   AdminFeature,
 } from "@/types/unified-auth";
 
+const mockNavigate = vi.fn();
+const mockLogout = vi.fn();
+
+vi.mock("react-router-dom", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    logout: mockLogout,
+  }),
+}));
+
+vi.mock("@/assets/primary logo O-W png_1760911234604.png", () => ({
+  default: "logo.png",
+}));
+
 // Mock the config modules
 vi.mock("@/config/modules", () => ({
   getModuleConfig: vi.fn((moduleType) => ({
@@ -117,6 +138,8 @@ describe("ModuleDashboard", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockReset();
+    mockLogout.mockReset();
   });
 
   it("renders welcome header with user information", () => {
@@ -208,27 +231,17 @@ describe("ModuleDashboard", () => {
 
     expect(screen.getByText("No modules available")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Contact your administrator to request access to modules."
-      )
+      screen.getByText("Contact your administrator to request module access.")
     ).toBeInTheDocument();
   });
 
   it("handles module card clicks", () => {
-    // Mock window.location.href
-    const originalLocation = window.location;
-    delete (window as any).location;
-    window.location = { ...originalLocation, href: "" };
-
     render(
       <ModuleDashboard user={mockUser} availableModules={mockModuleAccess} />
     );
 
     fireEvent.click(screen.getByTestId("module-card-k12"));
-    expect(window.location.href).toBe("/k12");
-
-    // Restore original location
-    window.location = originalLocation;
+    expect(mockNavigate).toHaveBeenCalledWith("/k12");
   });
 
   it("renders help and support section", () => {

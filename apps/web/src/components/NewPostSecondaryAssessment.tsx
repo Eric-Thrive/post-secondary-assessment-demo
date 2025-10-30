@@ -1,34 +1,20 @@
-import React, { useState } from 'react';
-import { PathwaySelector } from './PathwaySelector';
-import { UnifiedAssessmentForm } from './UnifiedAssessmentForm';
-
-type SelectedPathway = 'simple' | 'complex' | null;
+import React from "react";
+import { UnifiedAssessmentForm } from "./UnifiedAssessmentForm";
+import { useNavigate } from "react-router-dom";
 
 const NewPostSecondaryAssessment = () => {
-  const [selectedPathway, setSelectedPathway] = useState<SelectedPathway>(null);
-
-  const handlePathwaySelect = (pathway: 'simple' | 'complex') => {
-    setSelectedPathway(pathway);
-  };
+  const navigate = useNavigate();
 
   const handleBack = () => {
-    setSelectedPathway(null);
+    navigate("/post-secondary");
   };
 
-  if (selectedPathway) {
-    return (
-      <UnifiedAssessmentForm 
-        moduleType="post_secondary" 
-        pathway={selectedPathway} 
-        onBack={handleBack}
-      />
-    );
-  }
-
+  // Default to simple pathway for all modules
   return (
-    <PathwaySelector 
+    <UnifiedAssessmentForm
       moduleType="post_secondary"
-      onSelectPathway={handlePathwaySelect} 
+      pathway="simple"
+      onBack={handleBack}
     />
   );
 };

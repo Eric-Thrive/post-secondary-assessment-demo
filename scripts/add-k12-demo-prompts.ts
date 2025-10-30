@@ -1,19 +1,19 @@
-import pg from 'pg';
+import pg from "pg";
 
 const { Pool } = pg;
 
 /**
- * Script to add K-12 Demo-specific prompts to the database
+ * Script to add K-12 specific prompts to the database
  */
 
 async function addK12DemoPrompts() {
-  console.log('🚀 Adding K-12 Demo prompts to database...\n');
+  console.log("🚀 Adding K-12 prompts to database...\n");
 
   // Use the shared database
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {
-    console.error('❌ No database URL found. Please set DATABASE_URL');
+    console.error("❌ No database URL found. Please set DATABASE_URL");
     process.exit(1);
   }
 
@@ -21,7 +21,7 @@ async function addK12DemoPrompts() {
 
   try {
     // 1. K-12 Demo System Instructions
-    console.log('📝 Adding K-12 demo system instructions...');
+    console.log("📝 Adding K-12 demo system instructions...");
     const k12DemoSystemInstructions = `You are a K-12 educational specialist tasked with creating a practical, strengths-based student report for parents and educators. Follow these guidelines:
 Begin with a short overview describing the student's background, grade, and any relevant context (family input or student voice if available).
 
@@ -60,24 +60,30 @@ Your output should be understandable by any parent or educator.`;
 
     if (existingSystem.rows.length > 0) {
       // Update existing
-      await pool.query(`
+      await pool.query(
+        `
         UPDATE prompt_sections 
         SET content = $1, 
             version = 'v1.0', 
             last_updated = CURRENT_TIMESTAMP
         WHERE section_key = 'system_instructions_k12_demo'
-      `, [k12DemoSystemInstructions]);
+      `,
+        [k12DemoSystemInstructions]
+      );
     } else {
       // Insert new
-      await pool.query(`
+      await pool.query(
+        `
         INSERT INTO prompt_sections (section_key, section_name, module_type, content, version, prompt_type)
         VALUES ('system_instructions_k12_demo', 'K-12 Demo System Instructions', 'k12', $1, 'v1.0', 'system')
-      `, [k12DemoSystemInstructions]);
+      `,
+        [k12DemoSystemInstructions]
+      );
     }
-    console.log('✅ K-12 demo system instructions added');
+    console.log("✅ K-12 demo system instructions added");
 
     // 2. K-12 Demo Report Template
-    console.log('\n📄 Adding K-12 demo report template...');
+    console.log("\n📄 Adding K-12 demo report template...");
     const k12DemoReportTemplate = `# Student Support Report
 
 ## Student Overview
@@ -121,24 +127,30 @@ Your output should be understandable by any parent or educator.`;
 
     if (existingTemplate.rows.length > 0) {
       // Update existing
-      await pool.query(`
+      await pool.query(
+        `
         UPDATE prompt_sections 
         SET content = $1, 
             version = 'v1.0', 
             last_updated = CURRENT_TIMESTAMP
         WHERE section_key = 'markdown_report_template_k12_demo'
-      `, [k12DemoReportTemplate]);
+      `,
+        [k12DemoReportTemplate]
+      );
     } else {
       // Insert new
-      await pool.query(`
+      await pool.query(
+        `
         INSERT INTO prompt_sections (section_key, section_name, module_type, content, version, prompt_type)
         VALUES ('markdown_report_template_k12_demo', 'K-12 Demo Report Template', 'k12', $1, 'v1.0', 'report_format')
-      `, [k12DemoReportTemplate]);
+      `,
+        [k12DemoReportTemplate]
+      );
     }
-    console.log('✅ K-12 demo report template added');
+    console.log("✅ K-12 demo report template added");
 
     // 3. Verify the prompts were added
-    console.log('\n🔍 Verifying K-12 demo prompts...');
+    console.log("\n🔍 Verifying K-12 demo prompts...");
     const result = await pool.query(`
       SELECT section_key, module_type, prompt_type, 
              LEFT(content, 100) as content_preview,
@@ -148,17 +160,20 @@ Your output should be understandable by any parent or educator.`;
       ORDER BY section_key
     `);
 
-    console.log('\n📊 K-12 Demo prompts in database:');
-    result.rows.forEach(row => {
-      console.log(`  - ${row.section_key} (${row.prompt_type}, ${row.version})`);
+    console.log("\n📊 K-12 prompts in database:");
+    result.rows.forEach((row) => {
+      console.log(
+        `  - ${row.section_key} (${row.prompt_type}, ${row.version})`
+      );
       console.log(`    Preview: ${row.content_preview}...`);
     });
 
-    console.log('\n🎉 K-12 Demo prompts added successfully!');
-    console.log('\nNote: The system will need a code update to use these demo-specific prompts when in K-12 demo mode.');
-    
+    console.log("\n🎉 K-12 Demo prompts added successfully!");
+    console.log(
+      "\nNote: The system will need a code update to use these demo-specific prompts when in K-12 demo mode."
+    );
   } catch (error) {
-    console.error('❌ Error adding prompts:', error);
+    console.error("❌ Error adding prompts:", error);
   } finally {
     await pool.end();
   }

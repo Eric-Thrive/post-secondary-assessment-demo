@@ -3,6 +3,7 @@ import { AdminQuickActionsProps } from "./types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/types/unified-auth";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Settings,
@@ -27,6 +28,8 @@ export const AdminQuickActions: React.FC<AdminQuickActionsProps> = ({
   user,
   features,
 }) => {
+  const navigate = useNavigate();
+
   // Get icon for admin feature
   const getFeatureIcon = (featureId: string) => {
     switch (featureId) {
@@ -54,7 +57,7 @@ export const AdminQuickActions: React.FC<AdminQuickActionsProps> = ({
 
   // Handle feature click
   const handleFeatureClick = (route: string) => {
-    window.location.href = route;
+    navigate(route);
   };
 
   if (accessibleFeatures.length === 0) {

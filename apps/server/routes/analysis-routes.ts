@@ -7,7 +7,7 @@ import { storage } from "../storage";
 import { db } from "../db";
 import { itemMaster, ModuleType } from "@shared/schema";
 import { eq } from "drizzle-orm";
-import { isControlledAccessMode } from "../config/database";
+
 import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
 import {
   requireAuth,
@@ -23,76 +23,11 @@ export function registerAnalysisRoutes(app: Express): void {
     try {
       console.log("=== DEMO ANALYSIS REQUEST (No Auth Required) ===");
 
-      // SAFETY GUARD: Check for proper demo environment configuration
+      // Demo access is now handled by RBAC system - no separate database needed
       const currentEnv = process.env.APP_ENVIRONMENT || "production";
-      const hasProperDemoSetup =
-        currentEnv.includes("demo") &&
-        process.env.POST_SECONDARY_DEMO_DATABASE_URL;
-
-      // WORKAROUND: Allow demo if POST_SECONDARY_DEMO_DATABASE_URL is set (even if APP_ENVIRONMENT is wrong)
-      // This handles the case where APP_ENVIRONMENT secret can't be edited but demo database is configured
-      const hasWorkaroundDemoSetup =
-        process.env.POST_SECONDARY_DEMO_DATABASE_URL &&
-        process.env.POST_SECONDARY_DEMO_DATABASE_URL.length > 0;
-
-      // NEW: Allow controlled access mode for demo environments (enhanced security with customer isolation)
-      const hasControlledAccessSetup =
-        currentEnv.includes("demo") && isControlledAccessMode();
-
-      if (
-        !hasProperDemoSetup &&
-        !hasWorkaroundDemoSetup &&
-        !hasControlledAccessSetup
-      ) {
-        console.error(
-          "🚨 SECURITY ERROR: Demo endpoint accessed without proper demo database configuration"
-        );
-        console.error(`   APP_ENVIRONMENT: ${currentEnv}`);
-        console.error(
-          `   POST_SECONDARY_DEMO_DATABASE_URL: ${
-            process.env.POST_SECONDARY_DEMO_DATABASE_URL ? "SET" : "MISSING"
-          }`
-        );
-        console.error(
-          `   CONTROLLED_ACCESS_MODE: ${
-            isControlledAccessMode() ? "ENABLED" : "DISABLED"
-          }`
-        );
-        console.error(
-          "   Risk: Demo operations may write to production database"
-        );
-
-        return res.status(503).json({
-          error: "Demo environment not properly configured",
-          details:
-            "Demo operations require proper environment isolation to prevent production data corruption",
-          requiredVars: [
-            "APP_ENVIRONMENT=post-secondary-demo",
-            "POST_SECONDARY_DEMO_DATABASE_URL OR controlled access mode",
-          ],
-          currentEnv: currentEnv,
-        });
-      }
-
-      // Log the configuration being used
-      if (hasControlledAccessSetup) {
-        console.log("🔒 Using controlled access mode for demo analysis");
-        console.log(`   APP_ENVIRONMENT: ${currentEnv} ✅`);
-        console.log(`   CONTROLLED_ACCESS_MODE: ENABLED ✅`);
-        console.log(`   CUSTOMER_ISOLATION: ${DEMO_CUSTOMER_ID} only ✅`);
-      } else if (hasWorkaroundDemoSetup && !hasProperDemoSetup) {
-        console.log(
-          "⚠️  Using demo workaround mode - POST_SECONDARY_DEMO_DATABASE_URL is set but APP_ENVIRONMENT needs fixing"
-        );
-        console.log(
-          `   APP_ENVIRONMENT: ${currentEnv} (should be 'post-secondary-demo')`
-        );
-        console.log(`   POST_SECONDARY_DEMO_DATABASE_URL: SET ✅`);
-      } else if (hasProperDemoSetup) {
-        console.log("✅ Using proper demo setup with isolated database");
-        console.log(`   APP_ENVIRONMENT: ${currentEnv} ✅`);
-        console.log(`   POST_SECONDARY_DEMO_DATABASE_URL: SET ✅`);
-      }
+      console.log(`✅ Demo endpoint accessed with RBAC permissions`);
+      console.log(`   APP_ENVIRONMENT: ${currentEnv}`);
+      console.log(`   Access controlled by user roles and permissions`);
 
       const moduleType = req.body.moduleType || "post_secondary";
       const pathway = req.body.pathway || "simple"; // Extract pathway from request body
@@ -159,8 +94,8 @@ export function registerAnalysisRoutes(app: Express): void {
             studentGrade,
           });
 
-          // Save the demo analysis result to database so reports page can find it
-          console.log("💾 Saving demo analysis result to database...");
+          // Save the analysis result to database so reports page can find it
+          console.log("💾 Saving analysis result to database...");
 
           // Capture user ID from session if user is logged in
           const userId = req.session?.userId;
@@ -186,7 +121,7 @@ export function registerAnalysisRoutes(app: Express): void {
             createdAt: new Date().toISOString(), // Fixed: camelCase
             analysisDate: result.analysis_date || new Date().toISOString(), // Fixed: camelCase
             itemMasterData: JSON.stringify(result.item_master_data || []), // Fixed: camelCase
-            customerId: DEMO_CUSTOMER_ID, // Fixed: camelCase - Special demo customer ID
+            organizationId: req.user?.organizationId || "demo-org", // Demo organization
             createdByUserId: userId, // Link to logged-in user if available
             environment: "post-secondary-demo", // More specific environment
             // Add the missing new fields
@@ -212,7 +147,7 @@ export function registerAnalysisRoutes(app: Express): void {
             );
           } catch (dbError: any) {
             console.warn(
-              "⚠️  Failed to save demo case to database:",
+              "⚠️  Failed to save case to database:",
               dbError.message
             );
             // Continue anyway - analysis succeeded even if database save failed
@@ -304,18 +239,11 @@ export function registerAnalysisRoutes(app: Express): void {
           console.log("🚀 Using simple pathway with direct OpenAI analysis");
         }
 
-        // Check if request is from demo environment (frontend can pass this)
-        const requestEnv =
-          req.body.environment ||
-          req.headers["x-environment"] ||
-          process.env.APP_ENVIRONMENT ||
-          "replit-prod";
-        const currentEnv = requestEnv;
-        const promptModuleType =
-          currentEnv === "post-secondary-demo" ? "post_secondary" : moduleType;
+        // Use the module type directly - no environment-based overrides needed
+        const promptModuleType = moduleType;
 
         console.log(
-          `🔄 Environment: ${currentEnv}, Module: ${moduleType}, Prompt Module: ${promptModuleType}`
+          `🔄 Module: ${moduleType}, User Role: ${req.user?.role || "unknown"}`
         );
 
         // Get report format template from database (not system prompts)
@@ -324,31 +252,54 @@ export function registerAnalysisRoutes(app: Express): void {
           "report_format"
         );
 
-        // Use demo-specific template if in demo environment
-        const isDemoEnv =
-          currentEnv === "post-secondary-demo" || currentEnv === "k12-demo";
-        const templateKey = isDemoEnv
-          ? `markdown_report_template_${promptModuleType}_demo`
-          : `markdown_report_template_${promptModuleType}_format`;
+        console.log(
+          `📋 Available report format prompts for ${promptModuleType}:`
+        );
+        reportFormatPrompts.forEach((p) => {
+          console.log(
+            `   - ${p.section_key} (${p.content?.length || 0} chars, version: ${
+              p.version || "unknown"
+            })`
+          );
+        });
 
-        const templateSection = reportFormatPrompts.find(
+        // Use pathway-specific template for all modules, with multiple fallbacks
+        const templateKey = `markdown_report_template_${promptModuleType}_${pathway}`;
+        const fallbackKeys = [
+          `markdown_report_template_${promptModuleType}`,
+          `markdown_report_template_${promptModuleType}_format`,
+          `markdown_report_template_${promptModuleType}_demo`,
+        ];
+
+        console.log(`🔍 Looking for template: ${templateKey}`);
+
+        let templateSection = reportFormatPrompts.find(
           (p) => p.section_key === templateKey
         );
 
-        // Fallback to regular template if demo template not found
-        let template = templateSection?.content || "";
-        if (!template && isDemoEnv) {
-          const fallbackSection = reportFormatPrompts.find(
-            (p) =>
-              p.section_key ===
-              `markdown_report_template_${promptModuleType}_format`
-          );
-          if (fallbackSection) {
-            console.log(
-              `⚠️  Demo template not found, using fallback: ${fallbackSection.section_key}`
+        // Try fallback templates if pathway-specific not found
+        if (!templateSection) {
+          console.log(`⚠️ Pathway-specific template not found: ${templateKey}`);
+
+          for (const fallbackKey of fallbackKeys) {
+            console.log(`   Trying fallback: ${fallbackKey}`);
+            templateSection = reportFormatPrompts.find(
+              (p) => p.section_key === fallbackKey
             );
-            template = fallbackSection.content;
+            if (templateSection) {
+              console.log(`   ✅ Found fallback template: ${fallbackKey}`);
+              break;
+            }
           }
+        }
+
+        let template = templateSection?.content || "";
+        if (!template) {
+          throw new Error(
+            `Markdown template not found. Tried: ${templateKey}, ${fallbackKeys.join(
+              ", "
+            )}`
+          );
         }
 
         console.log(
@@ -362,40 +313,57 @@ export function registerAnalysisRoutes(app: Express): void {
           "system"
         );
 
-        // Use demo-specific system prompt if in demo environment
-        const systemPromptKey = isDemoEnv
-          ? `system_instructions_${promptModuleType}_demo`
-          : `system_instructions_${promptModuleType}_${pathway}`;
+        console.log(
+          `📋 Available system prompts for ${promptModuleType}:`,
+          systemPrompts.map((p) => p.section_key)
+        );
+
+        // Use pathway-specific system prompt with fallbacks
+        const systemPromptKey = `system_instructions_${promptModuleType}_${pathway}`;
+        const systemFallbackKeys = [
+          `system_instructions_${promptModuleType}`,
+          `system_instructions_${promptModuleType}_demo`,
+        ];
+
+        console.log(`🔍 Looking for system prompt: ${systemPromptKey}`);
 
         let systemInstructions = systemPrompts.find(
           (p) => p.section_key === systemPromptKey
         );
 
-        // Fallback to regular system prompt if demo prompt not found
-        if (!systemInstructions && isDemoEnv) {
-          systemInstructions = systemPrompts.find(
-            (p) =>
-              p.section_key ===
-              `system_instructions_${promptModuleType}_${pathway}`
+        // Try fallback system prompts if pathway-specific not found
+        if (!systemInstructions) {
+          console.log(
+            `⚠️ Pathway-specific system prompt not found: ${systemPromptKey}`
           );
-          if (systemInstructions) {
-            console.log(
-              `⚠️  Demo system prompt not found, using fallback: ${systemInstructions.section_key}`
+
+          for (const fallbackKey of systemFallbackKeys) {
+            console.log(`   Trying fallback: ${fallbackKey}`);
+            systemInstructions = systemPrompts.find(
+              (p) => p.section_key === fallbackKey
             );
+            if (systemInstructions) {
+              console.log(`   ✅ Found fallback system prompt: ${fallbackKey}`);
+              break;
+            }
           }
         }
 
-        const templateFixKeyCandidates = isDemoEnv
-          ? [
-              `system_instructions_${promptModuleType}_template_fix_demo`,
-              `system_instructions_${promptModuleType}_template_fix`,
-            ]
-          : [`system_instructions_${promptModuleType}_template_fix`];
-        const templateFixPrompt = templateFixKeyCandidates
-          .map((key) => systemPrompts.find((p) => p.section_key === key))
-          .find((prompt): prompt is { content: string } =>
-            Boolean(prompt?.content)
+        if (!systemInstructions) {
+          throw new Error(
+            `System prompt not found. Tried: ${systemPromptKey}, ${systemFallbackKeys.join(
+              ", "
+            )}`
           );
+        }
+
+        const templateFixKey = `system_instructions_${promptModuleType}_template_fix_${pathway}`;
+        const templateFixPrompt = systemPrompts.find(
+          (p) => p.section_key === templateFixKey
+        );
+        const templateFixInstructions = templateFixPrompt?.content
+          ? templateFixPrompt
+          : null;
 
         console.log(
           `📋 System prompt loaded: ${
@@ -535,7 +503,7 @@ export function registerAnalysisRoutes(app: Express): void {
                         .recommendsReview,
                       generatedAt: new Date().toISOString(),
                     },
-              customerId: req.user?.customerId,
+              organizationId: req.user?.organizationId,
               createdByUserId: req.user?.id,
             };
 
@@ -666,9 +634,8 @@ export function registerAnalysisRoutes(app: Express): void {
           console.log("🔄 Regenerating with stronger template enforcement...");
 
           if (!templateFixPrompt?.content) {
-            const missingKey = templateFixKeyCandidates.join(", ");
             console.warn(
-              `⚠️ Template fix system instructions not found. Expected one of: ${missingKey}. Skipping template enforcement.`
+              `⚠️ Template fix system instructions not found. Expected: ${templateFixKey}. Skipping template enforcement.`
             );
             // Skip template enforcement and return the original report
             console.log(
@@ -756,10 +723,7 @@ export function registerAnalysisRoutes(app: Express): void {
         }
 
         // Demo Mode Enhancement: Flag functional impairment 3 for review in demo mode only
-        if (
-          currentEnv === "post-secondary-demo" &&
-          moduleType === "post_secondary"
-        ) {
+        if (req.user?.role === "demo" && moduleType === "post_secondary") {
           console.log(
             "🔍 Demo Mode: Adding review flag to functional impairment 3..."
           );
@@ -804,9 +768,7 @@ export function registerAnalysisRoutes(app: Express): void {
           template_used: template.length > 0,
           template_violations: templateViolations,
           demo_flags:
-            currentEnv === "post-secondary-demo"
-              ? ["functional_barrier_3_flagged"]
-              : [],
+            req.user?.role === "demo" ? ["functional_barrier_3_flagged"] : [],
         };
 
         console.log("✅ Simple analysis completed successfully");

@@ -285,7 +285,7 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
 
       const environment =
         localStorage.getItem("app-environment") || "development";
-      // Always use regular endpoint - no separate demo database
+      // Use unified endpoint with RBAC permissions
       const endpoint = "/api/analyze-assessment";
 
       console.log(`Using endpoint: ${endpoint} (environment: ${environment})`);
@@ -294,7 +294,6 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Environment": "development",
         },
         body: JSON.stringify({
           caseId,
@@ -401,7 +400,8 @@ export const UnifiedAssessmentForm: React.FC<UnifiedAssessmentFormProps> = ({
                 ? "K-12"
                 : moduleType === "tutoring"
                 ? "Tutoring"
-                : "Post-Secondary"} Assessment
+                : "Post-Secondary"}{" "}
+              Assessment
             </h1>
           </div>
           {user && (

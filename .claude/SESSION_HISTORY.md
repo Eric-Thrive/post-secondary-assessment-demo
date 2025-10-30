@@ -732,3 +732,59 @@ npm run build
 
 ---
 ```
+
+## Session: K-12 Figma-Style Viewer Development (January 2025)
+
+### Summary
+Working on creating a K-12 report viewer that matches the visual style of the post-secondary FigmaEnhancedReportViewer and unified assessment form.
+
+### Status: ON HOLD - Awaiting Figma Mockup
+
+### Work Completed
+
+1. **Fixed Existing Report Components**
+   - Fixed `TutoringCardReportEditable.tsx` - removed Card components, added colored headers
+   - Fixed `K12CardReportEditable.tsx` - cleaned up imports, verified editing works
+   - Both now have consistent formatting with full-width colored headers
+
+2. **Created K-12 Figma Viewer Structure**
+   - Created `apps/web/src/components/report/K12FigmaStyleViewer.tsx` (basic placeholder)
+   - Integrated into `ReportContent.tsx` with "Figma View" button
+   - Set as default view for K-12 reports
+   - Shows THRIVE logo, blue gradient header, placeholder content
+
+3. **Design Requirements Identified**
+   - Alternating backgrounds: light blue and light orange
+   - White cards on colored backgrounds
+   - Sidebar navigation with yellow highlights
+   - Carousel for challenges and strategies (3 per slide)
+   - THRIVE brand colors: Navy Blue (#1297D2), Sky Blue (#96D7E1), Orange (#F89E54), Yellow (#FDE677)
+
+### Files Modified
+- `apps/web/src/components/report/ReportContent.tsx` - Added Figma view option
+- `apps/web/src/components/report/K12FigmaStyleViewer.tsx` - Created basic structure
+- `apps/web/src/components/report/TutoringCardReportEditable.tsx` - Fixed formatting
+- `apps/web/src/components/report/K12CardReportEditable.tsx` - Cleaned up
+
+### Next Steps (After Figma Mockup)
+1. Review Figma design mockup
+2. Implement full K12FigmaStyleViewer with:
+   - Complete sidebar navigation
+   - Section parsing and display
+   - Carousel components for challenges/strategies
+   - Print view
+3. Test thoroughly with real K-12 reports
+4. Polish transitions and interactions
+
+### Key Technical Details
+- Component uses same brand colors as UnifiedAssessmentForm
+- Alternates background colors per section (blue/orange)
+- Carousel shows 3 items per slide with expandable cards
+- Yellow background when cards expanded
+- Print view hides navigation, shows all content
+
+### Reference
+- Post-secondary viewer: `FigmaEnhancedReportViewer.tsx`
+- Assessment form: `UnifiedAssessmentForm.tsx`
+- User creating Figma mockup to finalize design before full implementation
+

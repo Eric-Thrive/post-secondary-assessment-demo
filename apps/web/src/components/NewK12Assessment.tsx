@@ -1,34 +1,20 @@
-import React, { useState } from 'react';
-import { PathwaySelector } from './PathwaySelector';
-import { UnifiedAssessmentForm } from './UnifiedAssessmentForm';
-
-type SelectedPathway = 'simple' | 'complex' | null;
+import React from "react";
+import { UnifiedAssessmentForm } from "./UnifiedAssessmentForm";
+import { useNavigate } from "react-router-dom";
 
 const NewK12Assessment = () => {
-  const [selectedPathway, setSelectedPathway] = useState<SelectedPathway>(null);
-
-  const handlePathwaySelect = (pathway: 'simple' | 'complex') => {
-    setSelectedPathway(pathway);
-  };
+  const navigate = useNavigate();
 
   const handleBack = () => {
-    setSelectedPathway(null);
+    navigate("/k12");
   };
 
-  if (selectedPathway) {
-    return (
-      <UnifiedAssessmentForm 
-        moduleType="k12" 
-        pathway={selectedPathway} 
-        onBack={handleBack}
-      />
-    );
-  }
-
+  // Default to simple pathway for all modules
   return (
-    <PathwaySelector 
+    <UnifiedAssessmentForm
       moduleType="k12"
-      onSelectPathway={handlePathwaySelect} 
+      pathway="simple"
+      onBack={handleBack}
     />
   );
 };

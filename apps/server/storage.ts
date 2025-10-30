@@ -908,7 +908,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     query += ` ORDER BY section_key`;
+
+    console.log(
+      `🔍 Querying prompts: module_type="${moduleType}", prompt_type="${promptType}", pathway_type="${pathwayType}"`
+    );
+    console.log(`📝 SQL: ${query}`);
+    console.log(`📊 Params:`, params);
+
     const result = await pool.query(query, params);
+
+    console.log(`✅ Found ${result.rows.length} prompts`);
+    if (result.rows.length > 0) {
+      console.log(
+        `📋 Prompt keys:`,
+        result.rows.map((r) => r.section_key)
+      );
+    }
 
     // Check if this is demo environment and we need to include demo templates
     const currentEnv = process.env.APP_ENVIRONMENT || "replit-prod";

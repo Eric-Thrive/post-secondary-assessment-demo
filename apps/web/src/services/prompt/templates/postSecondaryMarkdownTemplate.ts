@@ -1,4 +1,3 @@
-
 export const getPostSecondaryMarkdownTemplate = (): string => {
   return `# Post-Secondary Disability Accommodation Report
 
@@ -63,8 +62,6 @@ This post-secondary disability assessment analysis identifies functional barrier
 
 **Evidence Base:** [Evidence supporting this accommodation]
 
-**Implementation Notes:** [Specific guidance for faculty and staff]
-
 **Accommodation Category:** [Academic/Instructional/Auxiliary Aid]
 
 **Legal Basis:** [ADA/504 compliance reference]
@@ -99,7 +96,7 @@ This post-secondary disability assessment analysis identifies functional barrier
 - **Flagged Items**: Require additional validation before accommodation approval
 
 ### For Faculty and Instructors
-- **Understanding Accommodations**: Review accommodation letters and implementation notes
+- **Understanding Accommodations**: Review accommodation letters carefully
 - **Classroom Implementation**: Apply accommodations consistently across all coursework
 - **Communication**: Contact disability services with questions or concerns
 

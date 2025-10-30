@@ -79,7 +79,11 @@ export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   const isDemoUser = user.role === UserRole.DEMO;
 
   // Format last login date
-  const formatLastLogin = (date: Date) => {
+  const formatLastLogin = (date: Date | null) => {
+    if (!date) {
+      return "First login";
+    }
+
     const now = new Date();
     const diffInHours = Math.floor(
       (now.getTime() - date.getTime()) / (1000 * 60 * 60)

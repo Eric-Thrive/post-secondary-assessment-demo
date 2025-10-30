@@ -37,14 +37,33 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
     password: "",
     confirmPassword: "",
     email: "",
+    module: "post_secondary", // Default module
   });
   const [activeTab, setActiveTab] = useState("login");
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [showUsernameRecovery, setShowUsernameRecovery] = useState(false);
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [activeRecoveryView, setActiveRecoveryView] = useState<
+    "options" | "password" | "username"
+  >("options");
+  const [error, setError] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
+
+  const handleCloseCredentialsDialog = () => {
+    setShowCredentialsDialog(false);
+    setActiveRecoveryView("options");
+    setResetEmail("");
+    setRecoveryEmail("");
+  };
+
+  const openCredentialsDialog = (
+    view: "options" | "password" | "username" = "options"
+  ) => {
+    setActiveRecoveryView(view);
+    setShowCredentialsDialog(true);
+  };
 
   // Rate limiting configuration
   const MAX_LOGIN_ATTEMPTS = 5;
@@ -95,11 +114,52 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
       return;
     }
 
-    // Registration would be handled by the auth context
-    // For now, we'll show a message that registration is not available
-    alert(
-      "Registration is currently handled by administrators. Please contact support for account creation."
-    );
+    setIsRegistering(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: registerData.username.trim(),
+          email: registerData.email.trim(),
+          password: registerData.password,
+          role: "customer",
+          assignedModules: [registerData.module],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(
+          "Account created successfully! You can now login with your credentials."
+        );
+        // Switch to login tab
+        setRegisterData({
+          email: "",
+          username: "",
+          password: "",
+          confirmPassword: "",
+          module: "post_secondary",
+        });
+        // Optionally auto-fill login form
+        setLoginData({
+          username: registerData.username.trim(),
+          password: "",
+        });
+      } else {
+        setError(data.error || "Registration failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setError("Registration failed. Please try again.");
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -121,8 +181,7 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
         alert(
           "Password reset instructions have been sent to your email address if an account exists."
         );
-        setShowPasswordReset(false);
-        setResetEmail("");
+        handleCloseCredentialsDialog();
       } else {
         alert(
           data.error || "Failed to send password reset email. Please try again."
@@ -153,8 +212,7 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
         alert(
           "If an account exists with this email, your username has been sent to your email address."
         );
-        setShowUsernameRecovery(false);
-        setRecoveryEmail("");
+        handleCloseCredentialsDialog();
       } else {
         alert(
           data.error ||
@@ -173,7 +231,7 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
       <div
         className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 flex flex-col justify-center items-center p-8 text-white relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, ${THRIVE_COLORS.NAVY} 0%, ${THRIVE_COLORS.SKY_BLUE} 50%, ${THRIVE_COLORS.ORANGE} 100%)`,
+          background: THRIVE_COLORS.NAVY,
         }}
       >
         <div className="absolute inset-0 bg-black/10"></div>
@@ -259,14 +317,6 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
                     disabled={isRateLimited}
                     data-testid="input-username"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowUsernameRecovery(true)}
-                    className="text-blue-600 hover:text-blue-700 text-xs font-medium"
-                    data-testid="link-forgot-username"
-                  >
-                    Forgot your username?
-                  </button>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
@@ -304,15 +354,15 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
                     </>
                   )}
                 </Button>
-                {loginData.username.trim() && !isRateLimited && (
+                {!isRateLimited && (
                   <div className="text-center mt-4">
                     <button
                       type="button"
-                      onClick={() => setShowPasswordReset(true)}
+                      onClick={() => openCredentialsDialog()}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      data-testid="link-forgot-password"
+                      data-testid="link-forgot-credentials"
                     >
-                      Forgot your password?
+                      Forgot your credentials?
                     </button>
                   </div>
                 )}
@@ -328,6 +378,11 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
 
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="reg-username">Username</Label>
                   <Input
@@ -405,11 +460,39 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
                       </Alert>
                     )}
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="module-select">Select Module</Label>
+                  <select
+                    id="module-select"
+                    value={registerData.module}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({
+                        ...prev,
+                        module: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    data-testid="select-module"
+                  >
+                    <option value="post_secondary">
+                      Post-Secondary (College/University)
+                    </option>
+                    <option value="k12">
+                      K-12 (Elementary/Middle/High School)
+                    </option>
+                    <option value="tutoring">Tutoring</option>
+                  </select>
+                  <p className="text-xs text-gray-500">
+                    Choose the module you'll be using. This determines which
+                    types of reports you can create.
+                  </p>
+                </div>
                 <Button
                   type="submit"
                   className="w-full"
                   disabled={
-                    isLoading ||
+                    isRegistering ||
                     !registerData.username ||
                     !registerData.password ||
                     !registerData.email ||
@@ -417,7 +500,7 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
                   }
                   data-testid="button-create-account"
                 >
-                  {isLoading ? (
+                  {isRegistering ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating Account...
@@ -448,112 +531,158 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
         </div>
       </div>
 
-      {/* Password Reset Modal */}
-      <Dialog open={showPasswordReset} onOpenChange={setShowPasswordReset}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
-              Enter your email address and we'll send you instructions to reset
-              your password.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handlePasswordReset} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="reset-email">Email Address</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                placeholder="Enter your email address"
-                required
-                data-testid="input-reset-email"
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowPasswordReset(false)}
-                className="flex-1"
-                data-testid="button-cancel-reset"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading || !resetEmail.trim()}
-                className="flex-1"
-                data-testid="button-send-reset"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  "Send Reset Link"
-                )}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Username Recovery Modal */}
+      {/* Credentials Recovery Modal */}
       <Dialog
-        open={showUsernameRecovery}
-        onOpenChange={setShowUsernameRecovery}
+        open={showCredentialsDialog}
+        onOpenChange={(open) => {
+          if (open) {
+            setShowCredentialsDialog(true);
+          } else {
+            handleCloseCredentialsDialog();
+          }
+        }}
       >
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Recover Username</DialogTitle>
-            <DialogDescription>
-              Enter your email address and we'll send you your username if an
-              account exists.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleUsernameRecovery} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="recovery-email">Email Address</Label>
-              <Input
-                id="recovery-email"
-                type="email"
-                value={recoveryEmail}
-                onChange={(e) => setRecoveryEmail(e.target.value)}
-                placeholder="Enter your email address"
-                required
-                data-testid="input-recovery-email"
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowUsernameRecovery(false)}
-                className="flex-1"
-                data-testid="button-cancel-recovery"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading || !recoveryEmail.trim()}
-                className="flex-1"
-                data-testid="button-send-recovery"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  "Send Username"
-                )}
-              </Button>
-            </div>
-          </form>
+          {activeRecoveryView === "options" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Need help signing in?</DialogTitle>
+                <DialogDescription>
+                  Choose the option that best matches what you need to recover.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <Button
+                  className="w-full"
+                  onClick={() => setActiveRecoveryView("password")}
+                  data-testid="button-start-password-reset"
+                >
+                  Reset Password
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setActiveRecoveryView("username")}
+                  data-testid="button-start-username-recovery"
+                >
+                  Recover Username
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-4 text-center">
+                Still need help?{" "}
+                <a
+                  href="#"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Contact Support
+                </a>
+              </p>
+            </>
+          )}
+
+          {activeRecoveryView === "password" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Reset Password</DialogTitle>
+                <DialogDescription>
+                  Enter your email address and we'll send you instructions to
+                  reset your password.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email Address</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    required
+                    data-testid="input-reset-email"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveRecoveryView("options")}
+                    className="flex-1"
+                    data-testid="button-back-to-credentials-options"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !resetEmail.trim()}
+                    className="flex-1"
+                    data-testid="button-send-reset"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Reset Link"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {activeRecoveryView === "username" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Recover Username</DialogTitle>
+                <DialogDescription>
+                  Enter your email address and we'll send you your username if
+                  an account exists.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleUsernameRecovery} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="recovery-email">Email Address</Label>
+                  <Input
+                    id="recovery-email"
+                    type="email"
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    required
+                    data-testid="input-recovery-email"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveRecoveryView("options")}
+                    className="flex-1"
+                    data-testid="button-back-to-credentials-options-from-username"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !recoveryEmail.trim()}
+                    className="flex-1"
+                    data-testid="button-send-recovery"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Username"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

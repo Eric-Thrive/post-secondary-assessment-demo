@@ -67,10 +67,10 @@ Create or update your `.env` file for local development:
 
 ```bash
 # Local PostgreSQL (no password needed for local development)
-DATABASE_URL=postgresql://localhost:5432/post_secondary_demo
+DATABASE_URL=postgresql://localhost:5432/assessment_app
 
 # Or with your username
-DATABASE_URL=postgresql://$(whoami)@localhost:5432/post_secondary_demo
+DATABASE_URL=postgresql://$(whoami)@localhost:5432/assessment_app
 
 # Other required variables
 OPENAI_API_KEY=your-openai-api-key
@@ -117,7 +117,7 @@ You can easily switch between local and remote databases by changing the `DATABA
 
 ```bash
 # For local development
-DATABASE_URL=postgresql://localhost:5432/post_secondary_demo
+DATABASE_URL=postgresql://localhost:5432/assessment_app
 
 # For testing against production data
 DATABASE_URL=postgresql://user:password@your-neon-host/database?sslmode=require
@@ -126,11 +126,13 @@ DATABASE_URL=postgresql://user:password@your-neon-host/database?sslmode=require
 ## Verifying Your Setup
 
 1. **Start the development server:**
+
    ```bash
    npm run dev
    ```
 
 2. **Check the startup logs:**
+
    ```
    📊 Database Connection:
      - App Environment: development
@@ -140,11 +142,13 @@ DATABASE_URL=postgresql://user:password@your-neon-host/database?sslmode=require
    ```
 
 3. **Test the health endpoint:**
+
    ```bash
    curl http://localhost:5001/health
    ```
 
    Expected response:
+
    ```json
    {
      "status": "healthy",
@@ -163,6 +167,7 @@ DATABASE_URL=postgresql://user:password@your-neon-host/database?sslmode=require
 ### PostgreSQL won't start
 
 **macOS:**
+
 ```bash
 # Check if already running
 brew services list
@@ -175,6 +180,7 @@ tail -f /opt/homebrew/var/log/postgresql@16.log
 ```
 
 **Linux:**
+
 ```bash
 # Check status
 sudo systemctl status postgresql
@@ -217,12 +223,12 @@ psql postgres -c "CREATE USER $(whoami) SUPERUSER;"
 
 ## Performance Comparison
 
-| Operation | Remote Neon DB | Local PostgreSQL |
-|-----------|----------------|------------------|
-| Simple SELECT | 50-100ms | 1-5ms |
-| Session lookup | 60-120ms | 2-8ms |
-| Complex query | 150-300ms | 20-50ms |
-| Schema migration | 200-500ms | 10-30ms |
+| Operation        | Remote Neon DB | Local PostgreSQL |
+| ---------------- | -------------- | ---------------- |
+| Simple SELECT    | 50-100ms       | 1-5ms            |
+| Session lookup   | 60-120ms       | 2-8ms            |
+| Complex query    | 150-300ms      | 20-50ms          |
+| Schema migration | 200-500ms      | 10-30ms          |
 
 ## Next Steps
 
@@ -235,12 +241,14 @@ psql postgres -c "CREATE USER $(whoami) SUPERUSER;"
 If you installed background job processing:
 
 ### macOS
+
 ```bash
 brew install redis
 brew services start redis
 ```
 
 ### Ubuntu/Debian
+
 ```bash
 sudo apt install redis-server
 sudo systemctl start redis
@@ -248,6 +256,7 @@ sudo systemctl enable redis
 ```
 
 ### Verify Redis
+
 ```bash
 redis-cli ping
 # Should return: PONG
@@ -270,23 +279,26 @@ redis-cli ping
 
 - **Host:** localhost
 - **Port:** 5432
-- **Database:** post_secondary_demo
+- **Database:** assessment_app
 - **Username:** Your system username
 - **Password:** (leave empty for local development)
 
 ## Backup and Restore
 
 ### Create Backup
+
 ```bash
 pg_dump post_secondary_demo > backup.sql
 ```
 
 ### Restore Backup
+
 ```bash
 psql post_secondary_demo < backup.sql
 ```
 
 ### Copy Production Data to Local
+
 ```bash
 # Dump from remote
 pg_dump $REMOTE_DATABASE_URL > prod_backup.sql

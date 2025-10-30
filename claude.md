@@ -1,7 +1,9 @@
 # Project Overview
+
 AI-powered educational accessibility platform that dynamically adapts support resources for diverse learning needs through intelligent semantic matching and personalized recommendations. Generates comprehensive accommodation reports for K-12 and post-secondary educational contexts.
 
 **Core Modules:**
+
 - **K-12 Module**: Grade-specific analysis (K-5, 6-8, 9-12, Special Ed), observation templates, barrier identification
 - **Post-Secondary Module**: Higher education accommodations across Academic, Testing, Technology, and Additional Resources
 - **Tutoring Module**: Specialized tutoring assessment and support recommendations
@@ -9,6 +11,7 @@ AI-powered educational accessibility platform that dynamically adapts support re
 - **Report Management**: Version tracking, share tokens, multi-format export (PDF, Word, JSON)
 
 ## Unified Assessment UI
+
 - `UnifiedAssessmentForm` now supports `"k12"`, `"post_secondary"`, and `"tutoring"` modules with identical THRIVE branding (logo, gradient header, progress sidebar, gradient background, spacious white card layout).
 - Tutoring assessments route through `NewTutoringAssessment`, which mirrors the post-secondary/K-12 structure and relies on `PathwaySelector` auto-selecting the simple pathway.
 - Module-specific navigation still points to `/new-k12-assessment`, `/new-post-secondary-assessment`, and `/new-tutoring-assessment`; the legacy `NewAssessment` component has been removed.
@@ -17,6 +20,7 @@ AI-powered educational accessibility platform that dynamically adapts support re
 # Tech Stack
 
 ## Frontend
+
 - **React 18.3.1** with **TypeScript 5.6**
 - **Vite 5.4** for build/dev server
 - **Tailwind CSS 3.4** with **shadcn/ui** components
@@ -27,6 +31,7 @@ AI-powered educational accessibility platform that dynamically adapts support re
 - **Tesseract.js** for OCR, **PDF.js** for PDF extraction, **Mammoth.js** for Word docs
 
 ## Backend
+
 - **Node.js 20+** with **Express.js 4.21**
 - **TypeScript 5.6**
 - **Drizzle ORM 0.39** with **PostgreSQL**
@@ -37,23 +42,27 @@ AI-powered educational accessibility platform that dynamically adapts support re
 - **Google Cloud Storage** for document uploads
 
 ## Database
+
 - **PostgreSQL 16** (Railway or Replit-managed)
 - **Drizzle ORM** with migrations
 - Multi-tenancy support with customer isolation
 - Session-based authentication
 
 ## Deployment & Hosting
+
 - **Railway** (recommended) - Managed PostgreSQL, auto-deploy from GitHub
 - **Alternative**: Replit (legacy), Neon, Supabase
 - **Local Development**: VS Code with Railway CLI
 
 ## Build & Dev Tools
+
 - **Vite** (frontend), **esbuild** (backend)
 - **drizzle-kit** for migrations
 - **tsx** for TypeScript execution
 - **PostCSS + Autoprefixer**
 
 # Code Style & Conventions
+
 - Use **TypeScript** strictly across full stack
 - Prefer **functional React components** with hooks
 - Use **Tailwind CSS** utility classes (avoid inline styles)
@@ -75,17 +84,20 @@ AI-powered educational accessibility platform that dynamically adapts support re
 ## Quick Start Options
 
 ### Option 1: Railway (Recommended)
+
 See [QUICKSTART_RAILWAY.md](QUICKSTART_RAILWAY.md) for 15-minute setup guide.
 
 ### Option 2: Local Development
 
 ## Prerequisites
+
 - Node.js 20+
 - PostgreSQL 16 (optional if using Railway database)
 - npm or pnpm
 - Railway CLI (optional): `npm install -g @railway/cli`
 
 ## Initial Setup
+
 ```bash
 # Clone repository
 git clone <repo-url>
@@ -114,7 +126,9 @@ npm run dev
 ```
 
 ## Environment Variables
+
 Required in `.env`:
+
 - `DATABASE_URL` - Neon PostgreSQL connection string (all environments use same database)
 - `OPENAI_API_KEY` - OpenAI API key for GPT-4
 - `SESSION_SECRET` - Random string for session encryption
@@ -124,19 +138,22 @@ Required in `.env`:
 - `VITE_PI_REDACTOR_URL` - URL to PI Redactor tool (optional)
 
 **Login redirects & cookies**:
+
 - `LOGIN_REDIRECT_DEFAULT_URL` – fallback path when no demo/role match
 - `LOGIN_REDIRECT_POST_SECONDARY_DEMO_URL`, `LOGIN_REDIRECT_K12_DEMO_URL`, `LOGIN_REDIRECT_TUTORING_DEMO_URL`
 - `LOGIN_REDIRECT_ROLE_SYSTEM_ADMIN_URL`, `LOGIN_REDIRECT_ROLE_CUSTOMER_ADMIN_URL`, `LOGIN_REDIRECT_ROLE_TUTOR_URL`
 - Optional cross-subdomain session config: `SESSION_COOKIE_DOMAIN`, `SESSION_COOKIE_SAMESITE`
 
-**Note**: All environments (dev, prod, demo) use the same Neon database. The `APP_ENVIRONMENT` variable controls application behavior (demo mode = read-only, production = full access).
+**Note**: All environments use the same Neon database with Role-Based Access Control (RBAC). User permissions control access levels rather than environment variables.
 
 # Testing Guidelines
 
 ## Current Status
+
 ⚠️ **No formal testing framework currently configured**
 
 ## Testing Recommendations (To Be Implemented)
+
 - Add **Vitest** for frontend unit/integration tests
 - Add **React Testing Library** for component tests
 - Add **Playwright** or **Cypress** for E2E tests
@@ -144,6 +161,7 @@ Required in `.env`:
 - Tests should live alongside source files or in `__tests__/` directories
 
 ## Manual Testing Artifacts
+
 - `test-ai-handler.sh` - Bash script for AI response testing
 - `test-cascade-inference.md` - Test documentation
 - `test-k12-simple-pathway.md` - Test scenario docs
@@ -152,6 +170,7 @@ Required in `.env`:
 # Development Workflow
 
 ## Daily Development
+
 1. Pull latest from `main` before starting work
 2. Create feature branch: `git checkout -b feature/<name>`
 3. Make changes and test locally
@@ -162,6 +181,7 @@ Required in `.env`:
 8. Always sync from `main` before PR submission
 
 ## Database Changes
+
 ```bash
 # Modify schema in shared/schema.ts
 # Push changes to database (applies to the single shared database)
@@ -176,6 +196,7 @@ npx drizzle-kit generate
 **Note**: All environments use the same database. Schema changes via `db:push` apply to that database immediately. Migrations are for version control and reproducible deployments, not for separating dev/prod databases.
 
 ## Code Review Checklist
+
 - TypeScript types are properly defined
 - No `any` types unless absolutely necessary
 - Components follow existing patterns
@@ -205,9 +226,27 @@ npm run start            # Start production server
 npx tsx scripts/<script>.ts  # Run TypeScript scripts
 ```
 
+# Recent Updates & Learnings (Oct 2025)
+
+- **Security & repo hygiene**
+  - Removed a committed `connect.sid` cookie placeholder and clarified `cookies.txt` usage (runtime-only tokens).
+  - Wrapped the `/api` request logger with a `NODE_ENV === "development"` guard to avoid production noise.
+  - Deleted previously checked-in lcov coverage artifacts and the experimental “Revise Disability Report Template” app; added both paths to `.gitignore` to prevent reintroduction.
+- **Unified credential recovery**
+  - Consolidated "Forgot password" / "Forgot username" flows into a single modal on `UnifiedLoginPage` and the legacy `SimpleLogin` screen.
+  - Modal provides password reset and username recovery options, shares request handlers (`/api/auth/reset-password-request`, `/api/auth/forgot-username`), and resets state on close.
+  - Updated Vitest suites to follow the new interaction pattern.
+- **Module dashboard enhancements**
+  - Added top navigation with THRIVE branding, user details, and a working logout button sourced from `useAuth`.
+  - Module cards and admin quick actions now route with `useNavigate`; support/documentation buttons launch external resources or mailto links.
+  - Reworked layout into a 12-column grid with a status/help sidebar to reduce whitespace and surface platform health info.
+- **Testing guidance**
+  - Unit tests mock `useNavigate`/`useAuth` to assert routing and logout behavior. Run `npx vitest run src/components/auth/__tests__/UnifiedLoginPage.test.tsx src/components/__tests__/dashboard/ModuleDashboard.test.tsx` for quick verification.
+
 # Database Schema Overview
 
 ## Core Tables
+
 - `users` - User accounts with role-based access (system_admin, customer_admin, tutor)
 - `sessions` - Express session store
 - `assessmentCases` - Main case records with UUID-based tracking
@@ -218,6 +257,7 @@ npx tsx scripts/<script>.ts  # Run TypeScript scripts
 - `reportVersions` - Finalized report versions with change history
 
 ## Key Features
+
 - **Multi-tenancy**: Customer isolation via `customerId`
 - **Version tracking**: Report versions with finalization workflow
 - **Role-based access**: System admin, customer admin, tutor roles
@@ -229,28 +269,34 @@ npx tsx scripts/<script>.ts  # Run TypeScript scripts
 ## Replit-Specific Dependencies to Remove/Replace
 
 ### 1. Vite Plugins (Dev Dependencies)
+
 ```json
 // Remove from package.json devDependencies:
 "@replit/vite-plugin-cartographer": "^0.3.0"
 "@replit/vite-plugin-runtime-error-modal": "^0.0.3"
 ```
+
 **Action**: Remove from `vite.config.ts` and uninstall
 
 ### 2. Replit Configuration Files
+
 ```
 .replit           # Delete after migration
 .env.replit       # Delete (if exists)
 ```
 
 ### 3. Database Migration
+
 **Current**: Replit PostgreSQL 16
 **Options**:
+
 - **Neon** (recommended): Serverless PostgreSQL, already supported in code
 - **Supabase**: Already supported in code
 - **Railway/Render**: Managed PostgreSQL
 - **Self-hosted**: AWS RDS, GCP Cloud SQL, etc.
 
 **Steps**:
+
 1. Export data: `pg_dump $DATABASE_URL > backup.sql`
 2. Create new database on target platform
 3. Import data: `psql $NEW_DATABASE_URL < backup.sql`
@@ -258,29 +304,36 @@ npx tsx scripts/<script>.ts  # Run TypeScript scripts
 5. Update `APP_ENVIRONMENT` to match new platform
 
 ### 4. Google Cloud Storage
+
 **Current**: Via Replit integration `javascript_object_storage`
 **Migration**: Already using `@google-cloud/storage` directly
 **Action**:
+
 - Obtain GCP service account credentials JSON
 - Set `GOOGLE_APPLICATION_CREDENTIALS` environment variable
 - Or set credentials in code via `new Storage({ keyFilename: '...' })`
 
 ### 5. SendGrid
+
 **Current**: Via Replit integration `javascript_sendgrid`
 **Migration**: Already using `@sendgrid/mail` directly
 **Action**:
+
 - Ensure `SENDGRID_API_KEY` is set in environment
 - No code changes needed
 
 ### 6. Port Configuration
+
 **Current**: Multiple port mappings in `.replit`
 **Action**: Single port deployment (default 5000)
+
 - Remove port configuration complexity
 - Most platforms auto-assign ports
 
 ## Target Platform Recommendations
 
 ### Option A: Railway (Easiest Migration)
+
 ✅ Node.js + Express works out of the box
 ✅ Managed PostgreSQL included
 ✅ GitHub auto-deploy
@@ -288,18 +341,21 @@ npx tsx scripts/<script>.ts  # Run TypeScript scripts
 ✅ No code changes needed
 
 ### Option B: Render
+
 ✅ Similar to Railway
 ✅ Free tier for PostgreSQL
 ✅ Native Dockerfile support
 ✅ Health checks built-in
 
 ### Option C: Vercel
+
 ⚠️ Requires serverless refactor OR standalone mode
 ✅ Excellent for frontend + Neon PostgreSQL
 ✅ Fastest CDN and edge network
 ⚠️ Long-running processes (AI calls) may hit timeout limits
 
 ### Option D: AWS/GCP/Azure
+
 ✅ Production-grade scalability
 ✅ Full control
 ⚠️ More complex setup (ECS, App Engine, Cloud Run)
@@ -329,6 +385,7 @@ npx tsx scripts/<script>.ts  # Run TypeScript scripts
 # Review Process
 
 Before merging PRs:
+
 1. **Type checking passes**: `npm run check`
 2. **Build succeeds**: `npm run build`
 3. **Manual testing complete**: Test affected user flows
@@ -343,6 +400,7 @@ Before merging PRs:
 # Security & Compliance
 
 ## Critical Security Rules
+
 - **Never commit** `.env`, credentials, API keys
 - **Never log** sensitive user data (PII, assessment details)
 - **Always validate** user input with Zod schemas
@@ -353,18 +411,22 @@ Before merging PRs:
 - **Use HTTPS** in production (required)
 
 ## PII Handling
+
 This application processes educational assessments containing:
+
 - Student names and identifiers
 - Medical/psychological information
 - Educational records
 
 **Requirements**:
+
 - Encrypt data at rest and in transit
 - Implement audit logging for access
 - Follow FERPA/COPPA compliance guidelines
 - Provide data export/deletion capabilities
 
 ## Dependency Management
+
 ```bash
 # Check for vulnerabilities regularly
 npm audit
@@ -378,9 +440,11 @@ npm update
 # Architecture Notes
 
 ## Monorepo Structure (October 2025 Refactor)
+
 The project was refactored in October 2025 to use a tool-driven monorepo structure managed by **Turborepo**. This provides significant performance gains via caching and improves organization and scalability.
 
 The structure is now organized into `apps` and `packages`:
+
 ```
 /
 ├── apps/
@@ -398,6 +462,7 @@ The structure is now organized into `apps` and `packages`:
 - **`packages`**: Contain reusable code (libraries, configs) that the apps depend on.
 
 ## Key Design Patterns
+
 - **Multi-tenancy**: Customer isolation at database level
 - **Session-based auth**: PostgreSQL session store
 - **Database-driven prompts**: Real-time AI prompt updates
@@ -409,6 +474,7 @@ The structure is now organized into `apps` and `packages`:
 ## Performance Considerations
 
 ### Long-Running Operations
+
 - OpenAI API calls can be long-running (30s-2min for full reports)
 - Consider implementing job queue for async processing (Bull, BullMQ)
 - PDF processing in browser reduces server load
@@ -418,12 +484,14 @@ The structure is now organized into `apps` and `packages`:
 ### Caching & Performance Optimizations (Oct 2025)
 
 **Browser Caching Strategy**
+
 - HTML files: `no-cache` headers (always fresh)
 - JS/CSS assets: 1-day cache with ETags for smart validation
 - Static assets: Optimized with proper cache headers
 - Prevents stale content issues during development
 
 **Code Splitting**
+
 - React vendor bundle: ~350KB (React, React DOM, React Router)
 - UI vendor bundle: ~112KB (Radix UI components)
 - Query vendor bundle: React Query separate
@@ -431,12 +499,14 @@ The structure is now organized into `apps` and `packages`:
 - Main app bundle: Smaller, faster initial load
 
 **Build Optimizations**
+
 - esbuild minification for fastest builds
 - ES2020 target for modern browsers
 - Optimized dependency pre-bundling
 - Removed Replit-specific scripts (banner, etc.)
 
 **Development Server**
+
 - Cache-busting query parameters on HTML
 - Proper cache control headers on all responses
 - Hot Module Replacement (HMR) for fast iteration
@@ -445,12 +515,14 @@ The structure is now organized into `apps` and `packages`:
 
 **Slow Loading Without Cache Clear?**
 See [PERFORMANCE_TIPS.md](PERFORMANCE_TIPS.md) for:
+
 - Hard refresh shortcuts (Cmd+Shift+R / Ctrl+Shift+R)
 - Browser cache clearing methods
 - Environment reset procedures
 - Server management commands
 
 **Kill Multiple Dev Servers**
+
 ```bash
 # Kill all processes on port 5001
 lsof -ti:5001 | xargs kill -9
@@ -467,12 +539,14 @@ npm run dev
 If you see content without styling (text squeezed in a column, no colors/spacing):
 
 1. **Check Browser Console for JavaScript Errors**
+
    - Open DevTools (F12) → Console tab
    - Scroll to top or clear console and refresh
    - Look for RED error messages
    - JavaScript errors can prevent React components from rendering properly
 
 2. **Verify CSS is Loading**
+
    - Open DevTools (F12) → Network tab
    - Refresh page (Cmd/Ctrl+R)
    - Filter by "css"
@@ -480,6 +554,7 @@ If you see content without styling (text squeezed in a column, no colors/spacing
    - If missing or failed (red), check Vite server logs
 
 3. **Check Element Classes**
+
    - Open DevTools (F12) → Elements tab
    - Use element picker (cursor icon) to select visible element
    - Verify elements have Tailwind classes (e.g., `class="p-12 cursor-pointer"`)
@@ -487,6 +562,7 @@ If you see content without styling (text squeezed in a column, no colors/spacing
    - If classes exist but no styling, CSS isn't being applied
 
 4. **Force CSS Rebuild**
+
    ```bash
    # Touch CSS file to trigger rebuild
    touch apps/web/src/index.css
@@ -503,6 +579,7 @@ If you see content without styling (text squeezed in a column, no colors/spacing
    - Vite not processing Tailwind directives (check Vite logs)
 
 **Common Issues**
+
 - Multiple server instances causing port conflicts
 - Stale localStorage causing wrong environment
 - Shell environment variables overriding .env
@@ -513,19 +590,23 @@ If you see content without styling (text squeezed in a column, no colors/spacing
 # Support & Documentation
 
 ## Useful Resources
+
 - **Drizzle ORM**: https://orm.drizzle.team/
 - **shadcn/ui**: https://ui.shadcn.com/
 - **OpenAI API**: https://platform.openai.com/docs
 - **React Query**: https://tanstack.com/query/latest
 
 ## Getting Help
+
 - Check existing documentation in `docs/` (if exists)
 - Review test scenarios in `test-*.md` files
 - Check scripts in `scripts/` for examples
 - Review existing similar features for patterns
 
 ## Contributing
+
 When adding new features:
+
 1. Follow existing patterns in the codebase
 2. Add TypeScript types for everything
 3. Update this document if adding new conventions

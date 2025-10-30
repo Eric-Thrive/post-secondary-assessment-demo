@@ -1,23 +1,36 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Settings, Clock, Database, Brain, FileText } from 'lucide-react';
-import { useModule } from '@/contexts/ModuleContext';
+import { Zap, Settings, Clock, Database, Brain, FileText } from "lucide-react";
+import { useModule } from "@/contexts/ModuleContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PathwaySelectorProps {
-  onSelectPathway: (pathway: 'simple' | 'complex') => void;
-  moduleType: 'k12' | 'post_secondary' | 'tutoring';
+  onSelectPathway: (pathway: "simple" | "complex") => void;
+  moduleType: "k12" | "post_secondary" | "tutoring";
 }
 
-export const PathwaySelector: React.FC<PathwaySelectorProps> = ({ onSelectPathway, moduleType }) => {
+export const PathwaySelector: React.FC<PathwaySelectorProps> = ({
+  onSelectPathway,
+  moduleType,
+}) => {
   const { isDemoMode } = useModule();
-  
-  // Auto-skip pathway selection for tutoring module or demo environments
-  // Demo mode always uses simple pathway
-  if (moduleType === 'tutoring' || isDemoMode) {
+  const { user } = useAuth();
+
+  // Auto-skip pathway selection for tutoring module, demo environments, or non-dev users
+  // Only developers can see the pathway selection
+  const isDeveloper = user?.role === "developer";
+
+  if (moduleType === "tutoring" || isDemoMode || !isDeveloper) {
     React.useEffect(() => {
-      onSelectPathway('simple');
+      onSelectPathway("simple");
     }, [onSelectPathway]);
     return null;
   }
@@ -64,9 +77,9 @@ export const PathwaySelector: React.FC<PathwaySelectorProps> = ({ onSelectPathwa
             <p className="text-xs text-muted-foreground">
               Ideal for standard assessments where speed is important
             </p>
-            <Button 
-              className="w-full" 
-              onClick={() => onSelectPathway('simple')}
+            <Button
+              className="w-full"
+              onClick={() => onSelectPathway("simple")}
             >
               Use Simple Analysis
             </Button>
@@ -105,10 +118,10 @@ export const PathwaySelector: React.FC<PathwaySelectorProps> = ({ onSelectPathwa
             <p className="text-xs text-muted-foreground">
               Best for detailed assessments requiring specialized databases
             </p>
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               variant="outline"
-              onClick={() => onSelectPathway('complex')}
+              onClick={() => onSelectPathway("complex")}
             >
               Use Complex Analysis
             </Button>
@@ -118,7 +131,8 @@ export const PathwaySelector: React.FC<PathwaySelectorProps> = ({ onSelectPathwa
 
       <div className="mt-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Not sure which to choose? Start with Simple Analysis for faster results.
+          Not sure which to choose? Start with Simple Analysis for faster
+          results.
         </p>
       </div>
     </div>

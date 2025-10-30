@@ -15,8 +15,11 @@ export class ModuleAssignmentService {
   public static async getAssignedModules(
     user: Express.User
   ): Promise<ModuleType[]> {
-    // Developer and Admin roles have access to all modules
-    if (user.role === UserRole.DEVELOPER || user.role === UserRole.ADMIN) {
+    // Developer and System Admin roles have access to all modules
+    if (
+      user.role === UserRole.DEVELOPER ||
+      user.role === UserRole.SYSTEM_ADMIN
+    ) {
       return [ModuleType.K12, ModuleType.POST_SECONDARY, ModuleType.TUTORING];
     }
 
@@ -54,8 +57,10 @@ export class ModuleAssignmentService {
    * @returns boolean - true if user can switch modules, false otherwise
    */
   public static canSwitchModules(user: Express.User): boolean {
-    // Only Developer and Admin roles can switch between modules
-    return user.role === UserRole.DEVELOPER || user.role === UserRole.ADMIN;
+    // Only Developer and System Admin roles can switch between modules
+    return (
+      user.role === UserRole.DEVELOPER || user.role === UserRole.SYSTEM_ADMIN
+    );
   }
 
   /**
@@ -189,7 +194,7 @@ export class ModuleAssignmentService {
 
     switch (newRole) {
       case UserRole.DEVELOPER:
-      case UserRole.ADMIN:
+      case UserRole.SYSTEM_ADMIN:
         // Full access to all modules
         newModuleAssignments = [
           ModuleType.K12,

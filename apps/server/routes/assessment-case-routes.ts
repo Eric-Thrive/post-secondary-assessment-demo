@@ -55,7 +55,7 @@ export function registerAssessmentCaseRoutes(app: Express): void {
         // Enable sharing and get the share token
         const shareToken = await storage.enableReportSharing(
           caseId,
-          req.user?.customerId
+          req.user?.organizationId
         );
 
         if (!shareToken) {
@@ -93,7 +93,7 @@ export function registerAssessmentCaseRoutes(app: Express): void {
         // Disable sharing
         const success = await storage.disableReportSharing(
           caseId,
-          req.user?.customerId
+          req.user?.organizationId
         );
 
         if (!success) {
@@ -193,7 +193,7 @@ export function registerAssessmentCaseRoutes(app: Express): void {
           `🔍 Route Handler - req.customerFilter: "${req.customerFilter}"`
         );
         console.log(
-          `🔍 Route Handler - req.user.customerId: "${req.user?.customerId}"`
+          `🔍 Route Handler - req.user.organizationId: "${req.user?.organizationId}"`
         );
         console.log(
           `Fetching assessment cases for module: ${moduleType}, customer: ${req.customerFilter}`
@@ -352,14 +352,14 @@ export function registerAssessmentCaseRoutes(app: Express): void {
 
         // Check if user is admin or developer (no report limits for privileged users)
         const isAdmin =
-          req.user?.role === UserRole.ADMIN ||
+          req.user?.role === UserRole.SYSTEM_ADMIN ||
           req.user?.role === UserRole.DEVELOPER;
 
         if (!isAdmin) {
           // Check report limit before creating case (but don't increment yet)
           const reportCheck = await checkReportLimit(req.user!.id);
 
-          if (!reportCheck.canCreate) {
+          if (!reportCheck.canCreateReport) {
             // For demo users, provide upgrade information
             if (req.user?.role === UserRole.DEMO) {
               const { DemoSandboxService } = await import(
@@ -394,7 +394,7 @@ export function registerAssessmentCaseRoutes(app: Express): void {
         // Add customer isolation and user tracking to the case
         const caseData = {
           ...req.body,
-          customerId: req.user?.customerId,
+          organizationId: req.user?.organizationId,
           createdByUserId: req.user?.id,
         };
 
@@ -416,26 +416,52 @@ export function registerAssessmentCaseRoutes(app: Express): void {
     }
   );
 
-  // Get all assessment cases
-  app.get("/api/assessment-cases", async (req, res) => {
-    try {
-      const moduleType = req.query.moduleType as string;
-      if (moduleType) {
-        const cases = await storage.getAssessmentCases(moduleType);
-        res.json(cases);
-      } else {
-        // Get all cases if no module type specified
-        const postSecondaryCases = await storage.getAssessmentCases(
-          "post_secondary"
-        );
-        const k12Cases = await storage.getAssessmentCases("k12");
-        res.json([...postSecondaryCases, ...k12Cases]);
+  // DEPRECATED: Legacy endpoint - use /api/assessment-cases/:moduleType instead
+  // This endpoint is kept for backward compatibility but now requires authentication
+  app.get(
+    "/api/assessment-cases",
+    requireAuth,
+    requireCustomerAccess,
+    async (req, res) => {
+      try {
+        const moduleType = req.query.moduleType as string;
+
+        // Require authentication and customer filtering for data isolation
+        if (!req.customerFilter) {
+          return res.status(403).json({
+            error: "Access denied: Customer filter required",
+          });
+        }
+
+        if (moduleType) {
+          const cases = await storage.getAssessmentCases(
+            moduleType,
+            req.customerFilter
+          );
+          res.json(cases);
+        } else {
+          // Get all cases for this customer across all modules they have access to
+          const assignedModules = req.user?.assignedModules || [
+            "post_secondary",
+          ];
+          let allCases: any[] = [];
+
+          for (const module of assignedModules) {
+            const cases = await storage.getAssessmentCases(
+              module,
+              req.customerFilter
+            );
+            allCases = [...allCases, ...cases];
+          }
+
+          res.json(allCases);
+        }
+      } catch (error: any) {
+        console.error("Error fetching assessment cases:", error);
+        res.status(500).json({ error: "Failed to fetch assessment cases" });
       }
-    } catch (error: any) {
-      console.error("Error fetching assessment cases:", error);
-      res.json([]);
     }
-  });
+  );
 
   // Version Management Routes
   app.post("/api/assessment-cases/:id/finalize", async (req, res) => {
@@ -1135,68 +1161,8 @@ export function registerAssessmentCaseRoutes(app: Express): void {
     }
   );
 
-  // Environment switching endpoint
-  app.get("/api/environment", async (req, res) => {
-    try {
-      const currentEnv = process.env.APP_ENVIRONMENT || "replit-prod";
-      console.log(`🌍 Current environment: ${currentEnv}`);
-      res.json({ environment: currentEnv });
-    } catch (error: any) {
-      console.error("Error getting environment:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/environment", async (req, res) => {
-    try {
-      const { environment } = req.body;
-
-      if (
-        ![
-          "replit-prod",
-          "replit-dev",
-          "post-secondary-demo",
-          "k12-demo",
-          "tutoring-demo",
-          "tutoring",
-        ].includes(environment)
-      ) {
-        return res.status(400).json({ error: "Invalid environment" });
-      }
-
-      // Update the environment variable
-      process.env.APP_ENVIRONMENT = environment;
-
-      // Map demo environments to their respective databases
-      let dbEnvironment = environment;
-      if (environment === "post-secondary-demo") {
-        dbEnvironment = "replit-prod";
-      } else if (environment === "k12-demo") {
-        dbEnvironment = "k12-demo"; // K-12 demo gets its own database
-      } else if (environment === "tutoring-demo") {
-        dbEnvironment = "replit-prod"; // Tutoring demo uses main database
-      } else if (environment === "tutoring") {
-        dbEnvironment = "replit-prod"; // Tutoring production uses main database
-      }
-
-      // Reinitialize storage with new environment
-      const { reinitializeStorage } = await import("../storage");
-      await reinitializeStorage(dbEnvironment);
-
-      // Reinitialize database connection for environment-specific databases
-      const { reinitializeDatabase } = await import("../db");
-      await reinitializeDatabase();
-
-      res.json({
-        success: true,
-        environment,
-        message: `Switched to ${environment} environment`,
-      });
-    } catch (error: any) {
-      console.error("Error switching environment:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
+  // Environment switching endpoints removed - now using RBAC system
+  // Module access is controlled by user roles, not environment switching
 
   // Update assessment case report content
   app.post("/api/assessment-cases/edit", async (req, res) => {

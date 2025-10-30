@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUnifiedRouting } from "./useUnifiedRouting";
 import {
   AuthenticatedUser,
   LoginCredentials,
@@ -19,7 +18,6 @@ export const useUnifiedAuth = () => {
     isLoading,
     isAuthenticated,
   } = useAuth();
-  const { handlePostLoginNavigation } = useUnifiedRouting();
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Convert legacy user to AuthenticatedUser format
@@ -31,7 +29,7 @@ export const useUnifiedAuth = () => {
     return legacyUser as AuthenticatedUser;
   }, [legacyUser]);
 
-  // Enhanced login with unified routing
+  // Enhanced login with post-login navigation
   const unifiedLogin = useCallback(
     async (credentials: LoginCredentials): Promise<boolean> => {
       setAuthError(null);
@@ -44,9 +42,10 @@ export const useUnifiedAuth = () => {
         );
 
         if (success) {
-          // Handle post-login navigation
+          // Handle post-login navigation after a short delay to ensure user state is updated
           setTimeout(() => {
-            handlePostLoginNavigation();
+            // This will be handled by the App component's routing logic
+            window.location.href = "/";
           }, 100);
         }
 
@@ -58,7 +57,7 @@ export const useUnifiedAuth = () => {
         return false;
       }
     },
-    [login, handlePostLoginNavigation]
+    [login]
   );
 
   // Enhanced logout with cleanup

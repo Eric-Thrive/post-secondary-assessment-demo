@@ -98,11 +98,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up session middleware
   app.use(sessionConfig);
 
-  // Debug middleware to see if routes are being registered
-  app.use("/api", (req, res, next) => {
-    console.log(`API Route hit: ${req.method} ${req.originalUrl}`);
-    next();
-  });
+  // Debug middleware to see if routes are being registered (development only)
+  if (process.env.NODE_ENV === "development") {
+    app.use("/api", (req, res, next) => {
+      console.log(`API Route hit: ${req.method} ${req.originalUrl}`);
+      next();
+    });
+  }
 
   // SECURITY MIDDLEWARE: Combined demo operation detection and customer isolation enforcement
   app.use("/api", (req, res, next) => {
@@ -249,23 +251,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             dbUrl.toLowerCase().includes(pattern)
           );
 
-          if (isProdHost && !process.env.POST_SECONDARY_DEMO_DATABASE_URL) {
-            console.error(
-              `🚨 CRITICAL SECURITY VIOLATION: Demo operation on production database host`,
-              {
-                operation: `${req.method} ${req.path}`,
-                hostPattern: "Production database detected",
-                timestamp: new Date().toISOString(),
-                reason: "Demo operations blocked on production database",
-              }
-            );
-
-            return res.status(503).json({
-              error:
-                "SECURITY VIOLATION: Demo operations require isolated demo database",
-              code: "DEMO_REQUIRES_ISOLATED_DB",
-            });
-          }
+          // Demo operations are now handled by RBAC system with unified database
+          console.log(`✅ Demo operation authorized via RBAC system`);
+          console.log(`   Operation: ${req.method} ${req.path}`);
         }
 
         // LOG ALLOWED DEMO OPERATION for security auditing

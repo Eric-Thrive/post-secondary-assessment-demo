@@ -30,12 +30,8 @@ export const PostSecondaryReviewEditReports: React.FC = () => {
   const [changes, setChanges] = useState<any[]>([]);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Detect demo environment and use appropriate endpoint
-  const environment = localStorage.getItem('app-environment') || 'replit-prod';
-  const isDemoEnvironment = environment.includes('demo');
-  const endpoint = isDemoEnvironment 
-    ? '/api/demo-assessment-cases/post_secondary'
-    : '/api/assessment-cases-direct/post_secondary';
+  // Use the protected endpoint with proper customer filtering
+  const endpoint = '/api/assessment-cases/post_secondary';
 
   // Check for cached case data from navigation for optimistic loading
   const getCachedCaseForInitialData = () => {

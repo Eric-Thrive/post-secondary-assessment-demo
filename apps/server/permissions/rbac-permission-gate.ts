@@ -80,7 +80,7 @@ export class RBACPermissionGate implements PermissionGate {
           reportLimit: undefined, // Unlimited
         };
 
-      case UserRole.ADMIN:
+      case UserRole.SYSTEM_ADMIN:
         return {
           ...basePermissions,
           canSwitchModules: true,

@@ -27,6 +27,7 @@ export class OptimizedQueries {
         role: users.role,
         assignedModules: users.assignedModules,
         organizationId: users.organizationId,
+        customerId: users.customerId,
         reportCount: users.reportCount,
         maxReports: users.maxReports,
         isActive: users.isActive,

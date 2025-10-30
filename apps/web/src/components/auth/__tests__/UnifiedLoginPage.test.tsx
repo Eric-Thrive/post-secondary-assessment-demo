@@ -263,11 +263,8 @@ describe("UnifiedLoginPage", () => {
     it("should open password reset dialog", () => {
       render(<UnifiedLoginPage />);
 
-      fireEvent.change(screen.getByTestId("input-username"), {
-        target: { value: "testuser" },
-      });
-
-      fireEvent.click(screen.getByTestId("link-forgot-password"));
+      fireEvent.click(screen.getByTestId("link-forgot-credentials"));
+      fireEvent.click(screen.getByTestId("button-start-password-reset"));
 
       expect(screen.getByText("Reset Password")).toBeInTheDocument();
       expect(screen.getByTestId("input-reset-email")).toBeInTheDocument();
@@ -284,10 +281,8 @@ describe("UnifiedLoginPage", () => {
 
       render(<UnifiedLoginPage />);
 
-      fireEvent.change(screen.getByTestId("input-username"), {
-        target: { value: "testuser" },
-      });
-      fireEvent.click(screen.getByTestId("link-forgot-password"));
+      fireEvent.click(screen.getByTestId("link-forgot-credentials"));
+      fireEvent.click(screen.getByTestId("button-start-password-reset"));
 
       fireEvent.change(screen.getByTestId("input-reset-email"), {
         target: { value: "test@example.com" },
@@ -312,7 +307,10 @@ describe("UnifiedLoginPage", () => {
     it("should open username recovery dialog", () => {
       render(<UnifiedLoginPage />);
 
-      fireEvent.click(screen.getByTestId("link-forgot-username"));
+      fireEvent.click(screen.getByTestId("link-forgot-credentials"));
+      fireEvent.click(
+        screen.getByTestId("button-start-username-recovery")
+      );
 
       expect(screen.getByText("Recover Username")).toBeInTheDocument();
       expect(screen.getByTestId("input-recovery-email")).toBeInTheDocument();
@@ -328,7 +326,10 @@ describe("UnifiedLoginPage", () => {
 
       render(<UnifiedLoginPage />);
 
-      fireEvent.click(screen.getByTestId("link-forgot-username"));
+      fireEvent.click(screen.getByTestId("link-forgot-credentials"));
+      fireEvent.click(
+        screen.getByTestId("button-start-username-recovery")
+      );
 
       fireEvent.change(screen.getByTestId("input-recovery-email"), {
         target: { value: "test@example.com" },
@@ -387,7 +388,7 @@ describe("UnifiedLoginPage", () => {
       expect(screen.getByTestId("input-username")).toBeInTheDocument();
       expect(screen.getByTestId("input-password")).toBeInTheDocument();
       expect(screen.getByTestId("button-sign-in")).toBeInTheDocument();
-      expect(screen.getByTestId("link-forgot-username")).toBeInTheDocument();
+      expect(screen.getByTestId("link-forgot-credentials")).toBeInTheDocument();
     });
   });
 });

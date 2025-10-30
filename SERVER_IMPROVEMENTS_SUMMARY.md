@@ -9,17 +9,20 @@ We've implemented comprehensive improvements to address server reliability and s
 ### 1. Reliability Improvements Module ([server/reliability-improvements.ts](server/reliability-improvements.ts))
 
 **What it does:**
+
 - Request timeout middleware (30s for regular requests)
 - Graceful shutdown handlers (SIGTERM, SIGINT)
 - Database health check endpoint
 - Conditional logging (debug logs only in development)
 
 **Impact:**
+
 - 80% reduction in stuck/hanging requests
 - Clean server shutdown without data corruption
 - Faster production performance (reduced I/O from logging)
 
 **Usage:**
+
 ```bash
 # Check server health
 curl http://localhost:5001/health
@@ -35,12 +38,14 @@ curl http://localhost:5001/health
 ### 2. Server Configuration Updates ([server/index.ts](server/index.ts))
 
 **Changes:**
+
 - Added request timeout middleware
 - Configured server timeouts (3 min for AI operations)
 - Implemented graceful shutdown
 - Added health check endpoint at `/health`
 
 **Impact:**
+
 - No more hanging requests
 - Proper cleanup on restart/shutdown
 - Better handling of long AI operations
@@ -48,6 +53,7 @@ curl http://localhost:5001/health
 ### 3. Database Connection Optimization ([server/db.ts](server/db.ts))
 
 **Changes:**
+
 ```typescript
 // Before
 max: 10 connections
@@ -62,6 +68,7 @@ allowExitOnIdle: true // Clean process exit
 ```
 
 **Impact:**
+
 - 30-50% faster database operations
 - Better handling of concurrent requests
 - Automatic connection recycling
@@ -69,12 +76,14 @@ allowExitOnIdle: true // Clean process exit
 ### 4. Session Store Optimization ([server/auth.ts](server/auth.ts))
 
 **Changes:**
+
 - Reuse database connection pool (instead of creating new connections)
 - Added session pruning (cleanup every 60 seconds)
 - Enabled rolling sessions (reset expiration on activity)
 - Improved cookie security settings
 
 **Impact:**
+
 - 50% reduction in session-related latency
 - Automatic cleanup of old sessions
 - Better security (sameSite, secure cookies in production)
@@ -82,11 +91,13 @@ allowExitOnIdle: true // Clean process exit
 ### 5. Logging Overhead Reduction ([server/storage.ts](server/storage.ts))
 
 **Changes:**
+
 - Replaced all `console.log` with conditional logger
 - Debug logs only run in development mode
 - Structured logging with proper levels (debug, info, warn, error)
 
 **Impact:**
+
 - 20-30% faster response times in production
 - Cleaner logs with proper log levels
 - Easier debugging in development
@@ -94,6 +105,7 @@ allowExitOnIdle: true // Clean process exit
 ### 6. Vite Configuration Optimization ([vite.config.ts](vite.config.ts))
 
 **Changes:**
+
 - Disabled source maps in production builds
 - Added code splitting (vendor chunks)
 - Extended proxy timeout (3 min for AI operations)
@@ -101,6 +113,7 @@ allowExitOnIdle: true // Clean process exit
 - Dependency pre-bundling
 
 **Impact:**
+
 - 40% faster HMR (Hot Module Replacement)
 - Smaller production bundles
 - Faster development rebuilds
@@ -108,6 +121,7 @@ allowExitOnIdle: true // Clean process exit
 ### 7. Local PostgreSQL Setup Guide ([LOCAL_SETUP.md](LOCAL_SETUP.md))
 
 **What it provides:**
+
 - Complete guide for setting up local PostgreSQL
 - Installation instructions for macOS, Linux, Windows
 - Database initialization and migration steps
@@ -115,6 +129,7 @@ allowExitOnIdle: true // Clean process exit
 - Performance comparison (local vs remote)
 
 **Impact:**
+
 - 50-200ms faster queries (no network latency)
 - Ability to work offline
 - Faster development iterations
@@ -122,6 +137,7 @@ allowExitOnIdle: true // Clean process exit
 ### 8. Background Job Processing ([server/job-queue.ts](server/job-queue.ts), [server/job-worker.ts](server/job-worker.ts))
 
 **What it does:**
+
 - Async processing of long-running AI operations
 - Job queue with Redis backend
 - Progress tracking and status updates
@@ -129,6 +145,7 @@ allowExitOnIdle: true // Clean process exit
 - Graceful job cancellation
 
 **Impact:**
+
 - Non-blocking API requests (immediate response)
 - Better user experience (progress updates)
 - Improved server reliability (no timeout issues)
@@ -138,15 +155,15 @@ allowExitOnIdle: true // Clean process exit
 
 ## 📊 Expected Performance Improvements
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Simple database query | 50-100ms | 30-60ms | **40% faster** |
-| Session lookup | 60-120ms | 30-60ms | **50% faster** |
-| Hanging requests | Common | Rare (auto-timeout) | **80% reduction** |
-| Production logging overhead | High | Minimal | **20-30% faster** |
-| Dev server HMR | 2-5s | 1-3s | **40% faster** |
-| AI request blocking | Full block | Non-blocking | **Immediate response** |
-| Local DB queries | 50-100ms | 1-5ms | **90% faster** |
+| Metric                      | Before     | After               | Improvement            |
+| --------------------------- | ---------- | ------------------- | ---------------------- |
+| Simple database query       | 50-100ms   | 30-60ms             | **40% faster**         |
+| Session lookup              | 60-120ms   | 30-60ms             | **50% faster**         |
+| Hanging requests            | Common     | Rare (auto-timeout) | **80% reduction**      |
+| Production logging overhead | High       | Minimal             | **20-30% faster**      |
+| Dev server HMR              | 2-5s       | 1-3s                | **40% faster**         |
+| AI request blocking         | Full block | Non-blocking        | **Immediate response** |
+| Local DB queries            | 50-100ms   | 1-5ms               | **90% faster**         |
 
 ## 🚀 Getting Started
 
@@ -160,6 +177,7 @@ npm run dev
 ```
 
 You'll immediately see:
+
 - ✅ Faster database queries
 - ✅ Request timeouts working
 - ✅ Graceful shutdown
@@ -180,13 +198,14 @@ brew install postgresql@16  # macOS
 createdb post_secondary_demo
 
 # Update .env
-DATABASE_URL=postgresql://localhost:5432/post_secondary_demo
+DATABASE_URL=postgresql://localhost:5432/assessment_app
 
 # Initialize schema
 npm run db:push
 ```
 
 **Benefits:**
+
 - 50-200ms faster queries
 - Work offline
 - Faster development
@@ -205,6 +224,7 @@ npm run worker
 ```
 
 **Benefits:**
+
 - Non-blocking AI requests
 - Progress tracking
 - Better scalability
@@ -218,6 +238,7 @@ curl http://localhost:5001/health
 ```
 
 Should return:
+
 ```json
 {
   "status": "healthy",
@@ -352,15 +373,18 @@ node --max-old-space-size=2048 server/index.ts
 ## 📚 Next Steps
 
 1. **Monitor Performance**
+
    - Use the health check endpoint
    - Monitor database connection pool usage
    - Track request latencies
 
 2. **Consider Local PostgreSQL**
+
    - Significantly faster development
    - Follow [LOCAL_SETUP.md](LOCAL_SETUP.md)
 
 3. **Enable Background Jobs (Optional)**
+
    - Better handling of long AI operations
    - Follow [BACKGROUND_JOBS.md](BACKGROUND_JOBS.md)
 

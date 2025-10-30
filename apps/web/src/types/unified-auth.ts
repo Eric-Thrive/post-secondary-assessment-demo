@@ -13,7 +13,7 @@ export interface AuthenticatedUser {
   organizationId?: string;
   moduleAccess: ModuleAccess[];
   preferences: UserPreferences;
-  lastLogin: Date;
+  lastLogin: Date | null;
   demoExpiry?: Date;
 }
 

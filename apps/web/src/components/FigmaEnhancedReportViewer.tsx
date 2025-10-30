@@ -100,7 +100,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
   const { logout, isAuthenticated, getLogoutRedirectPath } = useAuth();
 
   // In the simplified RBAC system, demo mode will be handled by user roles
-  const isDemoMode =false; 
+  const isDemoMode = false;
 
   // Navigation function to Review & Edit section
   const handleEditClick = (sectionId: string) => {
@@ -643,29 +643,40 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
 
                   {/* Review */}
                   <button
-                    onClick={() => handleEditClick("review")}
+                    onClick={() => {
+                      toast({
+                        title: "Premium Feature",
+                        description: (
+                          <div>
+                            <p className="mb-2">
+                              This feature is available with a paid plan.
+                            </p>
+                            <p>
+                              Contact sales:{" "}
+                              <a
+                                href="mailto:eric@thriveiep.com"
+                                className="text-blue-600 underline"
+                              >
+                                eric@thriveiep.com
+                              </a>
+                            </p>
+                          </div>
+                        ),
+                        duration: 5000,
+                      });
+                    }}
                     className="w-full text-left p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                     style={{
-                      backgroundColor: isDemoMode ? "#e5e7eb" : "#f3f4f6",
-                      borderColor: isDemoMode ? "#9ca3af" : "#d1d5db",
-                      color: isDemoMode ? "#9ca3af" : "#374151",
-                      opacity: isDemoMode ? 0.6 : 1,
-                      cursor: isDemoMode ? "not-allowed" : "pointer",
+                      backgroundColor: "#e5e7eb",
+                      borderColor: "#9ca3af",
+                      color: "#9ca3af",
+                      opacity: 0.6,
+                      cursor: "not-allowed",
                     }}
                     data-testid="button-review"
                   >
                     <div className="flex items-center gap-3">
-                      {isDemoMode ? (
-                        <Lock
-                          className="h-5 w-5"
-                          style={{ color: "#9ca3af" }}
-                        />
-                      ) : (
-                        <Edit2
-                          className="h-5 w-5"
-                          style={{ color: "#6b7280" }}
-                        />
-                      )}
+                      <Lock className="h-5 w-5" style={{ color: "#9ca3af" }} />
                       <div
                         className="font-bold text-left"
                         style={{
@@ -673,7 +684,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                             'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
                         }}
                       >
-                        Review {isDemoMode && "(Paid Plans)"}
+                        Review (Paid Plans)
                       </div>
                     </div>
                   </button>
@@ -775,19 +786,23 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
               <div className="px-0">
                 {/* Student Information View */}
                 {currentView === "student-information" && (
-                  <div className="h-[600px] relative">
-                    <div className="px-6 pt-6 pb-4">
-                      <div className="flex items-center gap-3">
+                  <div className="min-h-screen relative flex flex-col items-center justify-start pt-20">
+                    {/* Header - centered above card */}
+                    <div
+                      className="mb-8"
+                      style={{ maxWidth: "1200px", width: "100%" }}
+                    >
+                      <div className="flex items-center justify-center gap-3">
                         <img
                           src={StudentHeaderIcon}
                           alt="Student Information"
-                          className="h-5 w-5"
+                          className="h-7 w-7"
                           style={{
                             filter: `brightness(0) saturate(100%) invert(17%) sepia(97%) saturate(1392%) hue-rotate(195deg) brightness(94%) contrast(88%)`,
                           }}
                         />
                         <h2
-                          className="text-xl font-bold text-gray-900"
+                          className="text-2xl font-bold text-gray-900"
                           style={{
                             fontFamily:
                               'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
@@ -798,27 +813,17 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       </div>
                     </div>
 
-                    {/* Full-Width Sky Blue Background Block - With minimal margins */}
+                    {/* Student Information Card - White card only */}
                     <div
-                      className="absolute"
+                      className="bg-white rounded-xl shadow-lg relative z-10"
                       style={{
-                        backgroundColor: "rgba(150, 215, 225, 0.15)",
-                        top: "0px", // Start from top to include header
-                        bottom: "0px",
-                        left: "2px", // Minimal left margin
-                        right: "2px", // Minimal right margin
-                      }}
-                    ></div>
-
-                    {/* Student Information Card - Consistent with Document Review spacing */}
-                    <div
-                      className="mx-6 mb-6 bg-white rounded-xl shadow-lg relative z-10"
-                      style={{
-                        padding: "2.5rem 3rem",
+                        maxWidth: "1200px",
+                        margin: "0 auto",
+                        padding: "0",
                         height: "auto",
                       }}
                     >
-                      <div className="space-y-5">
+                      <div className="space-y-4" style={{ padding: "2.8rem" }}>
                         <div className="flex items-baseline">
                           <label
                             className="text-lg font-bold"
@@ -826,7 +831,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                               color: "#1e293b",
                               fontFamily:
                                 "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-                              minWidth: "200px",
+                              minWidth: "140px",
                             }}
                           >
                             Unique ID:
@@ -851,7 +856,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                               color: "#1e293b",
                               fontFamily:
                                 "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-                              minWidth: "200px",
+                              minWidth: "140px",
                             }}
                           >
                             Program/Major:
@@ -882,7 +887,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                               color: "#1e293b",
                               fontFamily:
                                 "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-                              minWidth: "200px",
+                              minWidth: "140px",
                             }}
                           >
                             Report Author:
@@ -906,7 +911,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                               color: "#1e293b",
                               fontFamily:
                                 "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-                              minWidth: "200px",
+                              minWidth: "140px",
                             }}
                           >
                             Date Issued:
@@ -945,7 +950,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                               color: "#1e293b",
                               fontFamily:
                                 "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-                              minWidth: "200px",
+                              minWidth: "140px",
                             }}
                           >
                             Assessment Status:
@@ -970,8 +975,11 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       </div>
                     </div>
 
-                    {/* Next Section Button - Positioned at bottom right of section */}
-                    <div className="absolute bottom-6 right-6 z-20">
+                    {/* Next Section Button - bottom right of card */}
+                    <div
+                      className="mt-6 flex justify-end"
+                      style={{ maxWidth: "1200px", width: "100%" }}
+                    >
                       <button
                         className="text-white px-6 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2"
                         style={{
@@ -990,21 +998,24 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
 
                 {/* Document Review View */}
                 {currentView === "document-review" && (
-                  <div className="h-[600px] relative">
-                    {/* Header with Document Review title and icon */}
-                    <div className="px-6 pt-6 pb-4">
-                      <div className="flex items-center gap-3">
+                  <div className="min-h-screen relative flex flex-col items-center justify-start pt-20">
+                    {/* Header - centered above card */}
+                    <div
+                      className="mb-8"
+                      style={{ maxWidth: "800px", width: "100%" }}
+                    >
+                      <div className="flex items-center justify-center gap-3">
                         <img
                           src={DocumentReviewHeaderIcon}
                           alt="Document Review"
-                          className="h-6 w-6"
+                          className="h-7 w-7"
                           style={{
                             filter:
                               "brightness(0) saturate(100%) invert(67%) sepia(89%) saturate(1951%) hue-rotate(346deg) brightness(101%) contrast(96%)",
                           }}
                         />
                         <h3
-                          className="text-xl font-bold text-gray-900"
+                          className="text-2xl font-bold text-gray-900"
                           style={{
                             fontFamily:
                               'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
@@ -1015,23 +1026,13 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       </div>
                     </div>
 
-                    {/* Full-Width Orange Background Block - With minimal margins */}
-                    <div
-                      className="absolute"
-                      style={{
-                        backgroundColor: "rgba(248, 158, 84, 0.15)",
-                        top: "0px", // Start from top to include header
-                        bottom: "0px",
-                        left: "2px", // Minimal left margin
-                        right: "2px", // Minimal right margin
-                      }}
-                    ></div>
-
                     {/* Document Table - Clean White Background */}
                     <div
-                      className="mx-6 mb-6 bg-white rounded-lg shadow-sm relative z-10"
+                      className="bg-white rounded-xl shadow-lg relative z-10"
                       style={{
-                        height: "calc(100% - 140px)",
+                        maxWidth: "800px",
+                        margin: "0 auto",
+                        width: "100%",
                       }}
                     >
                       <div className="p-4 space-y-3">
@@ -1107,9 +1108,11 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       </div>
                     </div>
 
-                    {/* Bottom Navigation Bar - Only Finished Button on Right */}
-                    <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center z-20">
-                      <div></div>
+                    {/* Next Section Button - bottom right of card */}
+                    <div
+                      className="mt-6 flex justify-end"
+                      style={{ maxWidth: "800px", width: "100%" }}
+                    >
                       <button
                         className="text-white px-6 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2"
                         style={{
@@ -1128,30 +1131,31 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
 
                 {/* Functional Impact View */}
                 {currentView === "functional-impact" && (
-                  <div className="h-[600px] relative">
-                    {/* Header */}
-                    <div className="px-6 pt-6 pb-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={FunctionalImpactHeaderIcon}
-                            alt="Functional Impact"
-                            className="h-6 w-6"
-                            style={{
-                              filter:
-                                "brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1352%) hue-rotate(176deg) brightness(94%) contrast(91%)",
-                            }}
-                          />
-                          <h3
-                            className="text-xl font-bold text-gray-900"
-                            style={{
-                              fontFamily:
-                                'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-                            }}
-                          >
-                            2. Functional Impact Summary
-                          </h3>
-                        </div>
+                  <div className="min-h-screen relative flex flex-col items-center justify-start pt-20">
+                    {/* Header - centered above card */}
+                    <div
+                      className="mb-8"
+                      style={{ maxWidth: "1000px", width: "100%" }}
+                    >
+                      <div className="flex items-center justify-center gap-3">
+                        <img
+                          src={FunctionalImpactHeaderIcon}
+                          alt="Functional Impact"
+                          className="h-7 w-7"
+                          style={{
+                            filter:
+                              "brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1352%) hue-rotate(176deg) brightness(94%) contrast(91%)",
+                          }}
+                        />
+                        <h3
+                          className="text-2xl font-bold text-gray-900"
+                          style={{
+                            fontFamily:
+                              'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
+                          }}
+                        >
+                          2. Functional Impact Summary
+                        </h3>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1162,7 +1166,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                             );
                             handleEditClick("functional-impact");
                           }}
-                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-30 relative cursor-pointer"
+                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer ml-auto"
                           title="Edit this section"
                           style={{ pointerEvents: "auto" }}
                         >
@@ -1171,23 +1175,13 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       </div>
                     </div>
 
-                    {/* Full-Width Sky Blue Background Block - With minimal margins */}
-                    <div
-                      className="absolute"
-                      style={{
-                        backgroundColor: "rgba(150, 215, 225, 0.15)",
-                        top: "0px", // Start from top to include header
-                        bottom: "0px",
-                        left: "2px", // Minimal left margin
-                        right: "2px", // Minimal right margin
-                      }}
-                    ></div>
-
                     {/* White Content Card */}
                     <div
-                      className="mx-6 mb-6 bg-white rounded-lg shadow-sm relative z-10"
+                      className="bg-white rounded-xl shadow-lg relative z-10"
                       style={{
-                        height: "calc(100% - 140px)",
+                        maxWidth: "1000px",
+                        margin: "0 auto",
+                        width: "100%",
                       }}
                     >
                       <div
@@ -1609,7 +1603,10 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       const totalSlides = Math.ceil(barriers.length / 3);
 
                       return (
-                        <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center z-20">
+                        <div
+                          className="mt-6 flex justify-between items-center"
+                          style={{ maxWidth: "1000px", width: "100%" }}
+                        >
                           {/* Page Counter - Left Side */}
                           {totalSlides > 1 && (
                             <div className="text-sm text-gray-600">
@@ -1672,29 +1669,30 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
 
                 {/* Accommodations View */}
                 {currentView === "accommodations" && (
-                  <div className="h-[600px] relative">
-                    {/* Header */}
-                    <div className="px-6 pt-6 pb-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={AccommodationsHeaderIcon}
-                            alt="Accommodations"
-                            className="h-5 w-5"
-                            style={{
-                              filter: `brightness(0) saturate(100%) invert(17%) sepia(97%) saturate(1392%) hue-rotate(195deg) brightness(94%) contrast(88%)`,
-                            }}
-                          />
-                          <h3
-                            className="text-xl font-bold text-gray-900"
-                            style={{
-                              fontFamily:
-                                'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
-                            }}
-                          >
-                            3. Accommodation & Support Plan
-                          </h3>
-                        </div>
+                  <div className="min-h-screen relative flex flex-col items-center justify-start pt-20">
+                    {/* Header - centered above card */}
+                    <div
+                      className="mb-8"
+                      style={{ maxWidth: "1000px", width: "100%" }}
+                    >
+                      <div className="flex items-center justify-center gap-3">
+                        <img
+                          src={AccommodationsHeaderIcon}
+                          alt="Accommodations"
+                          className="h-7 w-7"
+                          style={{
+                            filter: `brightness(0) saturate(100%) invert(17%) sepia(97%) saturate(1392%) hue-rotate(195deg) brightness(94%) contrast(88%)`,
+                          }}
+                        />
+                        <h3
+                          className="text-2xl font-bold text-gray-900"
+                          style={{
+                            fontFamily:
+                              'Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
+                          }}
+                        >
+                          3. Accommodation & Support Plan
+                        </h3>
                         <button
                           onClick={(e) => {
                             e.preventDefault();
@@ -1704,7 +1702,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                             );
                             handleEditClick("accommodations");
                           }}
-                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-30 relative cursor-pointer"
+                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer ml-auto"
                           title="Edit this section"
                           style={{ pointerEvents: "auto" }}
                         >
@@ -1713,30 +1711,17 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       </div>
                     </div>
 
-                    {/* Full-Width Orange Background Block - With minimal margins */}
+                    {/* White Content Card */}
                     <div
-                      className="absolute"
-                      style={{
-                        backgroundColor: "rgba(248, 158, 84, 0.15)",
-                        top: "0px", // Start from top to include header
-                        bottom: "0px",
-                        left: "2px", // Minimal left margin
-                        right: "2px", // Minimal right margin
-                      }}
-                    ></div>
-
-                    {/* White Content Card - Fixed height with bottom margin for buttons */}
-                    <div
-                      className={`mx-6 mt-2 mb-6 bg-white rounded-lg shadow-sm relative z-10 ${
+                      className={`bg-white rounded-xl shadow-lg relative z-10 ${
                         expandedAccommodationIndex !== null
                           ? "overflow-visible"
                           : ""
                       }`}
                       style={{
-                        height:
-                          expandedAccommodationIndex !== null
-                            ? "auto"
-                            : "calc(100% - 160px)",
+                        maxWidth: "1000px",
+                        margin: "0 auto",
+                        width: "100%",
                       }}
                     >
                       <div
@@ -1927,8 +1912,7 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                                                   Implementation Notes
                                                 </h5>
                                                 <p className="text-sm text-gray-700">
-                                                  {accommodation.implementation ||
-                                                    "Apply to all assessments"}
+                                                  {"Apply to all assessments"}
                                                 </p>
                                               </div>
                                             </div>
@@ -1968,7 +1952,10 @@ const FigmaEnhancedReportViewer: React.FC<FigmaEnhancedReportViewerProps> = ({
                       );
 
                       return (
-                        <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center z-20">
+                        <div
+                          className="mt-6 flex justify-between items-center"
+                          style={{ maxWidth: "1000px", width: "100%" }}
+                        >
                           {/* Page Counter - Left Side */}
                           {totalAccommodationSlides > 1 && (
                             <div className="text-sm text-gray-600">

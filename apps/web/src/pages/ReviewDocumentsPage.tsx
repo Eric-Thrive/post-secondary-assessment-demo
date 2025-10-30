@@ -1,16 +1,22 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileText,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentFile } from "@/types/assessment";
 
 interface ReviewDocumentsState {
-  moduleType: 'k12' | 'post_secondary' | 'tutoring';
-  pathway: 'simple' | 'complex';
+  moduleType: "k12" | "post_secondary" | "tutoring";
+  pathway: "simple" | "complex";
   uniqueId: string;
   reportAuthor: string;
   selectedGrade?: string;
@@ -27,27 +33,35 @@ const ReviewDocumentsPage = () => {
   const state = location.state as ReviewDocumentsState | undefined;
 
   if (!state) {
-    navigate('/');
+    navigate("/");
     return null;
   }
 
-  const { moduleType, pathway, uniqueId, reportAuthor, selectedGrade, documents, filesArray } = state;
+  const {
+    moduleType,
+    pathway,
+    uniqueId,
+    reportAuthor,
+    selectedGrade,
+    documents,
+    filesArray,
+  } = state;
 
-  const finalizedDocuments = documents.filter(doc => doc.finalized === true);
+  const finalizedDocuments = documents.filter((doc) => doc.finalized === true);
 
   const parseFileTimestamp = (filename: string): string | null => {
     const match = filename.match(/_FINALIZED_(\d{8})_(\d{4})/);
     if (!match) return null;
-    
+
     const dateStr = match[1];
     const timeStr = match[2];
-    
+
     const year = dateStr.substring(0, 4);
     const month = dateStr.substring(4, 6);
     const day = dateStr.substring(6, 8);
     const hours = timeStr.substring(0, 2);
     const minutes = timeStr.substring(2, 4);
-    
+
     return `${month}/${day}/${year} ${hours}:${minutes}`;
   };
 
@@ -55,34 +69,39 @@ const ReviewDocumentsPage = () => {
     if (finalizedDocuments.length === 0) {
       toast({
         title: "No Finalized Documents",
-        description: "Please finalize at least one document in the PI Redactor before proceeding.",
-        variant: "destructive"
+        description:
+          "Please finalize at least one document in the PI Redactor before proceeding.",
+        variant: "destructive",
       });
       return;
     }
 
     try {
       setIsProcessing(true);
-      console.log(`=== Starting ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment with Finalized Documents ===`);
-      console.log('Finalized documents count:', finalizedDocuments.length);
+      console.log(
+        `=== Starting ${moduleType.toUpperCase()} ${pathway.toUpperCase()} Assessment with Finalized Documents ===`
+      );
+      console.log("Finalized documents count:", finalizedDocuments.length);
 
       const extractedDocs = [];
       for (let i = 0; i < filesArray.length; i++) {
         const file = filesArray[i];
-        
-        const isFinalized = file.name.includes('_FINALIZED_');
+
+        const isFinalized = file.name.includes("_FINALIZED_");
         if (!isFinalized) {
           console.log(`Skipping non-finalized file: ${file.name}`);
           continue;
         }
 
         console.log(`Extracting text from finalized file: ${file.name}...`);
-        
-        const { documentProcessor } = await import('@/services/document/documentProcessor');
+
+        const { documentProcessor } = await import(
+          "@/services/document/documentProcessor"
+        );
         const text = await documentProcessor.extractTextFromFile(file);
         extractedDocs.push({
           filename: file.name,
-          content: text
+          content: text,
         });
       }
 
@@ -90,7 +109,7 @@ const ReviewDocumentsPage = () => {
         toast({
           title: "No Documents to Process",
           description: "No finalized documents were found to analyze.",
-          variant: "destructive"
+          variant: "destructive",
         });
         setIsProcessing(false);
         return;
@@ -100,22 +119,28 @@ const ReviewDocumentsPage = () => {
 
       toast({
         title: "Processing Started",
-        description: `${moduleType.toUpperCase()} AI analysis using ${pathway} pathway is running. This may take a few minutes...`
+        description: `${moduleType.toUpperCase()} AI analysis using ${pathway} pathway is running. This may take a few minutes...`,
       });
-      
-      console.log(`Starting ${moduleType} AI processing using ${pathway} pathway...`);
 
-      const environment = localStorage.getItem('app-environment') || 'replit-prod';
-      const isDemoEnvironment = environment.includes('demo');
-      const endpoint = isDemoEnvironment ? '/api/demo-analyze-assessment' : '/api/analyze-assessment';
-      
-      console.log(`Using endpoint: ${endpoint} (environment: ${environment}, isDemo: ${isDemoEnvironment})`);
+      console.log(
+        `Starting ${moduleType} AI processing using ${pathway} pathway...`
+      );
+
+      const environment =
+        localStorage.getItem("app-environment") || "replit-prod";
+      const isDemoEnvironment = environment.includes("demo");
+      const endpoint = isDemoEnvironment
+        ? "/api/demo-analyze-assessment"
+        : "/api/analyze-assessment";
+
+      console.log(
+        `Using endpoint: ${endpoint} (environment: ${environment}, isDemo: ${isDemoEnvironment})`
+      );
 
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-Environment': environment
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           caseId,
@@ -125,51 +150,64 @@ const ReviewDocumentsPage = () => {
           uniqueId,
           reportAuthor,
           studentGrade: selectedGrade,
-          environment
-        })
+          environment,
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || `${moduleType.toUpperCase()} analysis failed`);
+        throw new Error(
+          error.error || `${moduleType.toUpperCase()} analysis failed`
+        );
       }
 
       const result = await response.json();
-      console.log(`✅ ${moduleType.toUpperCase()} ${pathway} analysis completed:`, result);
-      
+      console.log(
+        `✅ ${moduleType.toUpperCase()} ${pathway} analysis completed:`,
+        result
+      );
+
       toast({
         title: "Analysis Completed",
-        description: `Documents have been processed. Redirecting to your ${moduleType.toUpperCase()} report...`
+        description: `Documents have been processed. Redirecting to your ${moduleType.toUpperCase()} report...`,
       });
-      
-      const reportsPath = moduleType === 'k12' ? '/k12-reports' : 
-                         moduleType === 'tutoring' ? '/tutoring-reports' : 
-                         '/post-secondary-reports';
+
+      const reportsPath =
+        moduleType === "k12"
+          ? "/k12-reports"
+          : moduleType === "tutoring"
+          ? "/tutoring-reports"
+          : "/post-secondary-reports";
       console.log(`Navigating to ${reportsPath}...`);
       navigate(reportsPath);
-      
     } catch (error) {
-      console.error(`${moduleType.toUpperCase()} ${pathway} Assessment analysis failed:`, error);
+      console.error(
+        `${moduleType.toUpperCase()} ${pathway} Assessment analysis failed:`,
+        error
+      );
       toast({
         title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred during analysis.",
-        variant: "destructive"
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred during analysis.",
+        variant: "destructive",
       });
       setIsProcessing(false);
     }
   };
 
   const handleGoBack = () => {
-    if (moduleType === 'k12') {
-      if (pathway === 'complex') {
-        navigate('/new-k12-complex-assessment');
+    if (moduleType === "k12") {
+      if (pathway === "complex") {
+        navigate("/new-k12-complex-assessment");
       } else {
-        navigate('/new-k12-assessment');
+        navigate("/new-k12-assessment");
       }
-    } else if (moduleType === 'tutoring') {
-      navigate('/new-tutoring-assessment');
+    } else if (moduleType === "tutoring") {
+      navigate("/new-tutoring-assessment");
     } else {
-      navigate('/new-post-secondary-assessment');
+      navigate("/new-post-secondary-assessment");
     }
   };
 
@@ -187,7 +225,7 @@ const ReviewDocumentsPage = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Assessment Form
           </Button>
-          
+
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Review Finalized Documents
@@ -208,23 +246,51 @@ const ReviewDocumentsPage = () => {
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Unique ID:</span>
-                <p className="text-base font-semibold" data-testid="text-unique-id">{uniqueId}</p>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Unique ID:
+                </span>
+                <p
+                  className="text-base font-semibold"
+                  data-testid="text-unique-id"
+                >
+                  {uniqueId}
+                </p>
               </div>
               <div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Report Author:</span>
-                <p className="text-base font-semibold" data-testid="text-report-author">{reportAuthor}</p>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Report Author:
+                </span>
+                <p
+                  className="text-base font-semibold"
+                  data-testid="text-report-author"
+                >
+                  {reportAuthor}
+                </p>
               </div>
-              {moduleType === 'k12' && selectedGrade && (
+              {moduleType === "k12" && selectedGrade && (
                 <div>
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Grade Level:</span>
-                  <p className="text-base font-semibold" data-testid="text-grade">{selectedGrade}</p>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Grade Level:
+                  </span>
+                  <p
+                    className="text-base font-semibold"
+                    data-testid="text-grade"
+                  >
+                    {selectedGrade}
+                  </p>
                 </div>
               )}
               <div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Module Type:</span>
-                <p className="text-base font-semibold capitalize" data-testid="text-module-type">
-                  {moduleType === 'post_secondary' ? 'Post-Secondary' : moduleType.toUpperCase()}
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Module Type:
+                </span>
+                <p
+                  className="text-base font-semibold capitalize"
+                  data-testid="text-module-type"
+                >
+                  {moduleType === "post_secondary"
+                    ? "Post-Secondary"
+                    : moduleType.toUpperCase()}
                 </p>
               </div>
             </div>
@@ -237,8 +303,9 @@ const ReviewDocumentsPage = () => {
             <AlertDescription className="text-amber-800 dark:text-amber-200">
               <strong>No finalized documents found.</strong>
               <br />
-              Please return to the assessment form and use the PI Redactor Tool to finalize your documents.
-              Documents must contain "_FINALIZED_" in the filename to proceed with analysis.
+              Please return to the assessment form and use the PI Redactor Tool
+              to finalize your documents. Documents must contain "_FINALIZED_"
+              in the filename to proceed with analysis.
             </AlertDescription>
           </Alert>
         ) : (
@@ -246,9 +313,14 @@ const ReviewDocumentsPage = () => {
             <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
               <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
               <AlertDescription className="text-green-800 dark:text-green-200">
-                <strong>{finalizedDocuments.length} finalized {finalizedDocuments.length === 1 ? 'document' : 'documents'} ready for analysis.</strong>
+                <strong>
+                  {finalizedDocuments.length} finalized{" "}
+                  {finalizedDocuments.length === 1 ? "document" : "documents"}{" "}
+                  ready for analysis.
+                </strong>
                 <br />
-                All documents have been properly de-identified and are ready to be processed.
+                All documents have been properly de-identified and are ready to
+                be processed.
               </AlertDescription>
             </Alert>
 
@@ -257,7 +329,8 @@ const ReviewDocumentsPage = () => {
                 <CardTitle className="flex items-center justify-between">
                   <span>Finalized Documents</span>
                   <Badge variant="secondary" className="ml-2">
-                    {finalizedDocuments.length} {finalizedDocuments.length === 1 ? 'Document' : 'Documents'}
+                    {finalizedDocuments.length}{" "}
+                    {finalizedDocuments.length === 1 ? "Document" : "Documents"}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -278,17 +351,27 @@ const ReviewDocumentsPage = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate" data-testid={`text-filename-${doc.id}`}>
+                            <p
+                              className="text-sm font-medium text-gray-900 dark:text-white truncate"
+                              data-testid={`text-filename-${doc.id}`}
+                            >
                               {doc.name}
                             </p>
-                            <Badge variant="outline" className="border-green-500 text-green-700 dark:text-green-300">
+                            <Badge
+                              variant="outline"
+                              className="border-green-500 text-green-700 dark:text-green-300"
+                            >
                               Finalized
                             </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span data-testid={`text-size-${doc.id}`}>{doc.size}</span>
+                            <span data-testid={`text-size-${doc.id}`}>
+                              {doc.size}
+                            </span>
                             {timestamp && (
-                              <span data-testid={`text-timestamp-${doc.id}`}>Finalized: {timestamp}</span>
+                              <span data-testid={`text-timestamp-${doc.id}`}>
+                                Finalized: {timestamp}
+                              </span>
                             )}
                           </div>
                         </div>

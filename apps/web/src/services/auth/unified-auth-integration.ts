@@ -37,10 +37,7 @@ export class UnifiedAuthIntegration {
         "Content-Type": "application/json",
       };
 
-      // Add environment header if provided (for demo-specific authentication)
-      if (credentials.environment) {
-        headers["x-environment"] = credentials.environment;
-      }
+      // Environment-based authentication removed - now using RBAC roles
 
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -174,13 +171,104 @@ export class UnifiedAuthIntegration {
   /**
    * Convert legacy user format to unified AuthenticatedUser format
    */
-  private convertToUnifiedUser(legacyUser: any): AuthenticatedUser {
-    if (isLegacyUser(legacyUser)) {
-      return adaptLegacyUser(legacyUser);
+  private convertToUnifiedUser(backendUser: any): AuthenticatedUser {
+    if (isLegacyUser(backendUser)) {
+      return adaptLegacyUser(backendUser);
     }
 
-    // If already in unified format, return as-is
-    return legacyUser as AuthenticatedUser;
+    // Transform backend user format to AuthenticatedUser format
+    const defaultPreferences = {
+      dashboardLayout: "grid" as const,
+      theme: "light" as const,
+      notifications: {
+        email: true,
+        browser: true,
+        reportComplete: true,
+        systemUpdates: false,
+      },
+    };
+
+    // Convert lastLogin string to Date if needed
+    let lastLogin: Date | null = null;
+    if (backendUser.lastLogin) {
+      lastLogin =
+        typeof backendUser.lastLogin === "string"
+          ? new Date(backendUser.lastLogin)
+          : backendUser.lastLogin;
+    }
+
+    return {
+      id: backendUser.id?.toString() || "unknown",
+      email: backendUser.email || `${backendUser.username}@example.com`,
+      name: backendUser.customerName || backendUser.username || "Unknown User",
+      username: backendUser.username || "unknown",
+      role: backendUser.role,
+      organizationId: backendUser.organizationId,
+      moduleAccess: this.getModuleAccessFromBackendUser(backendUser),
+      preferences: defaultPreferences,
+      lastLogin,
+      demoExpiry:
+        backendUser.role === "demo"
+          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          : undefined,
+    };
+  }
+
+  /**
+   * Convert backend user's assigned modules to ModuleAccess format
+   */
+  private getModuleAccessFromBackendUser(backendUser: any) {
+    // System admins and developers get access to all modules
+    const role = backendUser.role?.toLowerCase();
+    if (
+      role === "system_admin" ||
+      role === "developer" ||
+      backendUser.role === UserRole.SYSTEM_ADMIN ||
+      backendUser.role === UserRole.DEVELOPER
+    ) {
+      return [
+        {
+          moduleType: ModuleType.K12,
+          accessLevel: "full" as const,
+          permissions: [
+            { action: "read", resource: "reports", granted: true },
+            { action: "write", resource: "reports", granted: true },
+            { action: "delete", resource: "reports", granted: true },
+          ],
+        },
+        {
+          moduleType: ModuleType.POST_SECONDARY,
+          accessLevel: "full" as const,
+          permissions: [
+            { action: "read", resource: "reports", granted: true },
+            { action: "write", resource: "reports", granted: true },
+            { action: "delete", resource: "reports", granted: true },
+          ],
+        },
+        {
+          moduleType: ModuleType.TUTORING,
+          accessLevel: "full" as const,
+          permissions: [
+            { action: "read", resource: "reports", granted: true },
+            { action: "write", resource: "reports", granted: true },
+            { action: "delete", resource: "reports", granted: true },
+          ],
+        },
+      ];
+    }
+
+    // For other users, use their assigned modules
+    const assignedModules = backendUser.assignedModules || [];
+
+    return assignedModules.map((moduleType: any) => ({
+      moduleType,
+      accessLevel: "full" as const,
+      permissions: [
+        { action: "read", resource: "reports", granted: true },
+        { action: "write", resource: "reports", granted: true },
+        { action: "delete", resource: "reports", granted: true },
+      ],
+    }));
   }
 
   /**

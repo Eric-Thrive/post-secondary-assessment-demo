@@ -17,6 +17,8 @@ dist/
 # Build artifacts  
 server/public
 vite.config.ts.*
+apps/server/coverage/
+Revise Disability Report Template/
 
 # Database backups (contain sensitive data)
 database_backup_*/
