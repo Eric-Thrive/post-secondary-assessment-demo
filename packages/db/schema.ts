@@ -69,12 +69,50 @@ export const users = pgTable("users", {
   resetTokenExpiry: timestamp("reset_token_expiry", { withTimezone: true }),
   registrationToken: text("registration_token"),
 
+  // Email verification fields
+  emailVerified: boolean("email_verified").notNull().default(false),
+  emailVerificationToken: text("email_verification_token"),
+  emailVerificationExpiry: timestamp("email_verification_expiry", {
+    withTimezone: true,
+  }),
+
   // Legacy demo permissions (will be removed after migration)
   demoPermissions: jsonb("demo_permissions").default({}),
 
   // Timestamps
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   lastLogin: timestamp("last_login", { withTimezone: true }),
+});
+
+// Support Requests table
+export const supportRequests = pgTable("support_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  urgency: text("urgency").notNull(), // 'low', 'medium', 'high'
+  category: text("category").notNull(), // 'technical', 'account', 'billing', 'other'
+  status: text("status").notNull().default("open"), // 'open', 'in_progress', 'resolved', 'closed'
+  userId: integer("user_id"), // Optional - if user is logged in
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+});
+
+// Sales Inquiries table
+export const salesInquiries = pgTable("sales_inquiries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  organization: text("organization").notNull(),
+  organizationSize: text("organization_size"),
+  interestedModules: jsonb("interested_modules").notNull(), // ModuleType[]
+  message: text("message").notNull(),
+  inquiryType: text("inquiry_type").notNull(), // 'pricing', 'demo', 'features', 'other'
+  status: text("status").notNull().default("new"), // 'new', 'contacted', 'qualified', 'converted', 'closed'
+  userId: integer("user_id"), // Optional - if user is logged in
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  contactedAt: timestamp("contacted_at", { withTimezone: true }),
 });
 
 // Sessions table for express-session with connect-pg-simple
@@ -377,8 +415,25 @@ export const insertUserSchema = createInsertSchema(users).pick({
   resetToken: true,
   resetTokenExpiry: true,
   registrationToken: true,
+  emailVerified: true,
+  emailVerificationToken: true,
+  emailVerificationExpiry: true,
   demoPermissions: true,
 });
+
+export const insertSupportRequestSchema = createInsertSchema(
+  supportRequests
+).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSalesInquirySchema = createInsertSchema(salesInquiries).omit(
+  {
+    id: true,
+    createdAt: true,
+  }
+);
 
 export const insertAiConfigSchema = createInsertSchema(aiConfig).omit({
   id: true,
@@ -460,6 +515,12 @@ export type Organization = typeof organizations.$inferSelect;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+export type InsertSupportRequest = z.infer<typeof insertSupportRequestSchema>;
+export type SupportRequest = typeof supportRequests.$inferSelect;
+
+export type InsertSalesInquiry = z.infer<typeof insertSalesInquirySchema>;
+export type SalesInquiry = typeof salesInquiries.$inferSelect;
 
 export type InsertAiConfig = z.infer<typeof insertAiConfigSchema>;
 export type AiConfig = typeof aiConfig.$inferSelect;

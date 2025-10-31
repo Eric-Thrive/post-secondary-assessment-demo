@@ -7,6 +7,9 @@ module.exports = {
   transform: {
     "^.+\\.ts$": "ts-jest",
   },
+  moduleNameMapper: {
+    "^@shared/(.*)$": "<rootDir>/../../packages/db/$1",
+  },
   collectCoverageFrom: [
     "**/*.ts",
     "!**/*.d.ts",

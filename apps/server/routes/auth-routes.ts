@@ -11,7 +11,6 @@ import {
   isResetTokenValid,
   requireAuth,
   requireRole,
-  sendRegistrationNotification,
   verifyPassword,
 } from "../auth";
 import { UserRole, ModuleType } from "@shared/schema";
@@ -21,6 +20,13 @@ import {
   normalizeDemoPermissions,
   resolvePostLoginRedirect,
 } from "../config/loginRedirects";
+import {
+  generateVerificationTokenWithExpiry,
+  createVerificationLink,
+} from "../services/email-verification";
+import { sendVerificationEmail } from "../services/sendgrid";
+import { sendRegistrationNotification as sendAdminNotification } from "../services/admin-notifications";
+import { rateLimiters } from "../middleware/rate-limit";
 
 /**
  * Register authentication-related routes.
@@ -36,158 +42,365 @@ export function registerAuthRoutes(app: Express): void {
     next();
   });
 
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const {
-        username,
-        password,
-        email,
-        customerId,
-        customerName,
-        role,
-        assignedModules,
-      } = req.body;
+  app.post(
+    "/api/auth/register",
+    rateLimiters.registration,
+    async (req, res) => {
+      try {
+        const {
+          username,
+          password,
+          email,
+          customerId,
+          customerName,
+          role,
+          assignedModules,
+        } = req.body;
 
-      if (!username || !password || !email) {
-        return res
-          .status(400)
-          .json({ error: "Username, password, and email are required" });
-      }
-
-      const trimmedUsername = username.trim();
-      const trimmedEmail = email.trim();
-
-      if (!trimmedUsername) {
-        return res.status(400).json({
-          error: "Username cannot be empty or contain only whitespace",
-        });
-      }
-
-      if (!trimmedEmail) {
-        return res
-          .status(400)
-          .json({ error: "Email cannot be empty or contain only whitespace" });
-      }
-
-      if (password.length < 8) {
-        return res
-          .status(400)
-          .json({ error: "Password must be at least 8 characters long" });
-      }
-
-      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-        return res.status(400).json({
-          error:
-            "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-        });
-      }
-
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.username, trimmedUsername));
-
-      if (existingUser) {
-        return res.status(409).json({ error: "Username already exists" });
-      }
-
-      const [existingEmail] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, trimmedEmail));
-
-      if (existingEmail) {
-        return res.status(409).json({ error: "Email already exists" });
-      }
-
-      const hashedPassword = await hashPassword(password);
-      const registrationToken = generateRegistrationToken();
-
-      let assignedRole = role || "customer";
-      let assignedCustomerId: string;
-      let assignedOrganizationId: string | null = null;
-      const userModules = assignedModules || ["post_secondary"];
-
-      // Create organization for non-admin users
-      if (
-        assignedRole !== "system_admin" &&
-        assignedRole !== "developer" &&
-        assignedRole !== "admin"
-      ) {
-        const orgId = `org-${trimmedUsername.toLowerCase()}-${Date.now()}`;
-        assignedCustomerId = `customer-${trimmedUsername.toLowerCase()}-${Date.now()}`;
-
-        // Handle demo user registration
-        if (assignedRole === "demo") {
-          assignedCustomerId = DEMO_CUSTOMER_ID;
+        if (!username || !password || !email) {
+          return res
+            .status(400)
+            .json({ error: "Username, password, and email are required" });
         }
 
-        const [newOrg] = await db
-          .insert(organizations)
+        const trimmedUsername = username.trim();
+        const trimmedEmail = email.trim();
+
+        if (!trimmedUsername) {
+          return res.status(400).json({
+            error: "Username cannot be empty or contain only whitespace",
+          });
+        }
+
+        if (!trimmedEmail) {
+          return res.status(400).json({
+            error: "Email cannot be empty or contain only whitespace",
+          });
+        }
+
+        if (password.length < 8) {
+          return res
+            .status(400)
+            .json({ error: "Password must be at least 8 characters long" });
+        }
+
+        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+          return res.status(400).json({
+            error:
+              "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+          });
+        }
+
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.username, trimmedUsername));
+
+        if (existingUser) {
+          return res.status(409).json({ error: "Username already exists" });
+        }
+
+        const [existingEmail] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, trimmedEmail));
+
+        if (existingEmail) {
+          return res.status(409).json({ error: "Email already exists" });
+        }
+
+        const hashedPassword = await hashPassword(password);
+        const registrationToken = generateRegistrationToken();
+
+        // Generate email verification token
+        const verificationTokenData = generateVerificationTokenWithExpiry(24);
+
+        let assignedRole = role || "customer";
+        let assignedCustomerId: string;
+        let assignedOrganizationId: string | null = null;
+        const userModules = assignedModules || ["post_secondary"];
+
+        // Create organization for non-admin users
+        if (
+          assignedRole !== "system_admin" &&
+          assignedRole !== "developer" &&
+          assignedRole !== "admin"
+        ) {
+          const orgId = `org-${trimmedUsername.toLowerCase()}-${Date.now()}`;
+          assignedCustomerId = `customer-${trimmedUsername.toLowerCase()}-${Date.now()}`;
+
+          // Handle demo user registration
+          if (assignedRole === "demo") {
+            assignedCustomerId = DEMO_CUSTOMER_ID;
+          }
+
+          const [newOrg] = await db
+            .insert(organizations)
+            .values({
+              id: orgId,
+              name: `${trimmedUsername}'s Organization`,
+              customerId: assignedCustomerId,
+              assignedModules: userModules,
+              maxUsers: assignedRole === "demo" ? 1 : 10,
+              isActive: true,
+            })
+            .returning();
+
+          assignedOrganizationId = newOrg.id;
+        } else {
+          // Admins don't need organizations
+          assignedCustomerId = customerId || "system";
+        }
+
+        const [newUser] = await db
+          .insert(users)
           .values({
-            id: orgId,
-            name: `${trimmedUsername}'s Organization`,
+            username: trimmedUsername,
+            password: hashedPassword,
+            email: trimmedEmail,
             customerId: assignedCustomerId,
+            customerName,
+            role: assignedRole,
             assignedModules: userModules,
-            maxUsers: assignedRole === "demo" ? 1 : 10,
+            organizationId: assignedOrganizationId,
             isActive: true,
+            registrationToken,
+            reportCount: 0,
+            maxReports: assignedRole === "demo" ? 5 : -1, // Demo users get 5 reports, others unlimited
+            emailVerified: false,
+            emailVerificationToken: verificationTokenData.hashedToken,
+            emailVerificationExpiry: verificationTokenData.expiry,
           })
-          .returning();
+          .returning({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            organizationId: users.organizationId,
+            role: users.role,
+            registrationToken: users.registrationToken,
+          });
 
-        assignedOrganizationId = newOrg.id;
-      } else {
-        // Admins don't need organizations
-        assignedCustomerId = customerId || "system";
-      }
+        // Send verification email to user
+        const baseUrl =
+          req.headers.origin || process.env.BASE_URL || "http://localhost:5000";
+        const verificationLink = createVerificationLink(
+          verificationTokenData.token,
+          baseUrl
+        );
 
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          username: trimmedUsername,
-          password: hashedPassword,
-          email: trimmedEmail,
-          customerId: assignedCustomerId,
-          customerName,
-          role: assignedRole,
-          assignedModules: userModules,
-          organizationId: assignedOrganizationId,
-          isActive: true,
-          registrationToken,
-          reportCount: 0,
-          maxReports: assignedRole === "demo" ? 5 : -1, // Demo users get 5 reports, others unlimited
-        })
-        .returning({
-          id: users.id,
-          username: users.username,
-          email: users.email,
-          organizationId: users.organizationId,
-          role: users.role,
-          registrationToken: users.registrationToken,
+        try {
+          await sendVerificationEmail(
+            trimmedEmail,
+            trimmedUsername,
+            verificationLink
+          );
+          console.log(`✅ Verification email sent to ${trimmedEmail}`);
+        } catch (emailError) {
+          console.error("Error sending verification email:", emailError);
+          // Don't block registration if email fails
+        }
+
+        // Send admin notification asynchronously
+        await sendAdminNotification({
+          username: newUser.username,
+          email: newUser.email || "",
+          organizationName: customerName,
+          registeredAt: new Date(),
         });
 
-      await sendRegistrationNotification({
-        username: newUser.username,
-        email: newUser.email || "",
-        organizationId: newUser.organizationId || undefined,
-        role: newUser.role,
-        registrationToken: newUser.registrationToken || "",
-      });
+        res.status(201).json({
+          message:
+            "Registration successful. Please check your email to verify your account.",
+          email: trimmedEmail,
+          user: {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            organizationId: newUser.organizationId,
+            role: newUser.role,
+          },
+        });
+      } catch (error) {
+        console.error("Registration error:", error);
+        res.status(500).json({ error: "Registration failed" });
+      }
+    }
+  );
 
-      res.status(201).json({
-        message: "User created successfully",
-        user: {
-          id: newUser.id,
-          username: newUser.username,
-          email: newUser.email,
-          organizationId: newUser.organizationId,
-          role: newUser.role,
-        },
+  app.get("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { token } = req.query;
+
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({
+          error: "Verification token is required",
+          code: "MISSING_TOKEN",
+        });
+      }
+
+      // Find user with matching verification token
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.emailVerificationToken, token));
+
+      if (!user) {
+        return res.status(400).json({
+          error: "Invalid verification token",
+          code: "INVALID_TOKEN",
+          message:
+            "This verification link is invalid. Please request a new verification email.",
+        });
+      }
+
+      // Check if already verified
+      if (user.emailVerified) {
+        return res.status(200).json({
+          success: true,
+          message: "Email already verified. You can log in now.",
+          code: "ALREADY_VERIFIED",
+          redirectUrl: "/login",
+        });
+      }
+
+      // Check if token has expired
+      if (
+        !user.emailVerificationExpiry ||
+        new Date() > user.emailVerificationExpiry
+      ) {
+        return res.status(400).json({
+          error: "Verification token expired",
+          code: "EXPIRED_TOKEN",
+          message:
+            "This verification link has expired. Please request a new verification email.",
+          email: user.email,
+        });
+      }
+
+      // Verify the token using bcrypt
+      const { validateToken } = await import("../services/email-verification");
+      const isValid = validateToken(
+        token,
+        user.emailVerificationToken!,
+        user.emailVerificationExpiry
+      );
+
+      if (!isValid) {
+        return res.status(400).json({
+          error: "Invalid verification token",
+          code: "INVALID_TOKEN",
+          message:
+            "This verification link is invalid. Please request a new verification email.",
+        });
+      }
+
+      // Update user to verified and clear verification token
+      await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          emailVerificationToken: null,
+          emailVerificationExpiry: null,
+        })
+        .where(eq(users.id, user.id));
+
+      console.log(
+        `✅ Email verified for user: ${user.username} (${user.email})`
+      );
+
+      res.json({
+        success: true,
+        message: "Email verified successfully! You can now log in.",
+        redirectUrl: "/login",
       });
     } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ error: "Registration failed" });
+      console.error("Email verification error:", error);
+      res.status(500).json({
+        error: "Email verification failed",
+        code: "VERIFICATION_ERROR",
+      });
     }
   });
+
+  app.post(
+    "/api/auth/resend-verification",
+    rateLimiters.resendVerification,
+    async (req, res) => {
+      try {
+        const { email } = req.body;
+
+        if (!email) {
+          return res.status(400).json({ error: "Email is required" });
+        }
+
+        const trimmedEmail = email.trim();
+
+        // Find user by email
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, trimmedEmail));
+
+        if (!user) {
+          // Return success message even if user doesn't exist (security)
+          return res.json({
+            message:
+              "If an account with that email exists and is unverified, a new verification email has been sent.",
+          });
+        }
+
+        // Check if already verified
+        if (user.emailVerified) {
+          return res.json({
+            message:
+              "This email address is already verified. You can log in now.",
+          });
+        }
+
+        // Generate new verification token
+        const verificationTokenData = generateVerificationTokenWithExpiry(24);
+
+        // Update user with new token
+        await db
+          .update(users)
+          .set({
+            emailVerificationToken: verificationTokenData.hashedToken,
+            emailVerificationExpiry: verificationTokenData.expiry,
+          })
+          .where(eq(users.id, user.id));
+
+        // Send new verification email
+        const baseUrl =
+          req.headers.origin || process.env.BASE_URL || "http://localhost:5000";
+        const verificationLink = createVerificationLink(
+          verificationTokenData.token,
+          baseUrl
+        );
+
+        try {
+          await sendVerificationEmail(
+            trimmedEmail,
+            user.username,
+            verificationLink
+          );
+          console.log(`✅ Resent verification email to ${trimmedEmail}`);
+        } catch (emailError) {
+          console.error("Error resending verification email:", emailError);
+          return res.status(500).json({
+            error: "Failed to send verification email. Please try again later.",
+          });
+        }
+
+        res.json({
+          message:
+            "A new verification email has been sent. Please check your inbox.",
+        });
+      } catch (error) {
+        console.error("Resend verification error:", error);
+        res.status(500).json({ error: "Failed to resend verification email" });
+      }
+    }
+  );
 
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -219,6 +432,17 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
+      // Check if email is verified
+      if (!user.emailVerified) {
+        return res.status(403).json({
+          error: "Email not verified",
+          code: "EMAIL_NOT_VERIFIED",
+          message:
+            "Please verify your email address before logging in. Check your inbox for the verification link.",
+          email: user.email,
+        });
+      }
+
       const parsedDemoPermissions = normalizeDemoPermissions(
         user.demoPermissions
       );
@@ -233,9 +457,9 @@ export function registerAuthRoutes(app: Express): void {
         email: user.email,
         role: user.role as UserRole,
         assignedModules: (user.assignedModules as ModuleType[]) || [],
-        organizationId: user.organizationId,
+        organizationId: user.organizationId || undefined,
         customerId: user.customerId,
-        customerName: user.customerName,
+        customerName: user.customerName || undefined,
         demoPermissions: parsedDemoPermissions,
       };
 

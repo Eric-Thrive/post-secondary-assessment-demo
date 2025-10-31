@@ -32,6 +32,9 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
     username: "",
     password: "",
   });
+  const [emailNotVerified, setEmailNotVerified] = useState<{
+    email: string;
+  } | null>(null);
   const [registerData, setRegisterData] = useState({
     username: "",
     password: "",
@@ -263,7 +266,24 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
           {authError && (
             <Alert className="mb-6" variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{authError}</AlertDescription>
+              <AlertDescription>
+                {authError}
+                {authError.includes("verify your email") && (
+                  <div className="mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Navigate to resend verification page
+                        window.location.href = "/verify-email-pending";
+                      }}
+                      className="w-full"
+                    >
+                      Resend Verification Email
+                    </Button>
+                  </div>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -519,14 +539,23 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
           {/* Helper Links */}
           <div className="mt-8 text-center space-y-2">
             <p className="text-sm text-gray-500">
-              Need help accessing your account?
+              Don't have an account?{" "}
+              <a
+                href="/register"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Sign up
+              </a>
             </p>
-            <a
-              href="#"
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              Contact Support
-            </a>
+            <p className="text-sm text-gray-500">
+              Need help accessing your account?{" "}
+              <a
+                href="#"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Contact Support
+              </a>
+            </p>
           </div>
         </div>
       </div>

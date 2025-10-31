@@ -97,11 +97,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // }
         return true;
       } else {
-        toast({
-          title: "Login Failed",
-          description: result.error || "Invalid credentials",
-          variant: "destructive",
-        });
+        // Check for email verification error
+        const resultWithCode = result as any;
+        if (resultWithCode.code === "EMAIL_NOT_VERIFIED") {
+          toast({
+            title: "Email Not Verified",
+            description:
+              result.error ||
+              "Please verify your email address before logging in.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login Failed",
+            description: result.error || "Invalid credentials",
+            variant: "destructive",
+          });
+        }
         return false;
       }
     } catch (error) {

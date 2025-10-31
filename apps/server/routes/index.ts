@@ -18,6 +18,7 @@ import { registerAnalysisRoutes } from "./analysis-routes";
 import { registerConfigRoutes } from "./config-routes";
 import { registerModuleRoutes } from "./module-routes";
 import { registerOrganizationRoutes } from "./organization-routes";
+import { registerSupportSalesRoutes } from "./support-sales-routes";
 import performanceRoutes from "./performance";
 function isDemoOperationAllowed(method: string, path: string): boolean {
   // Define explicit allowed operations with HTTP method restrictions
@@ -312,6 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAnalysisRoutes(app);
   registerConfigRoutes(app);
   registerModuleRoutes(app);
+  registerSupportSalesRoutes(app);
 
   // Register performance monitoring routes
   app.use("/api/performance", performanceRoutes);

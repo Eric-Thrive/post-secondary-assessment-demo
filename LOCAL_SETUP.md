@@ -78,7 +78,23 @@ SESSION_SECRET=your-random-session-secret
 APP_ENVIRONMENT=development
 NODE_ENV=development
 PORT=5001
+
+# Email Configuration (for testing email verification)
+SENDGRID_API_KEY=your-sendgrid-api-key
+SENDGRID_FROM_EMAIL=dev@thriveiep.com
+EMAIL_VERIFICATION_EXPIRY_HOURS=24
+EMAIL_VERIFICATION_BASE_URL=http://localhost:5001
+
+# Rate Limiting (higher limits for development)
+REGISTRATION_RATE_LIMIT=10
+RESEND_VERIFICATION_RATE_LIMIT=5
+SUPPORT_SALES_RATE_LIMIT=20
+
+# Admin Notifications (disabled for development to avoid spam)
+ADMIN_NOTIFICATION_ENABLED=false
 ```
+
+**Note:** For complete environment variable documentation, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### Initialize Database Schema
 

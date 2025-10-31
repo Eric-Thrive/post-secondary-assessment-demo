@@ -12,6 +12,9 @@ import {
 } from "@/components/routing/RouteMigration";
 import { AUTH_ROUTES } from "@/config/routes";
 import UnifiedLoginPage from "@/components/auth/UnifiedLoginPage";
+import RegistrationPage from "./pages/RegistrationPage";
+import EmailVerificationPendingPage from "./pages/EmailVerificationPendingPage";
+import EmailVerificationPage from "./pages/EmailVerificationPage";
 import Index from "./pages/Index";
 import K12HomePage from "./pages/K12HomePage";
 import PostSecondaryHomePage from "./pages/PostSecondaryHomePage";
@@ -43,6 +46,7 @@ import ReviewDocumentsPage from "./pages/ReviewDocumentsPage";
 import { SharedReport } from "./pages/SharedReport";
 import NotFound from "./pages/NotFound";
 import AuthenticationGuard from "@/components/auth/AuthenticationGuard";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ModuleType } from "@/types/unified-auth";
 import { ModuleDashboard } from "@/components/dashboard/ModuleDashboard";
 
@@ -78,6 +82,22 @@ const AuthenticatedRoute = () => {
   if (!isAuthenticated || !user) {
     console.log("Not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
+  }
+
+  // Check if email is verified (for new users with email verification)
+  const userWithEmail = user as any;
+  if (
+    userWithEmail.emailVerified === false ||
+    (userWithEmail.email && userWithEmail.emailVerified === undefined)
+  ) {
+    console.log("Email not verified, redirecting to verification pending");
+    return (
+      <Navigate
+        to="/verify-email-pending"
+        state={{ email: userWithEmail.email }}
+        replace
+      />
+    );
   }
 
   // Debug: Log user object to see the actual structure
@@ -185,61 +205,169 @@ const App = () => {
         <ModuleProvider>
           <BrowserRouter>
             <Routes>
+              {/* Public Auth Routes */}
               <Route path="/login" element={<UnifiedLoginPage />} />
+              <Route path="/register" element={<RegistrationPage />} />
+              <Route
+                path="/verify-email-pending"
+                element={<EmailVerificationPendingPage />}
+              />
+              <Route path="/verify-email" element={<EmailVerificationPage />} />
+
+              {/* Protected Routes */}
               <Route path="/" element={<AuthenticatedRoute />} />
-              <Route path="/module-picker" element={<ModulePickerRoute />} />
-              <Route path="/k12" element={<K12HomePage />} />
+              <Route
+                path="/module-picker"
+                element={
+                  <ProtectedRoute>
+                    <ModulePickerRoute />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/k12"
+                element={
+                  <ProtectedRoute>
+                    <K12HomePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/post-secondary"
-                element={<PostSecondaryHomePage />}
+                element={
+                  <ProtectedRoute>
+                    <PostSecondaryHomePage />
+                  </ProtectedRoute>
+                }
               />
-              <Route path="/tutoring" element={<TutoringHomePage />} />
+              <Route
+                path="/tutoring"
+                element={
+                  <ProtectedRoute>
+                    <TutoringHomePage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Assessment Routes */}
               <Route
                 path="/new-k12-assessment"
-                element={<NewK12AssessmentPage />}
+                element={
+                  <ProtectedRoute>
+                    <NewK12AssessmentPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/new-post-secondary-assessment"
-                element={<NewPostSecondaryAssessmentPage />}
+                element={
+                  <ProtectedRoute>
+                    <NewPostSecondaryAssessmentPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/new-tutoring-assessment"
-                element={<NewTutoringAssessmentPage />}
+                element={
+                  <ProtectedRoute>
+                    <NewTutoringAssessmentPage />
+                  </ProtectedRoute>
+                }
               />
 
               {/* Reports Routes */}
-              <Route path="/k12-reports" element={<K12ReportsPage />} />
+              <Route
+                path="/k12-reports"
+                element={
+                  <ProtectedRoute>
+                    <K12ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/post-secondary-reports"
-                element={<PostSecondaryReportsPage />}
+                element={
+                  <ProtectedRoute>
+                    <PostSecondaryReportsPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/tutoring-reports"
-                element={<TutoringReportsPage />}
+                element={
+                  <ProtectedRoute>
+                    <TutoringReportsPage />
+                  </ProtectedRoute>
+                }
               />
 
               {/* Review/Edit Routes */}
-              <Route path="/k12-review-edit" element={<K12ReviewEditPage />} />
+              <Route
+                path="/k12-review-edit"
+                element={
+                  <ProtectedRoute>
+                    <K12ReviewEditPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/post-secondary-review-edit"
-                element={<PostSecondaryReviewEditPage />}
+                element={
+                  <ProtectedRoute>
+                    <PostSecondaryReviewEditPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/tutoring-review-edit"
-                element={<TutoringReviewEditPage />}
+                element={
+                  <ProtectedRoute>
+                    <TutoringReviewEditPage />
+                  </ProtectedRoute>
+                }
               />
 
               {/* Admin Routes */}
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/users" element={<UserManagementPage />} />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute>
+                    <UserManagementPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/admin/organizations"
-                element={<OrganizationManagementPage />}
+                element={
+                  <ProtectedRoute>
+                    <OrganizationManagementPage />
+                  </ProtectedRoute>
+                }
               />
-              <Route path="/prompts" element={<PromptsPage />} />
+              <Route
+                path="/prompts"
+                element={
+                  <ProtectedRoute>
+                    <PromptsPage />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </BrowserRouter>
         </ModuleProvider>

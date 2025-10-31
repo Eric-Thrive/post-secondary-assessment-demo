@@ -67,7 +67,9 @@ export class UnifiedAuthIntegration {
         return {
           success: false,
           error: data.error || "Invalid credentials",
-        };
+          code: data.code,
+          email: data.email,
+        } as any;
       }
     } catch (error) {
       return {
