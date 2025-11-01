@@ -105,6 +105,18 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 
 ### Requirement 6
 
+**User Story:** As an educator, I want to access the Review & Edit feature from the sidebar navigation, so that I can make changes to the teacher guide content.
+
+#### Acceptance Criteria
+
+1. THE Navigation Panel SHALL include a "Review" button positioned after the report sections and before utility buttons (New Report, Home, Logout)
+2. WHEN the User clicks the "Review" button, THE K-12 Report Viewer SHALL navigate to the K-12 Review & Edit page for the current report
+3. THE "Review" button SHALL use an Edit icon (from Lucide React) to visually indicate editing functionality
+4. THE "Review" button SHALL use consistent styling with other navigation buttons using design tokens
+5. THE "Review" button SHALL pass the current case ID to the Review & Edit page for context
+
+### Requirement 7
+
 **User Story:** As a case manager, I want to view case information in a clean, organized format, so that I can quickly identify the student, grade level, tutor, and report dates.
 
 #### Acceptance Criteria
@@ -115,7 +127,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 4. THE K-12 Report Viewer SHALL apply consistent typography and spacing to case information fields using design tokens
 5. THE Case Information section SHALL include a "Next Section" button to navigate to Documents Reviewed
 
-### Requirement 7
+### Requirement 8
 
 **User Story:** As an educator, I want to see which documents were reviewed to create the teacher guide, so that I understand the evidence base for the recommendations.
 
@@ -127,7 +139,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 4. THE K-12 Report Viewer SHALL use an icon to visually identify each document card
 5. THE Documents Reviewed section SHALL include a "Next Section" button to navigate to Student Overview
 
-### Requirement 8
+### Requirement 9
 
 **User Story:** As a tutor, I want to read a comprehensive student overview organized by learning profile, challenges, and social-emotional factors, so that I understand the whole student before diving into specific strategies.
 
@@ -140,7 +152,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 5. THE K-12 Report Viewer SHALL apply consistent styling to accordion headers and content areas matching the Figma mockup interaction pattern
 6. THE Student Overview section SHALL include a "Next Section" button to navigate to Key Support Strategies
 
-### Requirement 9
+### Requirement 10
 
 **User Story:** As a teacher, I want to see key support strategies presented in an organized, scannable format, so that I can quickly implement effective interventions for the student.
 
@@ -153,7 +165,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 5. THE K-12 Report Viewer SHALL apply consistent hover states and interaction patterns to strategy accordions using design tokens
 6. THE Key Support Strategies section SHALL include a "Next Section" button to navigate to Student's Strengths
 
-### Requirement 10
+### Requirement 11
 
 **User Story:** As a support staff member, I want to see the student's strengths with practical "what you see" and "what to do" guidance, so that I can leverage their strengths in my instruction.
 
@@ -166,7 +178,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 5. THE K-12 Report Viewer SHALL use single-item accordion behavior where only one strength can be expanded at a time
 6. THE Student's Strengths section SHALL include a "Next Section" button to navigate to Student's Challenges
 
-### Requirement 11
+### Requirement 12
 
 **User Story:** As a teacher, I want to see the student's challenges with practical "what you see" and "what to do" guidance, so that I can proactively address difficulties and avoid ineffective approaches.
 
@@ -179,7 +191,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 5. THE K-12 Report Viewer SHALL use single-item accordion behavior where only one challenge can be expanded at a time
 6. THE Student's Challenges section SHALL include a "Complete Report" button to navigate to the completion screen
 
-### Requirement 12
+### Requirement 13
 
 **User Story:** As a case manager, I want to download a PDF version of the complete teacher guide, so that I can share it with teachers, parents, and include it in student files.
 
@@ -191,7 +203,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 4. THE K-12 Report Viewer SHALL name the PDF file using the pattern "Teacher*Guide*[StudentName]\_[Date].pdf"
 5. THE Report Complete screen SHALL include a "Back to Cover" button to return to Case Information
 
-### Requirement 13
+### Requirement 14
 
 **User Story:** As an educator with accessibility needs, I want the K-12 report viewer to be fully keyboard navigable and screen reader compatible, so that I can access all report information independently.
 
@@ -203,7 +215,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 4. THE K-12 Report Viewer SHALL include a "Skip to main content" link for keyboard users
 5. THE K-12 Report Viewer SHALL announce section changes and accordion state changes to screen readers
 
-### Requirement 14
+### Requirement 15
 
 **User Story:** As a teacher, I want the report to be responsive and work on different devices, so that I can review the teacher guide on my tablet during class or on my laptop during planning time.
 
@@ -215,7 +227,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 4. THE K-12 Report Viewer SHALL ensure cards and accordions are fully readable and functional on mobile devices
 5. THE K-12 Report Viewer SHALL apply responsive design patterns consistent with the post-secondary report
 
-### Requirement 15
+### Requirement 16
 
 **User Story:** As a product manager, I want the K-12 report to use a modular, reusable component library, so that we can easily build Tutoring and future report types without duplicating code.
 
@@ -227,7 +239,7 @@ The K-12 report SHALL maintain its Sunwashed color palette for branding while ad
 4. THE K-12 Report Viewer SHALL follow the same accessibility patterns (WCAG 2.1 AA compliance) as the post-secondary report
 5. THE K-12 Report Viewer SHALL document the component API and usage patterns for future report type implementations
 
-### Requirement 16
+### Requirement 17
 
 **User Story:** As a developer, I want zero inline styles with hardcoded values in components, so that styling changes are predictable and don't break unexpectedly.
 

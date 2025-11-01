@@ -264,19 +264,19 @@ const SectionCard = styled.div`
 - PDF export functionality
 - Accessibility compliance (WCAG 2.1 AA)
 
-### Phase 3: Extract Tutoring Report (Week 5)
+### Phase 3: Build Tutoring Tutor Guide Report (Week 5)
 
 **Tasks:**
 
-1. Create tutoring config file
-2. Build tutoring-specific content components
-3. Reuse design system components (no duplication)
+1. Create tutoring config file (uses same sections as K-12 Teacher Guide)
+2. Reuse K-12 content components (no duplication needed - same structure)
+3. Apply tutoring-specific branding/colors via theme
 4. Test across all three report types
 
 **Deliverables:**
 
-- Tutoring report viewer using shared design system
-- Proof that system is truly modular
+- Tutoring Tutor Guide viewer using shared design system
+- Proof that system is truly modular (K-12 and Tutoring share 95%+ code)
 
 ### Phase 4: Refactor Post-Secondary (Week 6-8)
 

@@ -24,6 +24,7 @@ export class OptimizedQueries {
         id: users.id,
         username: users.username,
         email: users.email,
+        emailVerified: users.emailVerified,
         role: users.role,
         assignedModules: users.assignedModules,
         organizationId: users.organizationId,

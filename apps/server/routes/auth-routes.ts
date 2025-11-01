@@ -455,6 +455,7 @@ export function registerAuthRoutes(app: Express): void {
         id: user.id,
         username: user.username,
         email: user.email,
+        emailVerified: user.emailVerified,
         role: user.role as UserRole,
         assignedModules: (user.assignedModules as ModuleType[]) || [],
         organizationId: user.organizationId || undefined,
@@ -500,8 +501,46 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   app.get("/api/auth/me", requireAuth, (req, res) => {
+    console.log("📧 /api/auth/me - User object:", {
+      email: req.user?.email,
+      emailVerified: req.user?.emailVerified,
+      emailVerifiedType: typeof req.user?.emailVerified,
+    });
+    console.log("📧 Full req.user:", JSON.stringify(req.user, null, 2));
+
+    // Explicitly construct the user object to ensure all fields are included
+    const userResponse = {
+      id: req.user?.id,
+      username: req.user?.username,
+      email: req.user?.email,
+      emailVerified: req.user?.emailVerified,
+      role: req.user?.role,
+      assignedModules: req.user?.assignedModules,
+      organizationId: req.user?.organizationId,
+      organizationName: req.user?.organizationName,
+      customerId: req.user?.customerId,
+      customerName: req.user?.customerName,
+      reportCount: req.user?.reportCount,
+      maxReports: req.user?.maxReports,
+      isActive: req.user?.isActive,
+      lastLogin: req.user?.lastLogin,
+      demoPermissions: req.user?.demoPermissions,
+    };
+
+    console.log(
+      "📧 Response being sent:",
+      JSON.stringify(userResponse, null, 2)
+    );
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, private"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
     res.json({
-      user: req.user,
+      user: userResponse,
       session: {
         id: req.sessionID,
         cookie: req.session.cookie,

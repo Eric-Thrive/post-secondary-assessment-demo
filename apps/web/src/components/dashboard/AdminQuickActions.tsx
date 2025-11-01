@@ -33,10 +33,14 @@ export const AdminQuickActions: React.FC<AdminQuickActionsProps> = ({
   // Get icon for admin feature
   const getFeatureIcon = (featureId: string) => {
     switch (featureId) {
+      case "all-users":
+        return Users;
       case "user-management":
         return Users;
       case "organization-management":
         return Shield;
+      case "admin-dashboard":
+        return BarChart3;
       case "system-settings":
         return Settings;
       case "performance-dashboard":

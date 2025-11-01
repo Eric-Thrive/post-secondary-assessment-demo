@@ -463,7 +463,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Button
                 onClick={() => navigate("/admin/users")}
                 className="h-20"
@@ -471,6 +471,14 @@ export default function AdminDashboard() {
               >
                 <Users className="h-5 w-5 mr-2" />
                 Manage Users
+              </Button>
+              <Button
+                onClick={() => navigate("/admin/all-users")}
+                className="h-20"
+                variant="outline"
+              >
+                <Users className="h-5 w-5 mr-2" />
+                View All Users
               </Button>
               <Button
                 onClick={() => navigate("/admin/organizations")}

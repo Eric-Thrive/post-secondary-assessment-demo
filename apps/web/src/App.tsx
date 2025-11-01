@@ -33,6 +33,7 @@ import PromptsPage from "./pages/PromptsPage";
 import AdminPage from "./pages/AdminPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagementPage from "./pages/UserManagementPage";
+import SystemAdminUsersPage from "./pages/SystemAdminUsersPage";
 import OrganizationManagementPage from "./pages/OrganizationManagementPage";
 import TutoringDemoPage from "./pages/TutoringDemoPage";
 import PostSecondaryDemoLandingPage from "./pages/PostSecondaryDemoLandingPage";
@@ -45,10 +46,12 @@ import TutorLoginPage from "./pages/TutorLoginPage";
 import ReviewDocumentsPage from "./pages/ReviewDocumentsPage";
 import { SharedReport } from "./pages/SharedReport";
 import NotFound from "./pages/NotFound";
+import K12ReportViewerDemo from "./pages/K12ReportViewerDemo";
 import AuthenticationGuard from "@/components/auth/AuthenticationGuard";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ModuleType } from "@/types/unified-auth";
 import { ModuleDashboard } from "@/components/dashboard/ModuleDashboard";
+import { UserRole } from "@/types/unified-auth";
 
 const queryClient = new QueryClient();
 
@@ -86,11 +89,28 @@ const AuthenticatedRoute = () => {
 
   // Check if email is verified (for new users with email verification)
   const userWithEmail = user as any;
+  console.log("🔍 Full user object:", user);
+  console.log("🔍 Email:", userWithEmail.email);
+  console.log("🔍 EmailVerified value:", userWithEmail.emailVerified);
+  console.log("🔍 EmailVerified type:", typeof userWithEmail.emailVerified);
+  console.log(
+    "🔍 EmailVerified === true?",
+    userWithEmail.emailVerified === true
+  );
+  console.log(
+    "🔍 EmailVerified === false?",
+    userWithEmail.emailVerified === false
+  );
+  console.log(
+    "🔍 EmailVerified === undefined?",
+    userWithEmail.emailVerified === undefined
+  );
+
   if (
     userWithEmail.emailVerified === false ||
     (userWithEmail.email && userWithEmail.emailVerified === undefined)
   ) {
-    console.log("Email not verified, redirecting to verification pending");
+    console.log("❌ Email not verified, redirecting to verification pending");
     return (
       <Navigate
         to="/verify-email-pending"
@@ -99,6 +119,8 @@ const AuthenticatedRoute = () => {
       />
     );
   }
+
+  console.log("✅ Email verified, proceeding with routing");
 
   // Debug: Log user object to see the actual structure
   console.log("User object:", user);
@@ -186,8 +208,62 @@ const ModulePickerRoute = () => {
 
   console.log("ModulePickerRoute - availableModules:", availableModules);
 
+  // Define admin features based on user role
+  const adminFeatures = [
+    {
+      id: "admin-dashboard",
+      title: "Admin Dashboard",
+      description: "View system statistics and analytics",
+      icon: "dashboard",
+      route: "/admin/dashboard",
+      requiredRole: [
+        UserRole.DEVELOPER,
+        UserRole.SYSTEM_ADMIN,
+        UserRole.ORG_ADMIN,
+      ],
+    },
+    {
+      id: "all-users",
+      title: "View All Users",
+      description: "Browse complete user directory with roles and modules",
+      icon: "users",
+      route: "/admin/all-users",
+      requiredRole: [
+        UserRole.DEVELOPER,
+        UserRole.SYSTEM_ADMIN,
+        UserRole.ORG_ADMIN,
+      ],
+    },
+    {
+      id: "user-management",
+      title: "Manage Users",
+      description: "Edit user permissions and settings",
+      icon: "users",
+      route: "/admin/users",
+      requiredRole: [
+        UserRole.DEVELOPER,
+        UserRole.SYSTEM_ADMIN,
+        UserRole.ORG_ADMIN,
+      ],
+    },
+    {
+      id: "organization-management",
+      title: "Organizations",
+      description: "Manage organizations and assignments",
+      icon: "organization",
+      route: "/admin/organizations",
+      requiredRole: [UserRole.DEVELOPER, UserRole.SYSTEM_ADMIN],
+    },
+  ];
+
   try {
-    return <ModuleDashboard user={user} availableModules={availableModules} />;
+    return (
+      <ModuleDashboard
+        user={user}
+        availableModules={availableModules}
+        adminFeatures={adminFeatures}
+      />
+    );
   } catch (error) {
     console.error("Error rendering ModuleDashboard:", error);
     return (
@@ -353,6 +429,14 @@ const App = () => {
                 }
               />
               <Route
+                path="/admin/all-users"
+                element={
+                  <ProtectedRoute>
+                    <SystemAdminUsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/admin/organizations"
                 element={
                   <ProtectedRoute>
@@ -367,6 +451,12 @@ const App = () => {
                     <PromptsPage />
                   </ProtectedRoute>
                 }
+              />
+
+              {/* Demo/Testing Routes */}
+              <Route
+                path="/k12-report-viewer-demo"
+                element={<K12ReportViewerDemo />}
               />
             </Routes>
           </BrowserRouter>

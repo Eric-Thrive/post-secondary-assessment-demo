@@ -1,5 +1,5 @@
-import { db } from "./apps/server/db";
-import { users } from "./packages/db/schema";
+import { db, pool } from "./apps/server/db";
+import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 async function verifyPippaEmail() {
@@ -50,6 +50,8 @@ async function verifyPippaEmail() {
     console.log("\nPippa can now log in with:");
     console.log("Username:", user.username);
     console.log("Password: 77Emily#77");
+
+    await pool.end();
   } catch (error) {
     console.error("Error:", error);
     process.exit(1);

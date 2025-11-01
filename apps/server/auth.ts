@@ -17,6 +17,8 @@ declare global {
     interface User {
       id: number;
       username: string;
+      email?: string;
+      emailVerified?: boolean;
       role: UserRole;
       assignedModules: ModuleType[];
       organizationId?: string;
@@ -193,6 +195,8 @@ export const requireAuth = async (
     const tempUser = {
       id: user.id,
       username: user.username,
+      email: user.email,
+      emailVerified: user.emailVerified,
       role: userRole,
       assignedModules: (user.assignedModules as ModuleType[]) || [
         ModuleType.POST_SECONDARY,
@@ -277,14 +281,18 @@ export const requireCustomerAccess = (
     req.user.role === UserRole.DEVELOPER
   ) {
     console.log(
-      `✅ System admin/developer access granted for user: ${req.user.username}`
+      `✅ System admin/developer access granted for user: ${req.user.username} - NO FILTERS APPLIED`
     );
+    // Explicitly set filters to undefined so they can see all data
+    req.organizationFilter = undefined;
+    req.customerFilter = undefined;
     return next();
   }
 
   // Set organization filter for data isolation
   if (req.user.organizationId) {
     req.organizationFilter = req.user.organizationId;
+    req.customerFilter = req.user.organizationId; // Legacy support
     console.log(`🔒 Organization filter set: ${req.organizationFilter}`);
   }
 

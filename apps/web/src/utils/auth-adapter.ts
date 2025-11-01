@@ -133,6 +133,7 @@ export const adaptLegacyUser = (legacyUser: LegacyUser): AuthenticatedUser => {
   return {
     id: legacyUser.id.toString(),
     email: `${legacyUser.username}@example.com`, // Placeholder email
+    emailVerified: true, // Legacy users are assumed to be verified
     name: legacyUser.customerName || legacyUser.username,
     username: legacyUser.username,
     role,

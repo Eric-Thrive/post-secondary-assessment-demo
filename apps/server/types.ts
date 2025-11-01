@@ -31,6 +31,7 @@ declare module "express-session" {
       id: number;
       username: string;
       email: string;
+      emailVerified: boolean;
       role: UserRole;
       assignedModules: ModuleType[];
       organizationId?: string;

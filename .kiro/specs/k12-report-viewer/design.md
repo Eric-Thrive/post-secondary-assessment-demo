@@ -2,9 +2,17 @@
 
 ## Overview
 
-This design document outlines the technical approach for implementing the K-12 Tutor Guide Report Viewer by adapting the existing Figma mockup to align with the post-secondary accommodation report design system. The implementation will maintain the K-12 report's existing section structure and content while applying consistent visual styling, component patterns, and interaction behaviors from the post-secondary design specification.
+This design document outlines the technical approach for implementing a modular, config-driven K-12 Teacher Guide Report Viewer that serves as the foundation for a unified THRIVE report design system. The implementation prioritizes reusability, maintainability, and modularity by building a design token system and reusable component library that can be shared across all THRIVE report types (K-12 Teacher Guides, Tutoring Tutor Guides, Post-Secondary Accommodation Reports).
 
-The K-12 Report Viewer will be built using React with TypeScript, leveraging Radix UI components for accessibility and the existing component library patterns from the post-secondary report. The design preserves the K-12 Sunwashed color palette while incorporating post-secondary design system patterns for professional consistency.
+The K-12 Report Viewer will be built using React with TypeScript, leveraging design tokens for all styling values, reusable layout components, and a config-driven section system. This approach eliminates the inline style and hardcoded value issues present in the current post-secondary report implementation, making it easy to add new report types, modify styling globally, and maintain consistency across the product.
+
+**Key Architectural Principles:**
+
+- **Design Tokens First**: All colors, spacing, typography, and shadows defined in centralized token files
+- **Config-Driven Sections**: Report structure defined in configuration objects, not hardcoded in components
+- **Reusable Components**: Layout and content components that work across all report types
+- **Zero Inline Styles**: All styling via Tailwind CSS classes or styled-components referencing tokens
+- **Pluggable Content**: Section components can be swapped or reused without touching layout code
 
 ## Architecture
 
@@ -20,132 +28,591 @@ The K-12 Report Viewer will be built using React with TypeScript, leveraging Rad
 
 ### Component Hierarchy
 
+**Design System Layer** (Reusable across all report types):
+
 ```
-App
-├── SkipToMainContent (accessibility)
-├── NavigationSidebar
-│   ├── Logo & Title
-│   └── NavigationItems[]
-│       └── NavigationButton
-├── Header (sticky)
-│   ├── Logo Button
-│   └── Report Title
-└── MainContent
-    ├── CaseInformationSection
-    │   └── InfoCard
-    ├── DocumentsReviewedSection
-    │   └── DocumentCard[]
-    ├── StudentOverviewSection
-    │   ├── AtAGlanceCard
-    │   └── ThematicAccordion
-    │       └── AccordionItem[]
-    ├── KeySupportStrategiesSection
-    │   └── StrategyAccordion
-    │       └── AccordionItem[]
-    ├── StudentStrengthsSection
-    │   └── StrengthAccordion
-    │       └── AccordionItem[]
-    ├── StudentChallengesSection
-    │   └── ChallengeAccordion
-    │       └── AccordionItem[]
-    ├── ReportCompleteSection
-    │   ├── PDFDownloadButton
-    │   └── BackToCoverButton
-    └── HiddenPDFReport (for generation)
+apps/web/src/design-system/
+├── tokens/
+│   ├── colors.ts
+│   ├── spacing.ts
+│   ├── typography.ts
+│   ├── shadows.ts
+│   └── index.ts
+├── themes/
+│   ├── k12Theme.ts
+│   ├── tutoringTheme.ts
+│   └── postSecondaryTheme.ts
+└── components/
+    ├── layout/
+    │   ├── ThriveReportLayout.tsx
+    │   ├── ThriveReportSidebar.tsx
+    │   ├── ThriveReportHeader.tsx
+    │   └── ThriveReportSection.tsx
+    ├── cards/
+    │   ├── ThriveReportCard.tsx
+    │   ├── InfoCard.tsx
+    │   └── DocumentCard.tsx
+    ├── navigation/
+    │   ├── NavigationButton.tsx
+    │   └── BottomNavigation.tsx
+    ├── content/
+    │   ├── ThematicAccordion.tsx
+    │   ├── StrategyAccordion.tsx
+    │   ├── StrengthAccordion.tsx
+    │   └── ChallengeAccordion.tsx
+    └── types.ts
 ```
 
-### Design System Integration
+**K-12 Application Layer** (K-12-specific implementation):
 
-The K-12 Report Viewer will integrate with the post-secondary design system through:
+```
+apps/web/src/components/k12/
+├── K12ReportViewer.tsx (main component)
+├── k12Config.ts (section configuration)
+└── content/
+    ├── CaseInformationContent.tsx
+    ├── DocumentsReviewedContent.tsx
+    ├── StudentOverviewContent.tsx
+    ├── SupportStrategiesContent.tsx
+    ├── StudentStrengthsContent.tsx
+    ├── StudentChallengesContent.tsx
+    └── ReportCompleteContent.tsx
+```
 
-1. **Shared Typography Scale**: Adopt H1-H4 hierarchy (32px/24px/20px/18px) with consistent font weights
-2. **Spacing System**: Use consistent padding/margin tokens (4px base unit)
-3. **Border & Shadow Tokens**: Apply standardized border-radius (8px/12px) and shadow depths
-4. **Component Patterns**: Reuse Radix UI accordion, card, and button patterns
-5. **Accessibility Standards**: Maintain WCAG 2.1 AA compliance with proper ARIA labels and keyboard navigation
+**Component Tree at Runtime**:
+
+```
+K12ReportViewer
+├── ThriveReportLayout (design system)
+│   ├── ThriveReportSidebar (design system)
+│   │   └── NavigationButton[] (design system)
+│   ├── ThriveReportHeader (design system)
+│   └── ThriveReportSection[] (design system)
+│       └── [Content Components] (K-12 specific)
+│           ├── CaseInformationContent
+│           ├── DocumentsReviewedContent
+│           ├── StudentOverviewContent
+│           ├── SupportStrategiesContent
+│           ├── StudentStrengthsContent
+│           ├── StudentChallengesContent
+│           └── ReportCompleteContent
+```
+
+### Design System Architecture
+
+The design system is built in three layers:
+
+**Layer 1: Design Tokens** (Primitive values)
+
+- Colors, spacing, typography, shadows, border-radius
+- No business logic, just raw values
+- Example: `colors.navyBlue = "#1297D2"`
+
+**Layer 2: Themes** (Token combinations for specific contexts)
+
+- Combine tokens into semantic themes for each report type
+- Example: `k12Theme = { primary: colors.navyBlue, spacing: spacing, ... }`
+
+**Layer 3: Components** (UI building blocks)
+
+- Layout components (structure and positioning)
+- Card components (content containers)
+- Navigation components (user interaction)
+- Content components (section-specific rendering)
+
+### Config-Driven Section System
+
+Reports are defined via configuration objects:
+
+```typescript
+interface ReportConfig {
+  reportTitle: string;
+  sections: ReportSection[];
+  utilityButtons?: UtilityButton[];
+  theme: Theme;
+}
+
+interface UtilityButton {
+  id: string;
+  title: string;
+  icon: React.ComponentType;
+  route: string;
+}
+
+interface ReportSection {
+  id: string;
+  title: string;
+  icon: React.ComponentType | string;
+  width?: string;
+  subsections?: ReportSection[];
+}
+
+// K-12 Configuration
+const k12Config: ReportConfig = {
+  reportTitle: "Teacher Guide",
+  sections: [
+    { id: "case-info", title: "Case Information", icon: StudentIcon },
+    { id: "documents", title: "Documents Reviewed", icon: DocumentIcon },
+    { id: "overview", title: "Student Overview", icon: OverviewIcon },
+    { id: "strategies", title: "Key Support Strategies", icon: StrategiesIcon },
+    { id: "strengths", title: "Student's Strengths", icon: Star },
+    { id: "challenges", title: "Student's Challenges", icon: AlertTriangle },
+    { id: "complete", title: "Report Complete", icon: CheckCircle },
+  ],
+  utilityButtons: [
+    { id: "review", title: "Review", icon: Edit, route: "/k12-review-edit" },
+    {
+      id: "new-report",
+      title: "New Report",
+      icon: Plus,
+      route: "/new-k12-assessment",
+    },
+    { id: "home", title: "Home", icon: Home, route: "/" },
+  ],
+  theme: k12Theme,
+};
+```
+
+Section IDs map to content components via a registry:
+
+```typescript
+const sectionRegistry = {
+  "case-info": CaseInformationContent,
+  documents: DocumentsReviewedContent,
+  overview: StudentOverviewContent,
+  strategies: SupportStrategiesContent,
+  strengths: StudentStrengthsContent,
+  challenges: StudentChallengesContent,
+  complete: ReportCompleteContent,
+};
+```
+
+## Design Tokens
+
+### Token Structure
+
+All design tokens are defined in `apps/web/src/design-system/tokens/`:
+
+**colors.ts**:
+
+```typescript
+export const colors = {
+  // K-12 Sunwashed Palette
+  navyBlue: "#1297D2",
+  skyBlue: "#96D7E1",
+  orange: "#F89E54",
+  yellow: "#FDE677",
+
+  // Neutral colors
+  white: "#FFFFFF",
+  gray50: "#F8FAFC",
+  gray100: "#F1F5F9",
+  gray200: "#E2E8F0",
+  gray600: "#475569",
+  gray700: "#334155",
+  gray800: "#1E293B",
+  gray900: "#0F172A",
+
+  // Semantic colors
+  success: "#16a34a",
+  error: "#dc2626",
+  warning: "#F89E54",
+  info: "#1297D2",
+};
+```
+
+**spacing.ts**:
+
+```typescript
+export const spacing = {
+  xs: "4px",
+  sm: "8px",
+  md: "16px",
+  lg: "24px",
+  xl: "32px",
+  xxl: "48px",
+  xxxl: "64px",
+};
+```
+
+**typography.ts**:
+
+```typescript
+export const typography = {
+  fontFamilies: {
+    primary:
+      '"Avenir", "Avenir Next", -apple-system, BlinkMacSystemFont, sans-serif',
+    secondary: '"Montserrat", -apple-system, BlinkMacSystemFont, sans-serif',
+  },
+  fontSizes: {
+    h1: "32px",
+    h2: "24px",
+    h3: "20px",
+    h4: "18px",
+    bodyLarge: "16px",
+    body: "14px",
+    small: "12px",
+  },
+  fontWeights: {
+    regular: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+    extrabold: 800,
+    heavy: 900,
+  },
+  lineHeights: {
+    tight: 1.2,
+    normal: 1.5,
+    relaxed: 1.75,
+  },
+};
+```
+
+**shadows.ts**:
+
+```typescript
+export const shadows = {
+  sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  md: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+  lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+  xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+  xxl: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+};
+
+export const borderRadius = {
+  sm: "4px",
+  md: "8px",
+  lg: "12px",
+  xl: "16px",
+  full: "9999px",
+};
+```
+
+### Theme Objects
+
+Themes combine tokens for specific report types:
+
+**k12Theme.ts**:
+
+```typescript
+import { colors, spacing, typography, shadows, borderRadius } from "../tokens";
+
+export const k12Theme = {
+  name: "K-12 Teacher Guide",
+  colors: {
+    primary: colors.navyBlue,
+    secondary: colors.skyBlue,
+    accent: colors.orange,
+    highlight: colors.yellow,
+    ...colors,
+  },
+  spacing,
+  typography,
+  shadows,
+  borderRadius,
+  // K-12-specific overrides
+  navigation: {
+    activeBackground: colors.yellow,
+    activeBorder: colors.orange,
+    inactiveBackground: colors.gray100,
+  },
+};
+```
+
+**tutoringTheme.ts**:
+
+```typescript
+// Same structure as k12Theme, different color values
+export const tutoringTheme = {
+  name: "Tutoring Tutor Guide",
+  colors: {
+    primary: colors.navyBlue,
+    secondary: colors.skyBlue,
+    accent: colors.orange,
+    highlight: colors.yellow,
+    ...colors,
+  },
+  spacing,
+  typography,
+  shadows,
+  borderRadius,
+  // Tutoring-specific overrides (if any)
+  navigation: {
+    activeBackground: colors.yellow,
+    activeBorder: colors.orange,
+    inactiveBackground: colors.gray100,
+  },
+};
+```
 
 ## Components and Interfaces
 
-### Core Components
+### Design System Components (Reusable)
 
-#### 1. NavigationSidebar
+These components live in `apps/web/src/design-system/components/` and are used by all report types.
 
-**Purpose**: Fixed left sidebar for section navigation
+#### 1. ThriveReportLayout
+
+**Location**: `apps/web/src/design-system/components/layout/ThriveReportLayout.tsx`
+
+**Purpose**: Main layout wrapper that provides the overall page structure with sidebar and content area
 
 **Props**:
 
 ```typescript
-interface NavigationSidebarProps {
+interface ThriveReportLayoutProps {
+  config: ReportConfig;
   currentSection: string;
   onSectionChange: (sectionId: string) => void;
-  sections: NavigationSection[];
-}
-
-interface NavigationSection {
-  id: string;
-  label: string;
-  icon: "custom" | LucideIcon;
-  customIcon?: string;
+  theme: Theme;
+  children: React.ReactNode;
 }
 ```
 
-**Styling**:
+**Styling**: Uses design tokens exclusively, no inline styles
 
-- Fixed position, left: 0, width: 320px (80rem)
-- White background with Sky Blue border (#96D7E1)
-- Active section: Yellow background (#FDE677) with Orange border (#F89E54)
-- Inactive sections: Gray background with hover states
+- Background gradient based on current section (from theme)
+- Responsive layout (sidebar collapses on mobile)
+- Fixed header and sidebar positioning
+
+**Accessibility**:
+
+- Semantic HTML5 structure (`<header>`, `<nav>`, `<main>`)
+- Skip to main content link
+- Proper landmark regions
+
+---
+
+#### 2. ThriveReportSidebar
+
+**Location**: `apps/web/src/design-system/components/layout/ThriveReportSidebar.tsx`
+
+**Purpose**: Fixed left sidebar for section navigation and utility buttons, reusable across all report types
+
+**Props**:
+
+```typescript
+interface ThriveReportSidebarProps {
+  sections: ReportSection[];
+  utilityButtons?: UtilityButton[];
+  currentSection: string;
+  onSectionChange: (sectionId: string) => void;
+  theme: Theme;
+  logo?: string;
+  reportTitle?: string;
+}
+```
+
+**Styling**: Uses Tailwind classes + design tokens
+
+```typescript
+// Example usage
+<div className="fixed left-0 top-0 h-screen w-80 bg-white shadow-xl">
+  <div style={{ borderRight: `2px solid ${theme.colors.secondary}` }}>
+    {sections.map((section) => (
+      <NavigationButton
+        key={section.id}
+        section={section}
+        isActive={currentSection === section.id}
+        theme={theme}
+        onClick={() => onSectionChange(section.id)}
+      />
+    ))}
+  </div>
+</div>
+```
 
 **Accessibility**:
 
 - `role="navigation"` with `aria-label="Report sections navigation"`
-- `aria-current="page"` on active section
-- Keyboard navigable with visible focus indicators
+- Keyboard navigable with Tab/Enter
+- Visible focus indicators
 
-#### 2. SectionCard
+---
 
-**Purpose**: Container for each report section with consistent styling
+#### 3. ThriveReportHeader
+
+**Location**: `apps/web/src/design-system/components/layout/ThriveReportHeader.tsx`
+
+**Purpose**: Sticky header with logo, title, and action buttons
 
 **Props**:
 
 ```typescript
-interface SectionCardProps {
+interface ThriveReportHeaderProps {
+  logo: string;
+  title: string;
+  theme: Theme;
+  actions?: React.ReactNode; // Print button, etc.
+}
+```
+
+**Styling**: Uses design tokens for gradient background
+
+```typescript
+<header style={{
+  background: `linear-gradient(to right, ${theme.colors.primary}, ${theme.colors.secondary})`
+}}>
+```
+
+---
+
+#### 4. ThriveReportSection
+
+**Location**: `apps/web/src/design-system/components/layout/ThriveReportSection.tsx`
+
+**Purpose**: Wrapper for section content with consistent styling and background
+
+**Props**:
+
+```typescript
+interface ThriveReportSectionProps {
+  section: ReportSection;
+  isActive: boolean;
+  theme: Theme;
   children: React.ReactNode;
-  backgroundGradient?: string;
+}
+```
+
+**Styling**: Uses design tokens for background gradients
+
+- Applies section-specific background gradient from theme
+- Consistent padding and spacing
+- Smooth transitions when switching sections
+
+---
+
+#### 5. NavigationButton
+
+**Location**: `apps/web/src/design-system/components/navigation/NavigationButton.tsx`
+
+**Purpose**: Individual navigation button in sidebar
+
+**Props**:
+
+```typescript
+interface NavigationButtonProps {
+  section: ReportSection;
+  isActive: boolean;
+  theme: Theme;
+  onClick: () => void;
+}
+```
+
+**Styling**: Uses design tokens for active/inactive states
+
+```typescript
+const buttonStyle = isActive
+  ? {
+      backgroundColor: theme.navigation.activeBackground,
+      borderColor: theme.navigation.activeBorder,
+      color: theme.colors.gray900,
+    }
+  : {
+      backgroundColor: theme.navigation.inactiveBackground,
+      borderColor: theme.colors.gray200,
+      color: theme.colors.gray600,
+    };
+```
+
+**Accessibility**:
+
+- `aria-current="page"` when active
+- Keyboard accessible with Enter/Space
+- Visible focus ring
+
+---
+
+### Card Components (Reusable)
+
+#### 6. ThriveReportCard
+
+**Location**: `apps/web/src/design-system/components/cards/ThriveReportCard.tsx`
+
+**Purpose**: Generic card container with consistent styling, reusable across all report types
+
+**Props**:
+
+```typescript
+interface ThriveReportCardProps {
+  children: React.ReactNode;
+  theme: Theme;
+  variant?: "default" | "highlighted" | "bordered";
   className?: string;
 }
 ```
 
-**Styling**:
+**Styling**: Uses design tokens exclusively
 
-- Border: 2px solid gray-200
-- Shadow: 2xl (large shadow depth)
-- Border radius: 12px (xl)
-- Padding: 32px (8rem)
-- Background: Optional gradient overlay with 90% opacity
+```typescript
+const cardStyles = {
+  border: `2px solid ${theme.colors.gray200}`,
+  boxShadow: theme.shadows.xxl,
+  borderRadius: theme.borderRadius.lg,
+  padding: theme.spacing.xl,
+  backgroundColor: theme.colors.white,
+};
+```
 
-#### 3. InfoCard
+**Variants**:
 
-**Purpose**: Display case information in label-value pairs
+- `default`: White background, gray border
+- `highlighted`: Colored background based on theme
+- `bordered`: Thicker colored border
+
+---
+
+#### 7. InfoCard
+
+**Location**: `apps/web/src/design-system/components/cards/InfoCard.tsx`
+
+**Purpose**: Display label-value pairs (case information, metadata, etc.)
 
 **Props**:
 
 ```typescript
 interface InfoCardProps {
   data: Record<string, string>;
+  theme: Theme;
 }
 ```
 
-**Styling**:
+**Styling**: Uses design tokens + semantic HTML
 
-- White background with 95% opacity
-- Sky Blue border (#96D7E1), 2px
-- Shadow: xl
-- Uses `<dl>` semantic structure
-- Label: Bold, min-width 160px
-- Value: Regular weight, gray-700
+```typescript
+<ThriveReportCard theme={theme} variant="bordered">
+  <dl>
+    {Object.entries(data).map(([label, value]) => (
+      <>
+        <dt
+          style={{
+            fontWeight: theme.typography.fontWeights.bold,
+            minWidth: "160px",
+          }}
+        >
+          {label}
+        </dt>
+        <dd
+          style={{
+            color: theme.colors.gray700,
+          }}
+        >
+          {value}
+        </dd>
+      </>
+    ))}
+  </dl>
+</ThriveReportCard>
+```
 
-#### 4. DocumentCard
+**Accessibility**: Uses semantic `<dl>`, `<dt>`, `<dd>` elements
+
+---
+
+#### 8. DocumentCard
+
+**Location**: `apps/web/src/design-system/components/cards/DocumentCard.tsx`
 
 **Purpose**: Display reviewed document information
 
@@ -157,15 +624,27 @@ interface DocumentCardProps {
   author: string;
   date: string;
   keyFindings: string;
+  theme: Theme;
 }
 ```
 
-**Styling**:
+**Styling**: Uses design tokens for colored left border
 
-- White background with 95% opacity
-- Orange left border (#F89E54), 4px
-- Icon circle: Orange background (#fed7aa)
-- FileText icon in Orange (#F89E54)
+```typescript
+<ThriveReportCard theme={theme}>
+  <div style={{ borderLeft: `4px solid ${theme.colors.accent}` }}>
+    <div
+      style={{
+        backgroundColor: `${theme.colors.accent}20`, // 20% opacity
+        borderRadius: theme.borderRadius.full,
+      }}
+    >
+      <FileText style={{ color: theme.colors.accent }} />
+    </div>
+    {/* Document content */}
+  </div>
+</ThriveReportCard>
+```
 
 #### 5. ThematicAccordion
 
@@ -825,3 +1304,45 @@ To align with post-secondary design:
 - Figma Mockup: `.figma/k12-figma-design/`
 - Post-Secondary Design Spec: `.figma/post-secondary-report-design.md`
 - Requirements: `.kiro/specs/k12-report-viewer/requirements.md`
+
+---
+
+## Design Document Update Summary
+
+**Status**: Partially updated to reflect modular architecture (January 2025)
+
+**What's Been Updated**:
+
+- ✅ Overview section - Now emphasizes modularity, design tokens, and config-driven approach
+- ✅ Architecture section - Added design system layer structure and config-driven section system
+- ✅ Design Tokens section - Complete token structure for colors, spacing, typography, shadows
+- ✅ Theme Objects section - K-12 and Tutoring theme definitions
+- ✅ Layout Components - ThriveReportLayout, ThriveReportSidebar, ThriveReportHeader, ThriveReportSection, NavigationButton
+- ✅ Card Components - ThriveReportCard, InfoCard, DocumentCard
+
+**What Needs Updating** (retained from original design for reference):
+
+- Accordion components (ThematicAccordion, StrategyAccordion, StrengthAccordion, ChallengeAccordion)
+- K-12 Content Components (CaseInformationContent, DocumentsReviewedContent, etc.)
+- PDF generation components
+- Data models
+- Error handling
+- Testing strategy
+- Responsive design details
+- Accessibility features
+- Performance considerations
+
+**Key Architectural Changes**:
+
+1. **No More Inline Styles**: All styling via design tokens or Tailwind classes
+2. **Config-Driven**: Sections defined in configuration objects, not hardcoded
+3. **Reusable Components**: Design system components work across K-12, Tutoring, and future report types
+4. **Theme-Based**: Each report type has its own theme that combines design tokens
+5. **Modular Structure**: Clear separation between design system (reusable) and application (K-12-specific) layers
+
+**Next Steps**:
+
+- Update remaining component descriptions to use design tokens
+- Update Data Models section to include ReportConfig and Theme interfaces
+- Update tasks.md to reflect design system foundation phase
+- Create implementation examples showing how Tutoring reuses K-12 components

@@ -92,8 +92,22 @@ export class UnifiedAuthIntegration {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const responseText = await response.text();
+        console.log("🔍 Raw response text:", responseText);
+        const data = JSON.parse(responseText);
+        console.log("🔍 Parsed data:", data);
+        console.log("🔍 Raw API response data.user:", {
+          email: data.user?.email,
+          emailVerified: data.user?.emailVerified,
+          emailVerifiedType: typeof data.user?.emailVerified,
+          allKeys: Object.keys(data.user || {}),
+        });
         const unifiedUser = this.convertToUnifiedUser(data.user);
+        console.log("🔍 Converted unified user:", {
+          email: unifiedUser.email,
+          emailVerified: unifiedUser.emailVerified,
+          emailVerifiedType: typeof unifiedUser.emailVerified,
+        });
 
         return {
           isAuthenticated: true,
@@ -174,6 +188,16 @@ export class UnifiedAuthIntegration {
    * Convert legacy user format to unified AuthenticatedUser format
    */
   private convertToUnifiedUser(backendUser: any): AuthenticatedUser {
+    console.log("🔍 convertToUnifiedUser - backendUser:", backendUser);
+    console.log(
+      "🔍 convertToUnifiedUser - backendUser.emailVerified:",
+      backendUser.emailVerified
+    );
+    console.log(
+      "🔍 convertToUnifiedUser - backendUser keys:",
+      Object.keys(backendUser || {})
+    );
+
     if (isLegacyUser(backendUser)) {
       return adaptLegacyUser(backendUser);
     }
@@ -202,6 +226,7 @@ export class UnifiedAuthIntegration {
     return {
       id: backendUser.id?.toString() || "unknown",
       email: backendUser.email || `${backendUser.username}@example.com`,
+      emailVerified: backendUser.emailVerified,
       name: backendUser.customerName || backendUser.username || "Unknown User",
       username: backendUser.username || "unknown",
       role: backendUser.role,

@@ -1,615 +1,103 @@
-# Project Overview
+# Email Verification Login Issue - Debug Session
 
-AI-powered educational accessibility platform that dynamically adapts support resources for diverse learning needs through intelligent semantic matching and personalized recommendations. Generates comprehensive accommodation reports for K-12 and post-secondary educational contexts.
+## Problem
 
-**Core Modules:**
+User cannot log in because the system redirects to email verification page even though the email is verified in the database.
 
-- **K-12 Module**: Grade-specific analysis (K-5, 6-8, 9-12, Special Ed), observation templates, barrier identification
-- **Post-Secondary Module**: Higher education accommodations across Academic, Testing, Technology, and Additional Resources
-- **Tutoring Module**: Specialized tutoring assessment and support recommendations
-- **AI Processing Pipeline**: Multi-format document upload (PDF, DOCX, images), OCR, GPT-4 integration with function calling
-- **Report Management**: Version tracking, share tokens, multi-format export (PDF, Word, JSON)
+## Root Cause Analysis
 
-## Unified Assessment UI
+### What We Found
 
-- `UnifiedAssessmentForm` now supports `"k12"`, `"post_secondary"`, and `"tutoring"` modules with identical THRIVE branding (logo, gradient header, progress sidebar, gradient background, spacious white card layout).
-- Tutoring assessments route through `NewTutoringAssessment`, which mirrors the post-secondary/K-12 structure and relies on `PathwaySelector` auto-selecting the simple pathway.
-- Module-specific navigation still points to `/new-k12-assessment`, `/new-post-secondary-assessment`, and `/new-tutoring-assessment`; the legacy `NewAssessment` component has been removed.
-- Finalized document enforcement remains in `UnifiedAssessmentForm`; users must finalize at least one upload via the PI Redactor before submission.
+1. **Database**: `emailVerified` is set to `true` ✅
+2. **Server Query**: `getUserWithOrganization` selects `emailVerified` field ✅
+3. **Server Middleware**: `req.user` includes `emailVerified: true` ✅
+4. **Server Response**: JSON response includes `"emailVerified": true` ✅
+5. **Browser Receives**: Parsed data shows `emailVerified: true` ✅
+6. **Frontend Access**: When accessing `data.user.emailVerified`, it shows `undefined` ❌
 
-# Tech Stack
+### Key Discovery
 
-## Frontend
-
-- **React 18.3.1** with **TypeScript 5.6**
-- **Vite 5.4** for build/dev server
-- **Tailwind CSS 3.4** with **shadcn/ui** components
-- **React Router DOM 7.6** for routing
-- **React Hook Form + Zod** for form validation
-- **React Query 5.60** for server state
-- **Framer Motion** for animations
-- **Tesseract.js** for OCR, **PDF.js** for PDF extraction, **Mammoth.js** for Word docs
-
-## Backend
-
-- **Node.js 20+** with **Express.js 4.21**
-- **TypeScript 5.6**
-- **Drizzle ORM 0.39** with **PostgreSQL**
-- **express-session** with PostgreSQL store
-- **bcryptjs** for password hashing
-- **OpenAI API 5.8** (GPT-4.1 / GPT-4o)
-- **SendGrid** for email notifications
-- **Google Cloud Storage** for document uploads
-
-## Database
-
-- **PostgreSQL 16** (Railway or Replit-managed)
-- **Drizzle ORM** with migrations
-- Multi-tenancy support with customer isolation
-- Session-based authentication
-
-## Deployment & Hosting
-
-- **Railway** (recommended) - Managed PostgreSQL, auto-deploy from GitHub
-- **Alternative**: Replit (legacy), Neon, Supabase
-- **Local Development**: VS Code with Railway CLI
-
-## Build & Dev Tools
-
-- **Vite** (frontend), **esbuild** (backend)
-- **drizzle-kit** for migrations
-- **tsx** for TypeScript execution
-- **PostCSS + Autoprefixer**
-
-# Code Style & Conventions
-
-- Use **TypeScript** strictly across full stack
-- Prefer **functional React components** with hooks
-- Use **Tailwind CSS** utility classes (avoid inline styles)
-- Follow **shadcn/ui** component patterns
-- Name branches: `feature/<topic>`, `fix/<issue>`, `refactor/<area>`
-- Use **Conventional Commits** format:
-  - `feat:` new features
-  - `fix:` bug fixes
-  - `refactor:` code restructuring
-  - `docs:` documentation changes
-  - `test:` adding/updating tests
-- Keep functions small and focused (single responsibility)
-- Use descriptive variable names (avoid abbreviations)
-- Add JSDoc comments for complex functions
-- Prefer `const` over `let`, avoid `var`
-
-# Environment Setup
-
-## Quick Start Options
-
-### Option 1: Railway (Recommended)
-
-See [QUICKSTART_RAILWAY.md](QUICKSTART_RAILWAY.md) for 15-minute setup guide.
-
-### Option 2: Local Development
-
-## Prerequisites
-
-- Node.js 20+
-- PostgreSQL 16 (optional if using Railway database)
-- npm or pnpm
-- Railway CLI (optional): `npm install -g @railway/cli`
-
-## Initial Setup
-
-```bash
-# Clone repository
-git clone <repo-url>
-cd post-secondary-assessment-demo
-
-# Install dependencies
-npm install
-
-# Copy environment template
-cp .env.example .env
-
-# Configure .env with your values:
-# - DATABASE_URL (Neon PostgreSQL connection string)
-# - OPENAI_API_KEY
-# - SESSION_SECRET (random string)
-# - APP_ENVIRONMENT (development, production, post-secondary-demo, k12-demo, tutoring-demo)
-# - NODE_ENV (development or production)
-# - PORT (5001 - to avoid macOS ControlCenter conflict on 5000)
-
-# Push database schema
-npm run db:push
-
-# Start development server
-npm run dev
-# Runs on http://localhost:5001
-```
-
-## Environment Variables
-
-Required in `.env`:
-
-- `DATABASE_URL` - Neon PostgreSQL connection string (all environments use same database)
-- `OPENAI_API_KEY` - OpenAI API key for GPT-4
-- `SESSION_SECRET` - Random string for session encryption
-- `APP_ENVIRONMENT` - Options: `development`, `production`, `post-secondary-demo`, `k12-demo`, `tutoring-demo`
-- `NODE_ENV` - `development` or `production`
-- `PORT` - Default: `5001` (avoid macOS ControlCenter conflict on port 5000)
-- `VITE_PI_REDACTOR_URL` - URL to PI Redactor tool (optional)
-
-**Login redirects & cookies**:
-
-- `LOGIN_REDIRECT_DEFAULT_URL` – fallback path when no demo/role match
-- `LOGIN_REDIRECT_POST_SECONDARY_DEMO_URL`, `LOGIN_REDIRECT_K12_DEMO_URL`, `LOGIN_REDIRECT_TUTORING_DEMO_URL`
-- `LOGIN_REDIRECT_ROLE_SYSTEM_ADMIN_URL`, `LOGIN_REDIRECT_ROLE_CUSTOMER_ADMIN_URL`, `LOGIN_REDIRECT_ROLE_TUTOR_URL`
-- Optional cross-subdomain session config: `SESSION_COOKIE_DOMAIN`, `SESSION_COOKIE_SAMESITE`
-
-**Note**: All environments use the same Neon database with Role-Based Access Control (RBAC). User permissions control access levels rather than environment variables.
-
-# Testing Guidelines
-
-## Current Status
-
-⚠️ **No formal testing framework currently configured**
-
-## Testing Recommendations (To Be Implemented)
-
-- Add **Vitest** for frontend unit/integration tests
-- Add **React Testing Library** for component tests
-- Add **Playwright** or **Cypress** for E2E tests
-- Target 80%+ coverage for new code
-- Tests should live alongside source files or in `__tests__/` directories
-
-## Manual Testing Artifacts
-
-- `test-ai-handler.sh` - Bash script for AI response testing
-- `test-cascade-inference.md` - Test documentation
-- `test-k12-simple-pathway.md` - Test scenario docs
-- Scripts in `scripts/` for data testing
-
-# Development Workflow
-
-## Daily Development
-
-1. Pull latest from `main` before starting work
-2. Create feature branch: `git checkout -b feature/<name>`
-3. Make changes and test locally
-4. Run type checking: `npm run check`
-5. Commit with descriptive messages
-6. Push and create PR to `main`
-7. Ensure PR passes all checks before merging
-8. Always sync from `main` before PR submission
-
-## Database Changes
-
-```bash
-# Modify schema in shared/schema.ts
-# Push changes to database (applies to the single shared database)
-npm run db:push
-
-# For production deployments, generate migration files for version control
-npx drizzle-kit generate
-# Review migration SQL in migrations/
-# Apply migration: npm run db:push (or run migration in production CI/CD)
-```
-
-**Note**: All environments use the same database. Schema changes via `db:push` apply to that database immediately. Migrations are for version control and reproducible deployments, not for separating dev/prod databases.
-
-## Code Review Checklist
-
-- TypeScript types are properly defined
-- No `any` types unless absolutely necessary
-- Components follow existing patterns
-- Error handling is comprehensive
-- Database queries use Drizzle ORM properly
-- Authentication/authorization checks in place
-- Customer isolation maintained (multi-tenancy)
-- No sensitive data in logs or responses
-
-# Common Commands
-
-```bash
-# Development
-npm run dev              # Start dev server (port 5000)
-npm run check            # TypeScript type checking
-
-# Database
-npm run db:push          # Push schema changes to database
-npx drizzle-kit generate # Generate migration files
-npx drizzle-kit studio   # Open Drizzle Studio (DB GUI)
-
-# Production Build
-npm run build            # Build frontend (Vite) + backend (esbuild)
-npm run start            # Start production server
-
-# Utilities
-npx tsx scripts/<script>.ts  # Run TypeScript scripts
-```
-
-# Recent Updates & Learnings (Oct 2025)
-
-- **Security & repo hygiene**
-  - Removed a committed `connect.sid` cookie placeholder and clarified `cookies.txt` usage (runtime-only tokens).
-  - Wrapped the `/api` request logger with a `NODE_ENV === "development"` guard to avoid production noise.
-  - Deleted previously checked-in lcov coverage artifacts and the experimental “Revise Disability Report Template” app; added both paths to `.gitignore` to prevent reintroduction.
-- **Unified credential recovery**
-  - Consolidated "Forgot password" / "Forgot username" flows into a single modal on `UnifiedLoginPage` and the legacy `SimpleLogin` screen.
-  - Modal provides password reset and username recovery options, shares request handlers (`/api/auth/reset-password-request`, `/api/auth/forgot-username`), and resets state on close.
-  - Updated Vitest suites to follow the new interaction pattern.
-- **Module dashboard enhancements**
-  - Added top navigation with THRIVE branding, user details, and a working logout button sourced from `useAuth`.
-  - Module cards and admin quick actions now route with `useNavigate`; support/documentation buttons launch external resources or mailto links.
-  - Reworked layout into a 12-column grid with a status/help sidebar to reduce whitespace and surface platform health info.
-- **Testing guidance**
-  - Unit tests mock `useNavigate`/`useAuth` to assert routing and logout behavior. Run `npx vitest run src/components/auth/__tests__/UnifiedLoginPage.test.tsx src/components/__tests__/dashboard/ModuleDashboard.test.tsx` for quick verification.
-
-# Database Schema Overview
-
-## Core Tables
-
-- `users` - User accounts with role-based access (system_admin, customer_admin, tutor)
-- `sessions` - Express session store
-- `assessmentCases` - Main case records with UUID-based tracking
-- `promptSections` - Database-driven AI prompt management
-- `aiConfig` - OpenAI configuration and model settings
-- `lookupTables` - K-12 and post-secondary lookup data
-- `accommodationMappings` - Barrier-to-accommodation mappings
-- `reportVersions` - Finalized report versions with change history
-
-## Key Features
-
-- **Multi-tenancy**: Customer isolation via `customerId`
-- **Version tracking**: Report versions with finalization workflow
-- **Role-based access**: System admin, customer admin, tutor roles
-- **Demo permissions**: JSON-based flexible access control
-- **Type safety**: Drizzle-zod integration
-
-# Migration from Replit
-
-## Replit-Specific Dependencies to Remove/Replace
-
-### 1. Vite Plugins (Dev Dependencies)
-
-```json
-// Remove from package.json devDependencies:
-"@replit/vite-plugin-cartographer": "^0.3.0"
-"@replit/vite-plugin-runtime-error-modal": "^0.0.3"
-```
-
-**Action**: Remove from `vite.config.ts` and uninstall
-
-### 2. Replit Configuration Files
+The expanded "Parsed data" object in the browser console clearly shows:
 
 ```
-.replit           # Delete after migration
-.env.replit       # Delete (if exists)
+user:
+  emailVerified: true
 ```
 
-### 3. Database Migration
+But when we log `data.user?.emailVerified`, it returns `undefined`. This is very unusual and suggests a timing issue or some kind of property access problem.
 
-**Current**: Replit PostgreSQL 16
-**Options**:
+## Changes Made
 
-- **Neon** (recommended): Serverless PostgreSQL, already supported in code
-- **Supabase**: Already supported in code
-- **Railway/Render**: Managed PostgreSQL
-- **Self-hosted**: AWS RDS, GCP Cloud SQL, etc.
+### Server Side
 
-**Steps**:
+1. **apps/server/services/optimized-queries.ts**
 
-1. Export data: `pg_dump $DATABASE_URL > backup.sql`
-2. Create new database on target platform
-3. Import data: `psql $NEW_DATABASE_URL < backup.sql`
-4. Update `DATABASE_URL` in `.env`
-5. Update `APP_ENVIRONMENT` to match new platform
+   - Added `emailVerified: users.emailVerified` to the select statement
 
-### 4. Google Cloud Storage
+2. **apps/server/auth.ts**
 
-**Current**: Via Replit integration `javascript_object_storage`
-**Migration**: Already using `@google-cloud/storage` directly
-**Action**:
+   - Added `emailVerified?: boolean` to the `Express.User` interface
+   - Added `emailVerified: user.emailVerified` to the `tempUser` object in `requireAuth` middleware
 
-- Obtain GCP service account credentials JSON
-- Set `GOOGLE_APPLICATION_CREDENTIALS` environment variable
-- Or set credentials in code via `new Storage({ keyFilename: '...' })`
+3. **apps/server/routes/auth-routes.ts**
+   - Explicitly constructed the user response object with all fields including `emailVerified`
+   - Added cache-busting headers to prevent browser caching
+   - Added extensive logging to track the `emailVerified` value through the response pipeline
 
-### 5. SendGrid
+### Frontend Side
 
-**Current**: Via Replit integration `javascript_sendgrid`
-**Migration**: Already using `@sendgrid/mail` directly
-**Action**:
+1. **apps/web/src/services/auth/unified-auth.ts**
 
-- Ensure `SENDGRID_API_KEY` is set in environment
-- No code changes needed
+   - Added `emailVerified?: boolean` to the `AuthenticatedUser` interface
 
-### 6. Port Configuration
+2. **apps/web/src/services/auth/unified-auth-integration.ts**
 
-**Current**: Multiple port mappings in `.replit`
-**Action**: Single port deployment (default 5000)
+   - Added `emailVerified: backendUser.emailVerified` to the `convertToUnifiedUser` function
+   - Added extensive logging to track the value through parsing and conversion
+   - Added raw response text logging before JSON parsing
+   - Added logging in `convertToUnifiedUser` to see what's passed in
 
-- Remove port configuration complexity
-- Most platforms auto-assign ports
+3. **apps/web/src/App.tsx**
+   - Added detailed logging for email verification checks
 
-## Target Platform Recommendations
-
-### Option A: Railway (Easiest Migration)
-
-✅ Node.js + Express works out of the box
-✅ Managed PostgreSQL included
-✅ GitHub auto-deploy
-✅ Environment variable management
-✅ No code changes needed
-
-### Option B: Render
-
-✅ Similar to Railway
-✅ Free tier for PostgreSQL
-✅ Native Dockerfile support
-✅ Health checks built-in
-
-### Option C: Vercel
-
-⚠️ Requires serverless refactor OR standalone mode
-✅ Excellent for frontend + Neon PostgreSQL
-✅ Fastest CDN and edge network
-⚠️ Long-running processes (AI calls) may hit timeout limits
-
-### Option D: AWS/GCP/Azure
-
-✅ Production-grade scalability
-✅ Full control
-⚠️ More complex setup (ECS, App Engine, Cloud Run)
-✅ Already using Google Cloud Storage
-
-## Migration Checklist
-
-- [ ] Remove Replit Vite plugins from `package.json` and `vite.config.ts`
-- [ ] Delete `.replit` file
-- [ ] Set up new PostgreSQL database (Neon/Supabase/Railway)
-- [ ] Export and migrate database data
-- [ ] Update `DATABASE_URL` in new environment
-- [ ] Update `APP_ENVIRONMENT` variable
-- [ ] Configure Google Cloud Storage credentials
-- [ ] Configure SendGrid API key
-- [ ] Set `SESSION_SECRET` for production
-- [ ] Update `NODE_ENV=production`
-- [ ] Test build process: `npm run build`
-- [ ] Test production start: `npm run start`
-- [ ] Configure health check endpoint (if needed)
-- [ ] Set up CI/CD pipeline (GitHub Actions recommended)
-- [ ] Configure domain and SSL
-- [ ] Set up monitoring and error tracking
-- [ ] Add formal testing framework (Vitest + Playwright)
-- [ ] Update documentation with new deployment process
-
-# Review Process
-
-Before merging PRs:
-
-1. **Type checking passes**: `npm run check`
-2. **Build succeeds**: `npm run build`
-3. **Manual testing complete**: Test affected user flows
-4. **Code review approved**: At least one reviewer
-5. **Naming and structure follow conventions**
-6. **Database migrations reviewed** (if applicable)
-7. **No sensitive data exposed** (check logs, responses)
-8. **Customer isolation maintained** (multi-tenancy checks)
-9. **Update documentation** as needed
-10. **No Replit-specific dependencies introduced**
-
-# Security & Compliance
-
-## Critical Security Rules
-
-- **Never commit** `.env`, credentials, API keys
-- **Never log** sensitive user data (PII, assessment details)
-- **Always validate** user input with Zod schemas
-- **Always enforce** customer isolation in queries
-- **Always use** parameterized queries (Drizzle handles this)
-- **Always check** authentication and authorization
-- **Hash passwords** with bcryptjs (never store plaintext)
-- **Use HTTPS** in production (required)
-
-## PII Handling
-
-This application processes educational assessments containing:
-
-- Student names and identifiers
-- Medical/psychological information
-- Educational records
-
-**Requirements**:
-
-- Encrypt data at rest and in transit
-- Implement audit logging for access
-- Follow FERPA/COPPA compliance guidelines
-- Provide data export/deletion capabilities
-
-## Dependency Management
-
-```bash
-# Check for vulnerabilities regularly
-npm audit
-
-# Update dependencies
-npm update
-
-# Review breaking changes before major updates
-```
-
-# Architecture Notes
-
-## Monorepo Structure (October 2025 Refactor)
-
-The project was refactored in October 2025 to use a tool-driven monorepo structure managed by **Turborepo**. This provides significant performance gains via caching and improves organization and scalability.
-
-The structure is now organized into `apps` and `packages`:
+## Server Logs Confirm
 
 ```
-/
-├── apps/
-│   ├── web/      # The React frontend application
-│   └── server/   # The Express backend server
-├── packages/
-│   ├── db/       # Drizzle ORM schema and database utilities
-│   ├── ui/       # Shared React components (e.g., buttons, cards)
-│   └── config/   # Shared configurations (ESLint, TSConfig, etc.)
-├── package.json  # Root configuration
-└── turbo.json    # Turborepo pipeline configuration
+📧 Full req.user: {
+  "emailVerified": true,
+  ...
+}
+📧 Response being sent: {
+  "emailVerified": true,
+  ...
+}
 ```
 
-- **`apps`**: Contain the actual runnable applications.
-- **`packages`**: Contain reusable code (libraries, configs) that the apps depend on.
+## Browser Console Shows
 
-## Key Design Patterns
+- Raw response text includes `"emailVerified":true`
+- Parsed data object has `emailVerified: true` in the user object
+- But `data.user?.emailVerified` logs as `undefined`
 
-- **Multi-tenancy**: Customer isolation at database level
-- **Session-based auth**: PostgreSQL session store
-- **Database-driven prompts**: Real-time AI prompt updates
-- **Function calling**: OpenAI function calling for structured output
-- **Client-side processing**: PDF/OCR processing in browser
-- **Cascade inference**: Multi-stage AI content generation
-- **Version control**: Report finalization with history
+## Next Steps
 
-## Performance Considerations
+1. Refresh the incognito window and log in again
+2. Check the new console logs that start with "🔍 convertToUnifiedUser"
+3. These logs will show:
+   - The full `backendUser` object
+   - The value of `backendUser.emailVerified`
+   - All keys in the `backendUser` object
+4. This should reveal where the `emailVerified` value is being lost
 
-### Long-Running Operations
+## Hypothesis
 
-- OpenAI API calls can be long-running (30s-2min for full reports)
-- Consider implementing job queue for async processing (Bull, BullMQ)
-- PDF processing in browser reduces server load
-- Use connection pooling for PostgreSQL
-- Implement caching for lookup tables and static data
+There may be a timing issue where the console is logging the object before it's fully populated, or there's some kind of getter/proxy that's interfering with property access. The new logging in `convertToUnifiedUser` will help confirm this.
 
-### Caching & Performance Optimizations (Oct 2025)
+## Files Modified
 
-**Browser Caching Strategy**
-
-- HTML files: `no-cache` headers (always fresh)
-- JS/CSS assets: 1-day cache with ETags for smart validation
-- Static assets: Optimized with proper cache headers
-- Prevents stale content issues during development
-
-**Code Splitting**
-
-- React vendor bundle: ~350KB (React, React DOM, React Router)
-- UI vendor bundle: ~112KB (Radix UI components)
-- Query vendor bundle: React Query separate
-- Markdown vendor bundle: react-markdown + remark-gfm separate
-- Main app bundle: Smaller, faster initial load
-
-**Build Optimizations**
-
-- esbuild minification for fastest builds
-- ES2020 target for modern browsers
-- Optimized dependency pre-bundling
-- Removed Replit-specific scripts (banner, etc.)
-
-**Development Server**
-
-- Cache-busting query parameters on HTML
-- Proper cache control headers on all responses
-- Hot Module Replacement (HMR) for fast iteration
-
-### Performance Troubleshooting
-
-**Slow Loading Without Cache Clear?**
-See [PERFORMANCE_TIPS.md](PERFORMANCE_TIPS.md) for:
-
-- Hard refresh shortcuts (Cmd+Shift+R / Ctrl+Shift+R)
-- Browser cache clearing methods
-- Environment reset procedures
-- Server management commands
-
-**Kill Multiple Dev Servers**
-
-```bash
-# Kill all processes on port 5001
-lsof -ti:5001 | xargs kill -9
-
-# Clean restart sequence
-lsof -ti:5001 | xargs kill -9
-sleep 2
-unset APP_ENVIRONMENT
-npm run dev
-```
-
-**Unstyled/No CSS Rendering Issues**
-
-If you see content without styling (text squeezed in a column, no colors/spacing):
-
-1. **Check Browser Console for JavaScript Errors**
-
-   - Open DevTools (F12) → Console tab
-   - Scroll to top or clear console and refresh
-   - Look for RED error messages
-   - JavaScript errors can prevent React components from rendering properly
-
-2. **Verify CSS is Loading**
-
-   - Open DevTools (F12) → Network tab
-   - Refresh page (Cmd/Ctrl+R)
-   - Filter by "css"
-   - Look for `index.css` - should show Status 200 or 304
-   - If missing or failed (red), check Vite server logs
-
-3. **Check Element Classes**
-
-   - Open DevTools (F12) → Elements tab
-   - Use element picker (cursor icon) to select visible element
-   - Verify elements have Tailwind classes (e.g., `class="p-12 cursor-pointer"`)
-   - If no classes, React components aren't rendering
-   - If classes exist but no styling, CSS isn't being applied
-
-4. **Force CSS Rebuild**
-
-   ```bash
-   # Touch CSS file to trigger rebuild
-   touch apps/web/src/index.css
-
-   # Hard refresh browser
-   # Mac: Cmd+Shift+R
-   # Windows/Linux: Ctrl+Shift+R
-   ```
-
-5. **Common Root Causes**
-   - JavaScript errors in Console preventing component render
-   - Browser cache serving stale/broken CSS (hard refresh needed)
-   - Multiple dev servers running (kill and restart)
-   - Vite not processing Tailwind directives (check Vite logs)
-
-**Common Issues**
-
-- Multiple server instances causing port conflicts
-- Stale localStorage causing wrong environment
-- Shell environment variables overriding .env
-- Browser cache showing old version
-- JavaScript errors preventing React component rendering
-- CSS file loaded but Tailwind classes not applied
-
-# Support & Documentation
-
-## Useful Resources
-
-- **Drizzle ORM**: https://orm.drizzle.team/
-- **shadcn/ui**: https://ui.shadcn.com/
-- **OpenAI API**: https://platform.openai.com/docs
-- **React Query**: https://tanstack.com/query/latest
-
-## Getting Help
-
-- Check existing documentation in `docs/` (if exists)
-- Review test scenarios in `test-*.md` files
-- Check scripts in `scripts/` for examples
-- Review existing similar features for patterns
-
-## Contributing
-
-When adding new features:
-
-1. Follow existing patterns in the codebase
-2. Add TypeScript types for everything
-3. Update this document if adding new conventions
-4. Consider multi-tenancy implications
-5. Test with different user roles
-6. Verify customer isolation works correctly
+- `apps/server/services/optimized-queries.ts`
+- `apps/server/auth.ts`
+- `apps/server/routes/auth-routes.ts`
+- `apps/web/src/services/auth/unified-auth.ts`
+- `apps/web/src/services/auth/unified-auth-integration.ts`
+- `apps/web/src/App.tsx`

@@ -7,6 +7,7 @@ export { UserRole, ModuleType };
 export interface AuthenticatedUser {
   id: string;
   email: string;
+  emailVerified?: boolean;
   name: string;
   username: string;
   role: UserRole;
