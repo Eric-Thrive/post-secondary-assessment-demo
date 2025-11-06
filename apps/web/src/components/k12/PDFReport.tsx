@@ -115,7 +115,7 @@ const PDFReport: React.FC<PDFReportProps> = ({ reportData }) => {
                 Student: reportData.caseInfo.studentName,
                 Grade: reportData.caseInfo.grade,
                 "School Year": reportData.caseInfo.schoolYear,
-                Tutor: reportData.caseInfo.tutor,
+                Author: reportData.caseInfo.tutor,
                 Created: reportData.caseInfo.dateCreated,
                 Updated: reportData.caseInfo.lastUpdated,
               }}
@@ -364,6 +364,12 @@ const PDFReport: React.FC<PDFReportProps> = ({ reportData }) => {
                     index < reportData.studentChallenges.length - 1
                       ? `${theme.dimensions.borderThin} solid ${theme.colors.gray200}`
                       : "none",
+                  backgroundColor:
+                    index % 2 === 0
+                      ? theme.colors.white
+                      : `${theme.colors.orange}10`,
+                  padding: theme.pdfDimensions.padding.sm,
+                  borderRadius: theme.borderRadius.sm,
                 }}
               >
                 <div

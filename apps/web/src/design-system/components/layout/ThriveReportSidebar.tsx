@@ -103,6 +103,40 @@ const ThriveReportSidebar: React.FC<ThriveReportSidebarProps> = ({
           <div className="space-y-2">
             {utilityButtons.map((button) => {
               const IconComponent = button.icon;
+
+              // If button has onClick handler, render as button
+              if (button.onClick) {
+                return (
+                  <button
+                    key={button.id}
+                    onClick={button.onClick}
+                    className="flex items-center gap-3 w-full px-4 py-3 rounded-lg transition-all duration-200 hover:shadow-md"
+                    style={{
+                      backgroundColor: theme.colors.gray100,
+                      border: `1px solid ${theme.colors.gray200}`,
+                      color: theme.colors.gray700,
+                      fontFamily: theme.typography.fontFamilies.primary,
+                      fontSize: theme.typography.fontSizes.body,
+                      fontWeight: theme.typography.fontWeights.medium,
+                      minHeight: theme.dimensions.minTouchTarget, // WCAG minimum touch target size
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        theme.colors.gray200;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        theme.colors.gray100;
+                    }}
+                    aria-label={button.title}
+                  >
+                    <IconComponent className="w-5 h-5 flex-shrink-0" />
+                    <span>{button.title}</span>
+                  </button>
+                );
+              }
+
+              // Otherwise render as link
               return (
                 <a
                   key={button.id}

@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -275,6 +276,28 @@ const ModulePickerRoute = () => {
 };
 
 const App = () => {
+  // Presentation mode detection - check for 'p' query parameter on app load
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const presentationToken = urlParams.get("p");
+
+    if (presentationToken) {
+      // Store presentation token in session storage (not localStorage for security)
+      sessionStorage.setItem("presentationToken", presentationToken);
+
+      // Remove token from URL after processing to hide it
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("p");
+      window.history.replaceState({}, document.title, newUrl.toString());
+
+      // Automatically authenticate with backend using token
+      // The token will be sent with subsequent API requests via session storage
+      console.log(
+        "🎭 Presentation mode detected - token stored and URL cleaned"
+      );
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

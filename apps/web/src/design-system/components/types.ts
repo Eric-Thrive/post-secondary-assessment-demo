@@ -31,6 +31,7 @@ export interface UtilityButton {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
   route: string;
+  onClick?: () => void;
 }
 
 export interface ReportConfig {
@@ -114,7 +115,7 @@ export interface DocumentCardProps {
   title: string;
   author: string;
   date: string;
-  keyFindings: string;
+  keyFindings?: string;
   theme: Theme;
 }
 

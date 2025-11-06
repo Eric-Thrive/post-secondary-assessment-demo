@@ -3,6 +3,7 @@ import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { K12MarkdownExportService } from "@/services/k12MarkdownExportService";
 import { Printer, BookOpen } from "lucide-react";
 
 interface K12ReportWithColoredHeadersProps {
@@ -22,27 +23,10 @@ export const K12ReportWithColoredHeaders: React.FC<
 > = ({ markdownReport, studentName = "Student" }) => {
   const componentRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-    documentTitle: `${studentName.replace(/\s+/g, "-")}-Teacher-Guide-${
-      new Date().toISOString().split("T")[0]
-    }`,
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 15mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .no-print {
-          display: none !important;
-        }
-      }
-    `,
-  });
+  // Print original markdown directly from AI
+  const handlePrint = () => {
+    K12MarkdownExportService.printOriginalMarkdown(markdownReport, studentName);
+  };
 
   const sections = React.useMemo(() => {
     if (!markdownReport) return [];

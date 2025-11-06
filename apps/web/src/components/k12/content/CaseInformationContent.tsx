@@ -2,7 +2,7 @@
  * CaseInformationContent Component
  *
  * Displays case information using InfoCard from the design system.
- * Shows student name, grade level, school year, tutor/case manager, and dates.
+ * Shows student name, grade level, school year, report author, and dates.
  *
  * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5
  */
@@ -21,7 +21,7 @@ const CaseInformationContent: React.FC<SectionContentProps> = ({
   // Extract case information from reportData or use sample data
   const caseInfo: CaseInformation = reportData?.caseInfo || {
     studentName: "Sarah Johnson",
-    grade: "5th Grade",
+    grade: "2nd",
     schoolYear: "2024-2025",
     tutor: "Ms. Emily Rodriguez",
     dateCreated: "January 15, 2025",
@@ -30,10 +30,10 @@ const CaseInformationContent: React.FC<SectionContentProps> = ({
 
   // Format data for InfoCard
   const caseInfoData: Record<string, string> = {
-    "Student Name": caseInfo.studentName,
+    "Unique ID": caseInfo.studentName,
     Grade: caseInfo.grade,
     "School Year": caseInfo.schoolYear,
-    "Tutor/Case Manager": caseInfo.tutor,
+    Author: caseInfo.tutor,
     "Date Created": caseInfo.dateCreated,
     "Last Updated": caseInfo.lastUpdated,
   };
@@ -45,18 +45,6 @@ const CaseInformationContent: React.FC<SectionContentProps> = ({
         fontFamily: theme.typography.fontFamilies.primary,
       }}
     >
-      {/* Section Header */}
-      <h2
-        style={{
-          fontSize: theme.typography.fontSizes.h2,
-          fontWeight: theme.typography.fontWeights.bold,
-          color: theme.colors.gray900,
-          marginBottom: theme.spacing.lg,
-        }}
-      >
-        Case Information
-      </h2>
-
       {/* Case Information Card */}
       <InfoCard data={caseInfoData} theme={theme} />
 

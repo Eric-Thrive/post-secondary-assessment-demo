@@ -1,14 +1,14 @@
 /**
  * ReportCompleteContent Component
  *
- * Displays the report completion screen with PDF download and navigation options.
- * Shows completion message and provides actions to download PDF or return to cover.
+ * Displays the report completion screen with PDF download option.
+ * Shows completion message and provides action to download PDF.
  *
- * Requirements: 12.1, 12.5
+ * Requirements: 12.1
  */
 
 import React from "react";
-import { Home, CheckCircle } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import PDFDownloadButton from "../PDFDownloadButton";
 import type { SectionContentProps } from "../sectionRegistry";
 
@@ -18,14 +18,6 @@ const ReportCompleteContent: React.FC<SectionContentProps> = ({
 }) => {
   // Get student name from report data
   const studentName = reportData?.caseInfo?.studentName || "Student";
-
-  /**
-   * Handle navigation back to cover (Case Information section)
-   */
-  const handleBackToCover = () => {
-    // Navigate to the first section (case-info)
-    window.location.hash = "#case-info";
-  };
 
   return (
     <div
@@ -61,62 +53,16 @@ const ReportCompleteContent: React.FC<SectionContentProps> = ({
         Report Complete!
       </h2>
 
-      <p
-        className="text-center mb-8 max-w-2xl"
-        style={{
-          fontSize: theme.typography.fontSizes.bodyLarge,
-          color: theme.colors.gray700,
-          lineHeight: theme.typography.lineHeights.relaxed,
-        }}
-      >
-        You've reviewed all sections of the Teacher Guide for {studentName}.
-        Download a PDF copy for your records or return to the beginning to
-        review any section.
-      </p>
-
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+      <div className="flex justify-center w-full max-w-md">
         {/* PDF Download Button */}
-        <div className="flex-1">
-          <PDFDownloadButton
-            studentName={studentName}
-            reportData={reportData}
-            theme={theme}
-            buttonText="Download PDF"
-            className="w-full"
-          />
-        </div>
-
-        {/* Back to Cover Button */}
-        <button
-          onClick={handleBackToCover}
-          className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-lg transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
-          style={{
-            backgroundColor: theme.colors.white,
-            color: theme.colors.primary,
-            border: `2px solid ${theme.colors.primary}`,
-            fontFamily: theme.typography.fontFamilies.primary,
-            fontSize: theme.typography.fontSizes.body,
-            fontWeight: theme.typography.fontWeights.semibold,
-            boxShadow: theme.shadows.sm,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = theme.shadows.md;
-            e.currentTarget.style.backgroundColor = `${theme.colors.primary}10`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = theme.shadows.sm;
-            e.currentTarget.style.backgroundColor = theme.colors.white;
-          }}
-          aria-label="Back to Cover"
-          role="button"
-          tabIndex={0}
-        >
-          <Home className="w-5 h-5" />
-          <span>Back to Cover</span>
-        </button>
+        <PDFDownloadButton
+          studentName={studentName}
+          reportData={reportData}
+          theme={theme}
+          buttonText="Download PDF"
+          className="w-full"
+        />
       </div>
 
       {/* Additional Information */}

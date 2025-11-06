@@ -1,25 +1,25 @@
-Email();
+// Minimal verify-email.ts to fix compilation errors
+import { eq } from "drizzle-orm";
+import { users } from "@shared/schema";
+import { db, pool } from "./db";
 
-verify
-  }
-}
-.exit(1);ess;
-    procrror)or:", eerror("Errnsole.r) {
-    coerroatch (
-  } col.end();ait po 
-    aw  ");
- ected.edir being r withoutnow log inan \nYou cole.log("ons");
-    cssfully!ed succeil verifi"✅ Emasole.log(on c
-   .id));
-usersers.id, re(eq(u     .whe
-      })
- ry: null,ationExpiilVerific        emaen: null,
-nTokerificatioailVem    
-    ue,ied: tr emailVerif({
-            .sete(users)
- updat .
-     t db
-    awai");
+async function verifyEmail() {
+  try {
+    console.log("Looking for Pippa user...");
+    
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, "Pippa"));
+
+    if (!user) {
+      console.log("User 'Pippa' not found");
+      process.exit(1);
+    }
+
+    if (user.emailVerified) {
+      console.log("✅ Email is already verified!");
+      con);
 ...ilfying emanVerig("\sole.lo
 
     con0);

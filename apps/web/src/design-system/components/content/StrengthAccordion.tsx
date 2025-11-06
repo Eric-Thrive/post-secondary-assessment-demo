@@ -118,10 +118,14 @@ export const StrengthAccordion: React.FC<StrengthAccordionProps> = ({
                     What to Do
                   </h4>
                   <div className="flex flex-col gap-2">
-                    {strength.whatToDo.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2">
-                        {/* Icon: Check for "do", X for "dont" */}
-                        {item.type === "do" ? (
+                    {/* Display "do" items first */}
+                    {strength.whatToDo
+                      .filter((item) => item.type === "do")
+                      .map((item, idx) => (
+                        <div
+                          key={`do-${idx}`}
+                          className="flex items-start gap-2"
+                        >
                           <div
                             style={{
                               color: theme.colors.success,
@@ -133,10 +137,31 @@ export const StrengthAccordion: React.FC<StrengthAccordionProps> = ({
                               aria-label="Do"
                             />
                           </div>
-                        ) : (
+                          <span
+                            className="text-sm md:text-base"
+                            style={{
+                              fontFamily: theme.typography.fontFamilies.primary,
+                              fontWeight: theme.typography.fontWeights.regular,
+                              lineHeight: theme.typography.lineHeights.relaxed,
+                              color: theme.colors.gray700,
+                            }}
+                          >
+                            {item.text}
+                          </span>
+                        </div>
+                      ))}
+
+                    {/* Display "don't" items below */}
+                    {strength.whatToDo
+                      .filter((item) => item.type === "dont")
+                      .map((item, idx) => (
+                        <div
+                          key={`dont-${idx}`}
+                          className="flex items-start gap-2"
+                        >
                           <div
                             style={{
-                              color: theme.colors.error,
+                              color: "#dc2626", // Red color for X marks
                               marginTop: theme.spacing.micro,
                             }}
                           >
@@ -145,22 +170,19 @@ export const StrengthAccordion: React.FC<StrengthAccordionProps> = ({
                               aria-label="Don't"
                             />
                           </div>
-                        )}
-
-                        {/* Action text */}
-                        <span
-                          className="text-sm md:text-base"
-                          style={{
-                            fontFamily: theme.typography.fontFamilies.primary,
-                            fontWeight: theme.typography.fontWeights.regular,
-                            lineHeight: theme.typography.lineHeights.relaxed,
-                            color: theme.colors.gray700,
-                          }}
-                        >
-                          {item.text}
-                        </span>
-                      </div>
-                    ))}
+                          <span
+                            className="text-sm md:text-base"
+                            style={{
+                              fontFamily: theme.typography.fontFamilies.primary,
+                              fontWeight: theme.typography.fontWeights.regular,
+                              lineHeight: theme.typography.lineHeights.relaxed,
+                              color: theme.colors.gray700,
+                            }}
+                          >
+                            {item.text}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               </div>

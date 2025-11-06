@@ -36,7 +36,10 @@ export const ChallengeAccordion: React.FC<ChallengeAccordionProps> = ({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  backgroundColor: `${theme.colors.yellow}40`,
+                  backgroundColor:
+                    index % 2 === 0
+                      ? `${theme.colors.orange}20`
+                      : theme.colors.white,
                   border: "none",
                   cursor: "pointer",
                   transition: "background-color 300ms ease",
@@ -49,10 +52,16 @@ export const ChallengeAccordion: React.FC<ChallengeAccordionProps> = ({
                 className="group p-4 md:p-6 text-base md:text-xl"
                 aria-label={`Expand ${challenge.challenge} challenge`}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = `${theme.colors.yellow}60`;
+                  e.currentTarget.style.backgroundColor =
+                    index % 2 === 0
+                      ? `${theme.colors.orange}30`
+                      : `${theme.colors.gray100}`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = `${theme.colors.yellow}40`;
+                  e.currentTarget.style.backgroundColor =
+                    index % 2 === 0
+                      ? `${theme.colors.orange}20`
+                      : theme.colors.white;
                 }}
               >
                 <div
@@ -144,10 +153,14 @@ export const ChallengeAccordion: React.FC<ChallengeAccordionProps> = ({
                     What to Do
                   </h4>
                   <div className="flex flex-col gap-2">
-                    {challenge.whatToDo.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2">
-                        {/* Icon: Check for "do", X for "dont" */}
-                        {item.type === "do" ? (
+                    {/* Display "do" items first */}
+                    {challenge.whatToDo
+                      .filter((item) => item.type === "do")
+                      .map((item, idx) => (
+                        <div
+                          key={`do-${idx}`}
+                          className="flex items-start gap-2"
+                        >
                           <div
                             style={{
                               color: theme.colors.success,
@@ -159,10 +172,31 @@ export const ChallengeAccordion: React.FC<ChallengeAccordionProps> = ({
                               aria-label="Do"
                             />
                           </div>
-                        ) : (
+                          <span
+                            className="text-sm md:text-base"
+                            style={{
+                              fontFamily: theme.typography.fontFamilies.primary,
+                              fontWeight: theme.typography.fontWeights.regular,
+                              lineHeight: theme.typography.lineHeights.relaxed,
+                              color: theme.colors.gray700,
+                            }}
+                          >
+                            {item.text}
+                          </span>
+                        </div>
+                      ))}
+
+                    {/* Display "don't" items below */}
+                    {challenge.whatToDo
+                      .filter((item) => item.type === "dont")
+                      .map((item, idx) => (
+                        <div
+                          key={`dont-${idx}`}
+                          className="flex items-start gap-2"
+                        >
                           <div
                             style={{
-                              color: theme.colors.error,
+                              color: "#dc2626", // Red color for X marks
                               marginTop: theme.spacing.micro,
                             }}
                           >
@@ -171,22 +205,19 @@ export const ChallengeAccordion: React.FC<ChallengeAccordionProps> = ({
                               aria-label="Don't"
                             />
                           </div>
-                        )}
-
-                        {/* Action text */}
-                        <span
-                          className="text-sm md:text-base"
-                          style={{
-                            fontFamily: theme.typography.fontFamilies.primary,
-                            fontWeight: theme.typography.fontWeights.regular,
-                            lineHeight: theme.typography.lineHeights.relaxed,
-                            color: theme.colors.gray700,
-                          }}
-                        >
-                          {item.text}
-                        </span>
-                      </div>
-                    ))}
+                          <span
+                            className="text-sm md:text-base"
+                            style={{
+                              fontFamily: theme.typography.fontFamilies.primary,
+                              fontWeight: theme.typography.fontWeights.regular,
+                              lineHeight: theme.typography.lineHeights.relaxed,
+                              color: theme.colors.gray700,
+                            }}
+                          >
+                            {item.text}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               </div>

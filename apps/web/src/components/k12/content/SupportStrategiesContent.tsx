@@ -66,18 +66,6 @@ const SupportStrategiesContent: React.FC<SectionContentProps> = ({
         fontFamily: theme.typography.fontFamilies.primary,
       }}
     >
-      {/* Section Header */}
-      <h2
-        style={{
-          fontSize: theme.typography.fontSizes.h2,
-          fontWeight: theme.typography.fontWeights.bold,
-          color: theme.colors.gray900,
-          marginBottom: theme.spacing.lg,
-        }}
-      >
-        Key Support Strategies
-      </h2>
-
       {/* Strategy Accordion */}
       <StrategyAccordion strategies={strategies} theme={theme} />
 

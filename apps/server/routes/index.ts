@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import "../types";
-import { sessionConfig } from "../auth";
+import { sessionConfig, presentationModeAuth } from "../auth";
 import { registerNoCacheRoutes } from "../no-cache-routes";
 import {
   isReadOnlyEnvironment,
@@ -98,6 +98,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up session middleware
   app.use(sessionConfig);
+
+  // Apply presentation mode authentication middleware before other auth middleware
+  app.use(presentationModeAuth);
 
   // Debug middleware to see if routes are being registered (development only)
   if (process.env.NODE_ENV === "development") {

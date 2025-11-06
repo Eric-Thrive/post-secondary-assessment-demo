@@ -22,5 +22,7 @@ export type { SectionContentProps } from "./sectionRegistry";
 // PDF Generation Components
 export { default as PDFReport } from "./PDFReport";
 export { default as PDFDownloadButton } from "./PDFDownloadButton";
+export { default as K12CompactPrintReport } from "./K12CompactPrintReport";
 export type { PDFReportProps } from "./PDFReport";
 export type { PDFDownloadButtonProps } from "./PDFDownloadButton";
+export type { K12CompactPrintReportProps } from "./K12CompactPrintReport";

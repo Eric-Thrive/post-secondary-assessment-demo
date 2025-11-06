@@ -405,3 +405,97 @@ body {
   border-color: var(--thrive-sky-blue);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+/* Smooth transitions and animations for K12 Report Generator */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.4s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Loading state transitions */
+.loading-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+.loading-transition.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Error state transitions */
+.error-bounce {
+  animation: bounce 0.5s ease-in-out;
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%,
+  43% {
+    transform: translate3d(0, -10px, 0);
+  }
+  70% {
+    transform: translate3d(0, -5px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+/* Section transition effects */
+.section-transition {
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.section-transition.entering {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.section-transition.entered {
+  opacity: 1;
+  transform: translateX(0);
+}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { K12MarkdownExportService } from "@/services/k12MarkdownExportService";
 import {
   BookOpen,
   Target,
@@ -47,39 +48,10 @@ export const K12CardReportEditable: React.FC<K12CardReportEditableProps> = ({
   );
   const [editedContent, setEditedContent] = useState<string>("");
 
-  // Print configuration
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-    documentTitle: `${studentName.replace(/\s+/g, "-")}-Teacher-Guide-${
-      new Date().toISOString().split("T")[0]
-    }`,
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 15mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-          color-adjust: exact;
-        }
-        .no-print {
-          display: none !important;
-        }
-        .page-break {
-          page-break-after: always;
-        }
-        .keep-together {
-          break-inside: avoid;
-        }
-        .gradient-text {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-      }
-    `,
-  });
+  // Print configuration - now prints original markdown directly
+  const handlePrint = () => {
+    K12MarkdownExportService.printOriginalMarkdown(markdownReport, studentName);
+  };
 
   // Parse the K-12 report into sections
   const sections = React.useMemo(() => {

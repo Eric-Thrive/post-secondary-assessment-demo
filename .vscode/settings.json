@@ -213,5 +213,6 @@
     "production": {
       "baseUrl": "${env:PRODUCTION_URL}"
     }
-  }
+  },
+  "typescript.autoClosingTags": false
 }

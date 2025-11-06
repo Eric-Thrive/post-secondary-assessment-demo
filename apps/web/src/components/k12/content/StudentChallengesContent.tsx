@@ -161,18 +161,6 @@ const StudentChallengesContent: React.FC<SectionContentProps> = ({
         fontFamily: theme.typography.fontFamilies.primary,
       }}
     >
-      {/* Section Header */}
-      <h2
-        style={{
-          fontSize: theme.typography.fontSizes.h2,
-          fontWeight: theme.typography.fontWeights.bold,
-          color: theme.colors.gray900,
-          marginBottom: theme.spacing.lg,
-        }}
-      >
-        Student's Challenges
-      </h2>
-
       {/* Challenge Accordion */}
       <ChallengeAccordion challenges={challenges} theme={theme} />
 

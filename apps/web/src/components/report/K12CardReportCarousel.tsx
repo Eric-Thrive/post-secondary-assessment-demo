@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { K12MarkdownExportService } from "@/services/k12MarkdownExportService";
 import {
   BookOpen,
   Target,
@@ -46,42 +47,10 @@ export const K12CardReportCarousel: React.FC<K12CardReportCarouselProps> = ({
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
 
-  // Print configuration
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-    documentTitle: `${studentName.replace(/\s+/g, "-")}-Teacher-Guide-${
-      new Date().toISOString().split("T")[0]
-    }`,
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 15mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-          color-adjust: exact;
-        }
-        .no-print {
-          display: none !important;
-        }
-        .carousel-container {
-          display: block !important;
-        }
-        .carousel-item {
-          display: block !important;
-          page-break-after: always;
-        }
-        .page-break {
-          page-break-after: always;
-        }
-        .keep-together {
-          break-inside: avoid;
-        }
-      }
-    `,
-  });
+  // Print original markdown directly from AI
+  const handlePrint = () => {
+    K12MarkdownExportService.printOriginalMarkdown(markdownReport, studentName);
+  };
 
   // Parse the report into sections
   const sections = React.useMemo(() => {

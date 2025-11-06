@@ -15,7 +15,7 @@ const mockReportData = {
 };
 
 describe("CaseInformationContent", () => {
-  it("should render section header", () => {
+  it("should render case information fields", () => {
     render(
       <CaseInformationContent
         theme={k12Theme}
@@ -24,7 +24,8 @@ describe("CaseInformationContent", () => {
       />
     );
 
-    expect(screen.getByText("Case Information")).toBeInTheDocument();
+    expect(screen.getByText("Unique ID:")).toBeInTheDocument();
+    expect(screen.getByText("John Doe")).toBeInTheDocument();
   });
 
   it("should render all case information fields", () => {
@@ -36,17 +37,17 @@ describe("CaseInformationContent", () => {
       />
     );
 
-    expect(screen.getByText("Student Name")).toBeInTheDocument();
+    expect(screen.getByText("Unique ID:")).toBeInTheDocument();
     expect(screen.getByText("John Doe")).toBeInTheDocument();
-    expect(screen.getByText("Grade")).toBeInTheDocument();
+    expect(screen.getByText("Grade:")).toBeInTheDocument();
     expect(screen.getByText("6th Grade")).toBeInTheDocument();
-    expect(screen.getByText("School Year")).toBeInTheDocument();
+    expect(screen.getByText("School Year:")).toBeInTheDocument();
     expect(screen.getByText("2024-2025")).toBeInTheDocument();
-    expect(screen.getByText("Tutor/Case Manager")).toBeInTheDocument();
+    expect(screen.getByText("Author:")).toBeInTheDocument();
     expect(screen.getByText("Mr. Smith")).toBeInTheDocument();
-    expect(screen.getByText("Date Created")).toBeInTheDocument();
+    expect(screen.getByText("Date Created:")).toBeInTheDocument();
     expect(screen.getByText("January 1, 2025")).toBeInTheDocument();
-    expect(screen.getByText("Last Updated")).toBeInTheDocument();
+    expect(screen.getByText("Last Updated:")).toBeInTheDocument();
     expect(screen.getByText("January 15, 2025")).toBeInTheDocument();
   });
 
@@ -61,7 +62,7 @@ describe("CaseInformationContent", () => {
 
     // Should render default sample data
     expect(screen.getByText("Sarah Johnson")).toBeInTheDocument();
-    expect(screen.getByText("5th Grade")).toBeInTheDocument();
+    expect(screen.getByText("2nd")).toBeInTheDocument();
   });
 
   it("should render bottom navigation with Next Section button", () => {
@@ -105,7 +106,7 @@ describe("CaseInformationContent", () => {
     expect(screen.queryByText("Next Section")).not.toBeInTheDocument();
   });
 
-  it("should use theme typography for section header", () => {
+  it("should use theme typography for labels", () => {
     render(
       <CaseInformationContent
         theme={k12Theme}
@@ -114,9 +115,9 @@ describe("CaseInformationContent", () => {
       />
     );
 
-    const header = screen.getByText("Case Information");
-    expect(header.style.fontSize).toBe(k12Theme.typography.fontSizes.h2);
-    expect(header.style.fontWeight).toBe(
+    const uniqueIdLabel = screen.getByText("Unique ID:");
+    expect(uniqueIdLabel).toBeInTheDocument();
+    expect(uniqueIdLabel.style.fontWeight).toBe(
       k12Theme.typography.fontWeights.bold.toString()
     );
   });

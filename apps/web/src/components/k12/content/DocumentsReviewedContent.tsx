@@ -18,30 +18,17 @@ const DocumentsReviewedContent: React.FC<SectionContentProps> = ({
   onNext,
   reportData,
 }) => {
-  // Extract documents from reportData or use sample data
-  const documents: Document[] = reportData?.documentsReviewed || [
-    {
-      title: "Psychoeducational Assessment Report",
-      author: "Dr. Jennifer Martinez, Ph.D.",
-      date: "September 2024",
-      keyFindings:
-        "Assessment indicates strengths in verbal reasoning and creative problem-solving. Challenges identified in working memory and processing speed, particularly with multi-step instructions.",
-    },
-    {
-      title: "IEP Documentation",
-      author: "Lincoln Elementary School",
-      date: "October 2024",
-      keyFindings:
-        "Current accommodations include extended time on tests, preferential seating, and access to graphic organizers. Progress notes show improvement in reading comprehension with visual supports.",
-    },
-    {
-      title: "Teacher Progress Notes",
-      author: "Ms. Thompson, 5th Grade Teacher",
-      date: "December 2024",
-      keyFindings:
-        "Sarah demonstrates strong participation in class discussions and shows creativity in project-based learning. Benefits from breaking down complex tasks into smaller steps.",
-    },
-  ];
+  // Extract documents from reportData or use default document
+  const documents: Document[] =
+    reportData?.documentsReviewed?.length > 0
+      ? reportData.documentsReviewed
+      : [
+          {
+            title: "2024.9 Psychoeducational Report.pdf",
+            author: "School Psychologist",
+            date: "September 2024",
+          },
+        ];
 
   return (
     <div
@@ -50,18 +37,6 @@ const DocumentsReviewedContent: React.FC<SectionContentProps> = ({
         fontFamily: theme.typography.fontFamilies.primary,
       }}
     >
-      {/* Section Header */}
-      <h2
-        style={{
-          fontSize: theme.typography.fontSizes.h2,
-          fontWeight: theme.typography.fontWeights.bold,
-          color: theme.colors.gray900,
-          marginBottom: theme.spacing.lg,
-        }}
-      >
-        Documents Reviewed
-      </h2>
-
       {/* Document Cards */}
       <div
         style={{
@@ -76,7 +51,6 @@ const DocumentsReviewedContent: React.FC<SectionContentProps> = ({
             title={doc.title}
             author={doc.author}
             date={doc.date}
-            keyFindings={doc.keyFindings}
             theme={theme}
           />
         ))}

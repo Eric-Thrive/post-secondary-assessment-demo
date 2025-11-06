@@ -76,28 +76,30 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
             <span>{date}</span>
           </div>
 
-          {/* Key Findings */}
-          <div>
-            <p
-              className="text-sm md:text-base font-semibold m-0 mb-1"
-              style={{
-                fontWeight: theme.typography.fontWeights.semibold,
-                color: theme.colors.gray900,
-              }}
-            >
-              Key Findings:
-            </p>
-            <p
-              className="text-sm md:text-base m-0"
-              style={{
-                fontWeight: theme.typography.fontWeights.regular,
-                color: theme.colors.gray700,
-                lineHeight: theme.typography.lineHeights.relaxed,
-              }}
-            >
-              {keyFindings}
-            </p>
-          </div>
+          {/* Key Findings - only show if there are key findings */}
+          {keyFindings && keyFindings.trim().length > 0 && (
+            <div>
+              <p
+                className="text-sm md:text-base font-semibold m-0 mb-1"
+                style={{
+                  fontWeight: theme.typography.fontWeights.semibold,
+                  color: theme.colors.gray900,
+                }}
+              >
+                Key Findings:
+              </p>
+              <p
+                className="text-sm md:text-base m-0"
+                style={{
+                  fontWeight: theme.typography.fontWeights.regular,
+                  color: theme.colors.gray700,
+                  lineHeight: theme.typography.lineHeights.relaxed,
+                }}
+              >
+                {keyFindings}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </ThriveReportCard>

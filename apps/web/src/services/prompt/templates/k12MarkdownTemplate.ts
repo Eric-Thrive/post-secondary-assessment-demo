@@ -1,8 +1,10 @@
 export const getK12MarkdownTemplate = (): string => {
   return `# K-12 Educational Assessment Analysis Report
 
+**Student Name:** [Student Name]  
+**Grade:** [Grade Level]  
+**Author:** [Report Author]  
 **Analysis Date:** [Date]  
-**Student Grade:** [Grade Level]  
 **Total Findings:** [Total Count]
 
 ---

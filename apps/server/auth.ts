@@ -40,6 +40,15 @@ declare global {
   }
 }
 
+// Extend session data to include presentation mode
+declare module "express-session" {
+  interface SessionData {
+    userId?: number;
+    user?: Express.User;
+    presentationMode?: boolean;
+  }
+}
+
 // Initialize PostgreSQL session store
 const PgSession = connectPg(session);
 
@@ -412,4 +421,66 @@ export const incrementReportCount = async (userId: number): Promise<void> => {
       reportCount: sql`report_count + 1`,
     })
     .where(eq(users.id, userId));
+};
+
+// Presentation mode authentication middleware
+export const presentationModeAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.query.p;
+
+  // Check if presentation token is provided and valid
+  if (
+    token &&
+    typeof token === "string" &&
+    token === process.env.PRESENTATION_MODE_TOKEN
+  ) {
+    // Create temporary read-only session for presentation mode
+    req.session.userId = -1; // Special presentation user ID
+    req.session.presentationMode = true;
+
+    // Set a temporary user object for presentation mode
+    req.user = {
+      id: -1,
+      username: "presentation-user",
+      email: "presentation@demo.com",
+      emailVerified: true,
+      role: UserRole.DEMO,
+      assignedModules: [ModuleType.K12, ModuleType.POST_SECONDARY],
+      organizationId: "presentation-org",
+      organizationName: "Presentation Mode",
+      customerId: "presentation-customer",
+      customerName: "Presentation Customer",
+      reportCount: 0,
+      maxReports: -1,
+      isActive: true,
+      lastLogin: new Date(),
+    };
+
+    // Log presentation mode access with security audit information
+    console.log(`🎭 PRESENTATION MODE ACCESS GRANTED`, {
+      ip: req.ip || req.connection.remoteAddress || "unknown",
+      userAgent: req.get("User-Agent") || "unknown",
+      timestamp: new Date().toISOString(),
+      url: req.originalUrl,
+      method: req.method,
+      sessionId: req.sessionID,
+      securityNote: "Read-only presentation access granted via secret token",
+    });
+  } else if (token && typeof token === "string") {
+    // Invalid token attempt - log for security audit but don't reveal the feature exists
+    console.warn(`🚨 INVALID PRESENTATION TOKEN ATTEMPT`, {
+      ip: req.ip || req.connection.remoteAddress || "unknown",
+      userAgent: req.get("User-Agent") || "unknown",
+      timestamp: new Date().toISOString(),
+      url: req.originalUrl,
+      method: req.method,
+      tokenLength: token.length,
+      securityNote: "Invalid presentation token - potential security probe",
+    });
+  }
+
+  next();
 };

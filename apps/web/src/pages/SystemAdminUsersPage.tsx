@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -10,21 +10,37 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Search, Download, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Users, Search, Download, RefreshCw, Trash2 } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface User {
   id: number;
   username: string;
   email: string;
+  customerId: string;
+  customerName?: string;
   role: string;
-  assignedModules: string[];
+  assignedModules?: string[];
   organizationId?: string;
   isActive: boolean;
   reportCount: number;
   maxReports: number;
+  demoPermissions?: any;
   createdAt: string;
   lastLogin?: string;
+  reportsRemaining: number;
+  isLimitReached: boolean;
 }
 
 interface UsersData {
@@ -50,6 +66,10 @@ const MODULE_LABELS: Record<string, string> = {
 
 export default function SystemAdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const {
     data: usersData,
@@ -60,6 +80,41 @@ export default function SystemAdminUsersPage() {
     queryFn: () => apiClient.request("/admin/users"),
     refetchInterval: 30000,
   });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: number) =>
+      apiClient.request(`/admin/users/${userId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: (data) => {
+      toast({
+        title: "User deleted successfully",
+        description: `${data.deletedUser} and ${data.reportsDeleted} associated reports have been deleted.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete user",
+        description:
+          error.message || "An error occurred while deleting the user.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (userToDelete) {
+      deleteUserMutation.mutate(userToDelete.id);
+    }
+  };
 
   const filteredUsers = usersData?.users.filter((user) => {
     const query = searchQuery.toLowerCase();
@@ -221,6 +276,7 @@ export default function SystemAdminUsersPage() {
                   <th className="text-left py-3 px-2">Modules</th>
                   <th className="text-left py-3 px-2">Status</th>
                   <th className="text-left py-3 px-2">Org ID</th>
+                  <th className="text-left py-3 px-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -273,12 +329,26 @@ export default function SystemAdminUsersPage() {
                           {user.organizationId || "—"}
                         </div>
                       </td>
+                      <td className="py-3 px-2">
+                        {user.role !== "system_admin" &&
+                          user.role !== "developer" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick(user)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              disabled={deleteUserMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="py-8 text-center text-muted-foreground"
                     >
                       {searchQuery
@@ -292,6 +362,37 @@ export default function SystemAdminUsersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete user "{userToDelete?.username}"?
+              <br />
+              <br />
+              <strong>This action cannot be undone.</strong> This will
+              permanently delete:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>The user account ({userToDelete?.email})</li>
+                <li>All reports created by this user</li>
+                <li>All reports associated with their customer ID</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -437,39 +437,91 @@ export class LocalAIService {
     moduleType: string,
     pathway: string = "simple"
   ): Promise<string> {
-    // Load system prompt from database
+    // Load system prompt and markdown template from database
     try {
       const systemPrompts = await storage.getPromptSections(
         moduleType,
         "system"
       );
+      const reportFormatPrompts = await storage.getPromptSections(
+        moduleType,
+        "report_format"
+      );
 
       let systemPrompt;
-      let expectedPromptKey: string;
+      let markdownTemplate;
+      let expectedSystemKey: string;
+      let expectedTemplateKey: string;
 
-      // All pathways use module-specific pathway prompts - no fallbacks
-      expectedPromptKey = `system_instructions_${moduleType}_${pathway}`;
-      systemPrompt = systemPrompts.find(
-        (p) => p.section_key === expectedPromptKey
-      );
-
-      if (systemPrompt && systemPrompt.content) {
+      // K-12 simple pathway: Force use of demo prompts
+      if (moduleType === "k12" && pathway === "simple") {
+        expectedSystemKey = `system_instructions_k12_demo`;
+        expectedTemplateKey = `markdown_report_template_k12_demo`;
         console.log(
-          `✅ Using system prompt ${systemPrompt.section_key} for ${moduleType} ${pathway} pathway (${systemPrompt.content.length} chars)`
+          `🎯 K-12 Simple Pathway: Using demo prompts (v3.0 system, v12.0 template)`
         );
-        return systemPrompt.content;
+      } else {
+        // All other pathways use module-specific pathway prompts
+        expectedSystemKey = `system_instructions_${moduleType}_${pathway}`;
+        expectedTemplateKey = `markdown_report_template_${moduleType}_${pathway}`;
       }
 
-      // Fail if prompt not found - no fallbacks for any pathway
-      throw new Error(
-        `System prompt not found for module: ${moduleType}, pathway: ${pathway}. Required prompt: ${expectedPromptKey}`
+      systemPrompt = systemPrompts.find(
+        (p) => p.section_key === expectedSystemKey
       );
+
+      markdownTemplate = reportFormatPrompts.find(
+        (p) => p.section_key === expectedTemplateKey
+      );
+
+      // Fallback to non-pathway-specific template if pathway-specific not found (NOT for K-12 simple)
+      if (
+        !markdownTemplate &&
+        !(moduleType === "k12" && pathway === "simple")
+      ) {
+        expectedTemplateKey = `markdown_report_template_${moduleType}`;
+        markdownTemplate = reportFormatPrompts.find(
+          (p) => p.section_key === expectedTemplateKey
+        );
+      }
+
+      if (!systemPrompt || !systemPrompt.content) {
+        throw new Error(
+          `System prompt not found for module: ${moduleType}, pathway: ${pathway}. Required prompt: ${expectedSystemKey}`
+        );
+      }
+
+      if (!markdownTemplate || !markdownTemplate.content) {
+        throw new Error(
+          `Markdown template not found for module: ${moduleType}, pathway: ${pathway}. Tried: ${expectedTemplateKey}`
+        );
+      }
+
+      console.log(
+        `✅ Using system prompt ${systemPrompt.section_key} for ${moduleType} ${pathway} pathway (${systemPrompt.content.length} chars)`
+      );
+      console.log(
+        `✅ Using markdown template ${markdownTemplate.section_key} (${markdownTemplate.content.length} chars)`
+      );
+
+      // Combine system instructions with markdown template
+      const combinedPrompt = `${systemPrompt.content}
+
+---
+
+## MARKDOWN REPORT FORMAT
+
+Use the following markdown template format for your report:
+
+${markdownTemplate.content}`;
+
+      return combinedPrompt;
     } catch (error) {
       console.error(
-        `❌ Failed to load system prompt from database: ${error.message}`
+        `❌ Failed to load prompts from database: ${error.message}`
       );
       throw new Error(
-        `Database system prompt required for ${moduleType} module with pathway ${pathway}. ${error.message}`
+        `Database prompts required for ${moduleType} module with pathway ${pathway}. ${error.message}`
       );
     }
   }

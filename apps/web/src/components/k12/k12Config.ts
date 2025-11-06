@@ -14,6 +14,7 @@ import {
   Home,
   Lightbulb,
   Eye,
+  Printer,
 } from "lucide-react";
 import {
   ThriveStudentIcon,
@@ -72,6 +73,12 @@ export const k12Config: ReportConfig = {
 
   // Utility buttons (displayed below sections in sidebar)
   utilityButtons: [
+    {
+      id: "print",
+      title: "Print Compact View",
+      icon: Printer,
+      route: "#print",
+    },
     {
       id: "review",
       title: "Review",

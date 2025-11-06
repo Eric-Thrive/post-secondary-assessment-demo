@@ -139,7 +139,7 @@ const UnifiedLoginPage: React.FC<UnifiedLoginPageProps> = ({
 
       if (response.ok) {
         alert(
-          "Account created successfully! You can now login with your credentials."
+          "Account created successfully! Please check your email and click the activation link before logging in."
         );
         // Switch to login tab
         setRegisterData({

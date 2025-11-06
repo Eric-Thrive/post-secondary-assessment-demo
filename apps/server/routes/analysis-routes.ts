@@ -5,7 +5,7 @@ import { LocalAIService, type AIAnalysisRequest } from "../ai-service";
 import { aiJSONService } from "../ai-json-service";
 import { storage } from "../storage";
 import { db } from "../db";
-import { itemMaster, ModuleType } from "@shared/schema";
+import { itemMaster, ModuleType, UserRole } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
@@ -30,7 +30,19 @@ export function registerAnalysisRoutes(app: Express): void {
       console.log(`   Access controlled by user roles and permissions`);
 
       const moduleType = req.body.moduleType || "post_secondary";
-      const pathway = req.body.pathway || "simple"; // Extract pathway from request body
+      let pathway = req.body.pathway || "simple"; // Extract pathway from request body
+
+      // ENFORCE: Only developers can use complex pathway (even in demo)
+      const userRole = req.session?.userId ? req.user?.role : null;
+      if (pathway === "complex" && userRole !== UserRole.DEVELOPER) {
+        console.log(
+          `⚠️ Non-developer user (${
+            userRole || "anonymous"
+          }) attempted complex pathway in demo - forcing simple`
+        );
+        pathway = "simple";
+      }
+
       const caseId = req.body.caseId || `demo-${Date.now()}`;
       const documents = req.body.documents || req.body.documentContents || [];
       const studentGrade = req.body.studentGrade;
@@ -38,6 +50,7 @@ export function registerAnalysisRoutes(app: Express): void {
       const programMajor = req.body.programMajor;
       const reportAuthor = req.body.reportAuthor;
 
+      console.log(`Demo User role: ${userRole || "anonymous"}`);
       console.log(`Demo Module type: ${moduleType}`);
       console.log(`Demo Pathway: ${pathway}`);
       console.log(`Demo Case ID: ${caseId}`);
@@ -193,7 +206,16 @@ export function registerAnalysisRoutes(app: Express): void {
     async (req, res) => {
       try {
         const moduleType = req.body.moduleType || "post_secondary";
-        const pathway = req.body.pathway || "simple"; // New: pathway selection
+        let pathway = req.body.pathway || "simple"; // New: pathway selection
+
+        // ENFORCE: Only developers can use complex pathway
+        if (pathway === "complex" && req.user?.role !== UserRole.DEVELOPER) {
+          console.log(
+            `⚠️ Non-developer user (${req.user?.role}) attempted complex pathway - forcing simple`
+          );
+          pathway = "simple";
+        }
+
         const caseId = req.body.caseId || `analysis-${Date.now()}`;
         const documents = req.body.documents || req.body.documentContents || [];
         const studentGrade = req.body.studentGrade;
@@ -202,6 +224,7 @@ export function registerAnalysisRoutes(app: Express): void {
         const reportAuthor = req.body.reportAuthor;
 
         console.log("=== DUAL PATHWAY ANALYSIS REQUEST ===");
+        console.log(`User role: ${req.user?.role || "unknown"}`);
         console.log(`Module type: ${moduleType}`);
         console.log(`Pathway: ${pathway}`);
         console.log(`Case ID: ${caseId}`);
@@ -263,13 +286,25 @@ export function registerAnalysisRoutes(app: Express): void {
           );
         });
 
-        // Use pathway-specific template for all modules, with multiple fallbacks
-        const templateKey = `markdown_report_template_${promptModuleType}_${pathway}`;
-        const fallbackKeys = [
-          `markdown_report_template_${promptModuleType}`,
-          `markdown_report_template_${promptModuleType}_format`,
-          `markdown_report_template_${promptModuleType}_demo`,
-        ];
+        // K-12 simple pathway: Force use of demo prompts (v12 Student Support Report format)
+        let templateKey: string;
+        let fallbackKeys: string[];
+
+        if (moduleType === "k12" && pathway === "simple") {
+          templateKey = `markdown_report_template_k12_demo`;
+          fallbackKeys = []; // No fallbacks - demo prompt only
+          console.log(
+            `🎯 K-12 Simple Pathway: Using demo template only (v12 format)`
+          );
+        } else {
+          // Other modules use pathway-specific template with fallbacks
+          templateKey = `markdown_report_template_${promptModuleType}_${pathway}`;
+          fallbackKeys = [
+            `markdown_report_template_${promptModuleType}`,
+            `markdown_report_template_${promptModuleType}_format`,
+            `markdown_report_template_${promptModuleType}_demo`,
+          ];
+        }
 
         console.log(`🔍 Looking for template: ${templateKey}`);
 
@@ -278,7 +313,7 @@ export function registerAnalysisRoutes(app: Express): void {
         );
 
         // Try fallback templates if pathway-specific not found
-        if (!templateSection) {
+        if (!templateSection && fallbackKeys.length > 0) {
           console.log(`⚠️ Pathway-specific template not found: ${templateKey}`);
 
           for (const fallbackKey of fallbackKeys) {
@@ -318,12 +353,24 @@ export function registerAnalysisRoutes(app: Express): void {
           systemPrompts.map((p) => p.section_key)
         );
 
-        // Use pathway-specific system prompt with fallbacks
-        const systemPromptKey = `system_instructions_${promptModuleType}_${pathway}`;
-        const systemFallbackKeys = [
-          `system_instructions_${promptModuleType}`,
-          `system_instructions_${promptModuleType}_demo`,
-        ];
+        // K-12 simple pathway: Force use of demo system instructions
+        let systemPromptKey: string;
+        let systemFallbackKeys: string[];
+
+        if (moduleType === "k12" && pathway === "simple") {
+          systemPromptKey = `system_instructions_k12_demo`;
+          systemFallbackKeys = []; // No fallbacks - demo prompt only
+          console.log(
+            `🎯 K-12 Simple Pathway: Using demo system instructions only (v3.0)`
+          );
+        } else {
+          // Other modules use pathway-specific system prompt with fallbacks
+          systemPromptKey = `system_instructions_${promptModuleType}_${pathway}`;
+          systemFallbackKeys = [
+            `system_instructions_${promptModuleType}`,
+            `system_instructions_${promptModuleType}_demo`,
+          ];
+        }
 
         console.log(`🔍 Looking for system prompt: ${systemPromptKey}`);
 
@@ -332,7 +379,7 @@ export function registerAnalysisRoutes(app: Express): void {
         );
 
         // Try fallback system prompts if pathway-specific not found
-        if (!systemInstructions) {
+        if (!systemInstructions && systemFallbackKeys.length > 0) {
           console.log(
             `⚠️ Pathway-specific system prompt not found: ${systemPromptKey}`
           );
@@ -914,6 +961,8 @@ export function registerAnalysisRoutes(app: Express): void {
           module_type: "k12",
           status: "processing",
           grade_band: studentGrade,
+          unique_id: uniqueId?.trim() || null,
+          report_author: reportAuthor?.trim() || null,
           documentNames: documents
             .map(
               (d: any) =>
@@ -969,10 +1018,19 @@ export function registerAnalysisRoutes(app: Express): void {
           );
 
           // Generate markdown from actual database item master data
+          console.log(
+            `📋 Passing to report generator: uniqueId="${uniqueId}", reportAuthor="${reportAuthor}"`
+          );
+          const documentNames = documents
+            .map((d: any) => d.filename || d.name)
+            .filter(Boolean);
           const markdownReport = await generateK12ReportFromItemMaster(
             itemMasterData,
             k12Template?.content || "",
-            studentGrade
+            studentGrade,
+            uniqueId,
+            reportAuthor,
+            documentNames
           );
 
           result.markdown_report = markdownReport;
@@ -1056,11 +1114,17 @@ function validateItemMasterFields(item: any): {
 async function generateK12ReportFromItemMaster(
   itemMasterData: any[],
   template: string,
-  studentGrade: string
+  studentGrade: string,
+  studentName?: string,
+  reportAuthor?: string,
+  documentNames?: string[]
 ): Promise<string> {
   console.log("📝 Generating K-12 report from item master data...");
   console.log(`- Item count: ${itemMasterData.length}`);
   console.log(`- Grade: ${studentGrade}`);
+  console.log(`- Student Name: ${studentName || "Not provided"}`);
+  console.log(`- Report Author: ${reportAuthor || "Not provided"}`);
+  console.log(`- Document Names: ${documentNames?.length || 0} documents`);
   console.log(`- Template length: ${template.length}`);
 
   // Validate item master data
@@ -1098,6 +1162,20 @@ async function generateK12ReportFromItemMaster(
       studentGrade
     );
     populatedTemplate = populatedTemplate.replace(/\[Grade\]/g, studentGrade);
+
+    const studentNameValue = studentName || "Student";
+    const reportAuthorValue = reportAuthor || "Not Specified";
+    console.log(`🔄 Replacing [Student Name] with: "${studentNameValue}"`);
+    console.log(`🔄 Replacing [Report Author] with: "${reportAuthorValue}"`);
+
+    populatedTemplate = populatedTemplate.replace(
+      /\[Student Name\]/g,
+      studentNameValue
+    );
+    populatedTemplate = populatedTemplate.replace(
+      /\[Report Author\]/g,
+      reportAuthorValue
+    );
     populatedTemplate = populatedTemplate.replace(
       /\[Total Count\]/g,
       itemMasterData.length.toString()
@@ -1106,6 +1184,34 @@ async function generateK12ReportFromItemMaster(
       /\[Total count\]/g,
       itemMasterData.length.toString()
     );
+
+    // Add Documents Reviewed section if document names are provided
+    if (documentNames && documentNames.length > 0) {
+      console.log(`🔄 Adding ${documentNames.length} documents to report`);
+      const documentsSection = `## Documents Reviewed\n\n${documentNames
+        .map((name) => `- ${name}`)
+        .join("\n")}\n\n---\n\n`;
+
+      // Try to insert after the header section (after the first ---)
+      const firstDividerIndex = populatedTemplate.indexOf("---");
+      if (firstDividerIndex !== -1) {
+        const insertPosition =
+          populatedTemplate.indexOf("\n", firstDividerIndex + 3) + 1;
+        populatedTemplate =
+          populatedTemplate.slice(0, insertPosition) +
+          documentsSection +
+          populatedTemplate.slice(insertPosition);
+      } else {
+        // If no divider found, add after the header
+        const headerEndIndex = populatedTemplate.indexOf("\n\n");
+        if (headerEndIndex !== -1) {
+          populatedTemplate =
+            populatedTemplate.slice(0, headerEndIndex + 2) +
+            documentsSection +
+            populatedTemplate.slice(headerEndIndex + 2);
+        }
+      }
+    }
 
     // Count items by quality control status
     const validatedItems = itemMasterData.filter(

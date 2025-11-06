@@ -12,6 +12,7 @@ import {
   requireAuth,
   requireRole,
   verifyPassword,
+  presentationModeAuth,
 } from "../auth";
 import { UserRole, ModuleType } from "@shared/schema";
 import { DEMO_CUSTOMER_ID } from "@shared/constants/environments";
@@ -188,13 +189,24 @@ export function registerAuthRoutes(app: Express): void {
           baseUrl
         );
 
+        console.log(`🔗 Generated verification link: ${verificationLink}`);
+        console.log(`📧 Sending verification email to: ${trimmedEmail}`);
+
         try {
-          await sendVerificationEmail(
+          const emailSent = await sendVerificationEmail(
             trimmedEmail,
             trimmedUsername,
             verificationLink
           );
-          console.log(`✅ Verification email sent to ${trimmedEmail}`);
+          if (emailSent) {
+            console.log(
+              `✅ Verification email sent successfully to ${trimmedEmail}`
+            );
+          } else {
+            console.error(
+              `❌ Failed to send verification email to ${trimmedEmail}`
+            );
+          }
         } catch (emailError) {
           console.error("Error sending verification email:", emailError);
           // Don't block registration if email fails
@@ -231,20 +243,54 @@ export function registerAuthRoutes(app: Express): void {
     try {
       const { token } = req.query;
 
+      console.log(
+        `🔍 Email verification attempt with token: ${
+          token ? "present" : "missing"
+        }`
+      );
+
       if (!token || typeof token !== "string") {
+        console.log(`❌ Missing or invalid token type`);
         return res.status(400).json({
           error: "Verification token is required",
           code: "MISSING_TOKEN",
         });
       }
 
-      // Find user with matching verification token
-      const [user] = await db
+      console.log(
+        `🔍 Looking for users with verification tokens to validate against`
+      );
+
+      // We need to find users who have verification tokens and then validate the plain token
+      // against their hashed tokens using bcrypt
+      const usersWithTokens = await db
         .select()
         .from(users)
-        .where(eq(users.emailVerificationToken, token));
+        .where(eq(users.emailVerified, false));
+
+      console.log(`🔍 Found ${usersWithTokens.length} unverified users`);
+
+      // Find the user whose hashed token matches the provided plain token
+      let user = null;
+      for (const candidate of usersWithTokens) {
+        if (candidate.emailVerificationToken) {
+          const { validateToken } = await import(
+            "../services/email-verification"
+          );
+          const isMatch = validateToken(
+            token,
+            candidate.emailVerificationToken,
+            candidate.emailVerificationExpiry!
+          );
+          if (isMatch) {
+            user = candidate;
+            break;
+          }
+        }
+      }
 
       if (!user) {
+        console.log(`❌ No user found with matching verification token`);
         return res.status(400).json({
           error: "Invalid verification token",
           code: "INVALID_TOKEN",
@@ -252,6 +298,21 @@ export function registerAuthRoutes(app: Express): void {
             "This verification link is invalid. Please request a new verification email.",
         });
       }
+
+      console.log(`✅ Found user: ${user.username} (${user.email})`);
+      console.log(
+        `🔍 User verification status: ${
+          user.emailVerified ? "already verified" : "pending"
+        }`
+      );
+      console.log(`🔍 Token expiry: ${user.emailVerificationExpiry}`);
+      console.log(`🔍 Current time: ${new Date()}`);
+      console.log(
+        `🔍 Token expired: ${
+          user.emailVerificationExpiry &&
+          new Date() > user.emailVerificationExpiry
+        }`
+      );
 
       // Check if already verified
       if (user.emailVerified) {
@@ -277,22 +338,8 @@ export function registerAuthRoutes(app: Express): void {
         });
       }
 
-      // Verify the token using bcrypt
-      const { validateToken } = await import("../services/email-verification");
-      const isValid = validateToken(
-        token,
-        user.emailVerificationToken!,
-        user.emailVerificationExpiry
-      );
-
-      if (!isValid) {
-        return res.status(400).json({
-          error: "Invalid verification token",
-          code: "INVALID_TOKEN",
-          message:
-            "This verification link is invalid. Please request a new verification email.",
-        });
-      }
+      // Token validation was already done in the loop above
+      console.log(`✅ Token validation successful for user: ${user.username}`);
 
       // Update user to verified and clear verification token
       await db
@@ -432,8 +479,12 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
-      // Check if email is verified
-      if (!user.emailVerified) {
+      // Check if email is verified (skip for system admins and developers)
+      if (
+        !user.emailVerified &&
+        user.role !== "system_admin" &&
+        user.role !== "developer"
+      ) {
         return res.status(403).json({
           error: "Email not verified",
           code: "EMAIL_NOT_VERIFIED",
@@ -735,6 +786,8 @@ export function registerAdminRoutes(app: Express): void {
             customerId: users.customerId,
             customerName: users.customerName,
             role: users.role,
+            assignedModules: users.assignedModules,
+            organizationId: users.organizationId,
             isActive: users.isActive,
             reportCount: users.reportCount,
             maxReports: users.maxReports,
@@ -799,6 +852,88 @@ export function registerAdminRoutes(app: Express): void {
       } catch (error) {
         console.error("Error updating user:", error);
         res.status(500).json({ error: "Failed to update user" });
+      }
+    }
+  );
+
+  app.delete(
+    "/api/admin/users/:userId",
+    requireAuth,
+    requireRole([UserRole.SYSTEM_ADMIN, UserRole.DEVELOPER]),
+    async (req, res) => {
+      try {
+        const { userId } = req.params;
+        const userIdNum = parseInt(userId, 10);
+
+        if (isNaN(userIdNum)) {
+          return res.status(400).json({ error: "Invalid user ID" });
+        }
+
+        // First, get the user details
+        const [userToDelete] = await db
+          .select({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            customerId: users.customerId,
+            role: users.role,
+          })
+          .from(users)
+          .where(eq(users.id, userIdNum));
+
+        if (!userToDelete) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        // Prevent deletion of system admin users (safety check)
+        if (
+          userToDelete.role === "system_admin" ||
+          userToDelete.role === "developer"
+        ) {
+          return res.status(403).json({
+            error: "Cannot delete system admin or developer users",
+          });
+        }
+
+        // Import assessment cases schema
+        const { assessmentCases } = await import("@shared/schema");
+
+        // Delete reports created by this user
+        const deletedReportsByUser = await db
+          .delete(assessmentCases)
+          .where(eq(assessmentCases.createdByUserId, userIdNum))
+          .returning({ id: assessmentCases.id });
+
+        // Delete reports with matching customer_id (if not 'system')
+        let deletedReportsByCustomer = [];
+        if (userToDelete.customerId && userToDelete.customerId !== "system") {
+          deletedReportsByCustomer = await db
+            .delete(assessmentCases)
+            .where(eq(assessmentCases.customerId, userToDelete.customerId))
+            .returning({ id: assessmentCases.id });
+        }
+
+        // Delete the user
+        const deletedUser = await db
+          .delete(users)
+          .where(eq(users.id, userIdNum))
+          .returning({ username: users.username });
+
+        console.log(`🗑️ User deletion completed:
+          - User: ${userToDelete.username} (${userToDelete.email})
+          - Reports by user deleted: ${deletedReportsByUser.length}
+          - Reports by customer deleted: ${deletedReportsByCustomer.length}
+        `);
+
+        res.json({
+          message: "User deleted successfully",
+          deletedUser: deletedUser[0]?.username,
+          reportsDeleted:
+            deletedReportsByUser.length + deletedReportsByCustomer.length,
+        });
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ error: "Failed to delete user" });
       }
     }
   );

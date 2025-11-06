@@ -1,7 +1,7 @@
 /**
  * AtAGlanceCard Component
  *
- * Summary card with Yellow background for Student Overview section.
+ * Summary card for Student Overview section.
  * Displays a high-level overview of the student with Sparkles icon.
  *
  * Requirements: 5.1
@@ -27,20 +27,19 @@ export interface AtAGlanceCardProps {
 /**
  * AtAGlanceCard Component
  *
- * Displays a highlighted summary card with yellow background and sparkles icon.
+ * Displays a summary card with sparkles icon.
  */
 export const AtAGlanceCard: React.FC<AtAGlanceCardProps> = ({
   content,
   theme,
 }) => {
   return (
-    <ThriveReportCard theme={theme} variant="highlighted">
+    <ThriveReportCard theme={theme} variant="default">
       <div
         style={{
           display: "flex",
           alignItems: "flex-start",
           gap: theme.spacing.md,
-          backgroundColor: `${theme.colors.yellow}40`,
           padding: theme.spacing.lg,
           borderRadius: theme.borderRadius.lg,
         }}
@@ -52,11 +51,11 @@ export const AtAGlanceCard: React.FC<AtAGlanceCardProps> = ({
             width: theme.dimensions.iconXl,
             height: theme.dimensions.iconXl,
             borderRadius: theme.borderRadius.full,
-            backgroundColor: `${theme.colors.yellow}60`,
+            backgroundColor: theme.colors.gray100,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: theme.colors.orange,
+            color: theme.colors.gray600,
           }}
         >
           <Sparkles className="w-6 h-6" />
