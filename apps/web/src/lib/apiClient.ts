@@ -115,6 +115,11 @@ class ApiClient {
     };
     return this.updateAssessmentCase(caseId, updateData);
   }
+
+  // Prompt sections
+  async getPromptSections(moduleType: string) {
+    return this.request(`/prompts/sections?moduleType=${moduleType}`);
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,8 +27,10 @@ import remarkGfm from "remark-gfm";
 import { useNavigate } from "react-router-dom";
 import { useModule } from "@/contexts/ModuleContext";
 import { useToast } from "@/hooks/use-toast";
+import { useReactToPrint } from "react-to-print";
 import { AssessmentCase } from "@/types/assessmentCase";
 import { BatchExportModal } from "./BatchExportModal";
+import { UniversalCompactPrintReport } from "../report/UniversalCompactPrintReport";
 
 interface UnifiedReportViewerProps {
   currentCase: AssessmentCase | null;
@@ -58,6 +60,7 @@ export const UnifiedReportViewer: React.FC<UnifiedReportViewerProps> = ({
   const { toast } = useToast();
   const [currentView, setCurrentView] = useState("overview");
   const [isBatchExportOpen, setIsBatchExportOpen] = useState(false);
+  const compactPrintRef = useRef<HTMLDivElement>(null);
 
   // In the simplified RBAC system, demo mode will be handled by user roles
   const isDemoMode = false;
@@ -240,6 +243,29 @@ export const UnifiedReportViewer: React.FC<UnifiedReportViewerProps> = ({
     }
   };
 
+  // Handle compact print
+  const handleCompactPrint = useReactToPrint({
+    contentRef: compactPrintRef,
+    documentTitle: `${currentModuleConfig.name}_Report_${
+      currentCase?.display_name?.replace(/[^a-z0-9]/gi, "_") || "Report"
+    }_${new Date().toISOString().split("T")[0]}`,
+    pageStyle: `
+      @page {
+        size: letter;
+        margin: 0.5in;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+    `,
+  });
+
   // Get current section content
   const getCurrentContent = () => {
     if (currentView === "overview") {
@@ -313,6 +339,16 @@ export const UnifiedReportViewer: React.FC<UnifiedReportViewerProps> = ({
             </Button>
 
             <div className="space-y-2">
+              <Button
+                onClick={handleCompactPrint}
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print Compact Report
+              </Button>
+
               <div className="flex space-x-2">
                 {onDownloadPDF && (
                   <Button
@@ -468,6 +504,16 @@ export const UnifiedReportViewer: React.FC<UnifiedReportViewerProps> = ({
         availableCases={availableCases}
         moduleType={activeModule as "k12" | "post_secondary" | "tutoring"}
       />
+
+      {/* Hidden Compact Print Report */}
+      <div style={{ display: "none" }} aria-hidden="true">
+        <UniversalCompactPrintReport
+          ref={compactPrintRef}
+          markdownReport={markdownReport || ""}
+          reportType={activeModule === "k12" ? "k12" : "tutoring"}
+          studentName={currentCase?.display_name || "Student"}
+        />
+      </div>
     </div>
   );
 };

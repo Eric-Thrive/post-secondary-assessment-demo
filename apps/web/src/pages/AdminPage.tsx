@@ -41,6 +41,7 @@ import {
 import { apiClient } from "@/lib/apiClient";
 import { AdminDebugPanel } from "@/components/AdminDebugPanel";
 import OrganizationManagementPage from "./OrganizationManagementPage";
+import PromptManager from "@/components/PromptManager";
 
 interface AdminUser {
   id: number;
@@ -214,9 +215,9 @@ export default function AdminPage() {
         </Card>
       </div>
 
-      {/* Tabs for Users, Organizations, and Debug */}
+      {/* Tabs for Users, Organizations, Prompts, and Debug */}
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Users
@@ -230,6 +231,10 @@ export default function AdminPage() {
               Organizations
             </TabsTrigger>
           )}
+          <TabsTrigger value="prompts" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Prompts
+          </TabsTrigger>
           <TabsTrigger value="debug" className="flex items-center gap-2">
             <Bug className="h-4 w-4" />
             Debug
@@ -358,6 +363,21 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="prompts" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prompt Manager</CardTitle>
+              <CardDescription>
+                Manage AI prompts for all modules (K-12, Tutoring,
+                Post-Secondary)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PromptManager />
             </CardContent>
           </Card>
         </TabsContent>

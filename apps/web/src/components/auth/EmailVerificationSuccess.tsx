@@ -10,7 +10,9 @@ interface EmailVerificationSuccessProps {
 
 /**
  * EmailVerificationSuccess - Successful verification confirmation
- * Requirements: 4.3
+ * Requirements: 4.3, 4.4, 10.1, 10.2, 10.3
+ * - Displays demo access information (5 reports limit)
+ * - Provides upgrade instructions and customer support contact
  */
 export const EmailVerificationSuccess: React.FC<
   EmailVerificationSuccessProps
@@ -76,10 +78,35 @@ export const EmailVerificationSuccess: React.FC<
               <p className="text-xs text-gray-600 mb-1">What's next?</p>
               <ul className="text-sm text-gray-700 space-y-1">
                 <li>• Sign in with your credentials</li>
-                <li>• Complete your profile setup</li>
-                <li>• Explore the platform features</li>
                 <li>• Create your first assessment</li>
               </ul>
+            </div>
+          </div>
+
+          {/* Demo Access Information */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+              <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded mr-2">
+                DEMO
+              </span>
+              Your Trial Access
+            </h3>
+            <p className="text-sm text-gray-700 mb-3">
+              You have <strong>demo access to run 5 reports</strong> to explore
+              the platform's capabilities. This allows you to:
+            </p>
+            <div className="bg-white rounded-md p-3 border border-blue-200">
+              <p className="text-xs font-semibold text-gray-900 mb-1">
+                Ready to upgrade?
+              </p>
+              <a
+                href="mailto:eric@thriveiep.com"
+                className="text-xs text-[#1297d2] hover:text-[#1297d2]/80 font-medium inline-block cursor-pointer"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Contact Customer Support →
+              </a>
             </div>
           </div>
 

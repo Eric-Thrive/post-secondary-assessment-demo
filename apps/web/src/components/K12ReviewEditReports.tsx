@@ -27,10 +27,12 @@ import {
   AlertCircle,
   Clock,
   FileCheck,
+  Printer,
 } from "lucide-react";
 // We'll use fetch directly instead of apiRequest
 import { EditableReportContent } from "./report/EditableReportContent";
 import { K12CardReportEditable } from "./report/K12CardReportEditable";
+import { UniversalCompactPrintReport } from "./report/UniversalCompactPrintReport";
 import { ChangeTracker } from "./report/ChangeTracker";
 import { toast } from "@/hooks/use-toast";
 
@@ -100,9 +102,14 @@ export const K12ReviewEditReports: React.FC = () => {
     isFinalized: false,
   });
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
+  const [showPrintView, setShowPrintView] = useState(false);
 
-  // Use the protected endpoint with proper customer filtering
-  const endpoint = "/api/assessment-cases/k12";
+  // Detect demo environment and use appropriate endpoint
+  const environment = localStorage.getItem("app-environment") || "replit-prod";
+  const isDemoEnvironment = environment.includes("demo");
+  const endpoint = isDemoEnvironment
+    ? "/api/demo-assessment-cases/k12"
+    : "/api/assessment-cases/k12";
 
   // Fetch K-12 assessment cases with inline fetcher
   const { data: cases = [], isLoading: isLoadingCases } = useQuery<
@@ -568,6 +575,10 @@ export const K12ReviewEditReports: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowPrintView(true)}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print Guide
+              </Button>
               <Button variant="default" onClick={handleFinalizeReport}>
                 <Check className="h-4 w-4 mr-2" />
                 Finalize Report
@@ -656,6 +667,33 @@ export const K12ReviewEditReports: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+      )}
+
+      {/* Print View Modal */}
+      {showPrintView && selectedCase && liveMarkdownReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-7xl max-h-[90vh] overflow-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Teacher Guide - Print Preview
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPrintView(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <UniversalCompactPrintReport
+                markdownReport={liveMarkdownReport}
+                reportType="k12"
+                studentName={selectedCase.student_name}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -147,13 +147,26 @@ export function registerAssessmentCaseRoutes(app: Express): void {
           `Fetching demo assessment cases for module: ${moduleType}, user: ${userId}`
         );
 
-        // Get demo cases filtered by the current user's ID
-        // This ensures users only see their own assessment cases
-        const cases = await storage.getAssessmentCases(
-          moduleType,
-          DEMO_CUSTOMER_ID,
-          userId
-        );
+        // System admins and developers can see all cases, even in demo mode
+        let cases;
+        if (
+          req.user?.role === UserRole.SYSTEM_ADMIN ||
+          req.user?.role === UserRole.DEVELOPER
+        ) {
+          console.log(
+            `✅ System admin/developer access in demo mode - showing all cases`
+          );
+          // Get all cases without customer or user filters
+          cases = await storage.getAssessmentCases(moduleType);
+        } else {
+          // Get demo cases filtered by the current user's ID
+          // This ensures users only see their own assessment cases
+          cases = await storage.getAssessmentCases(
+            moduleType,
+            DEMO_CUSTOMER_ID,
+            userId
+          );
+        }
 
         console.log(
           `Found ${cases.length} demo ${moduleType} cases for user ${userId}`

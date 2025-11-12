@@ -7,6 +7,7 @@ import {
 } from "../../services/admin-notifications";
 import { db } from "../../db";
 import * as sendgridService from "../../services/sendgrid";
+import * as slackService from "../../services/slack-notifications";
 import type {
   RegistrationData,
   SupportRequest,
@@ -25,6 +26,13 @@ jest.mock("../../services/sendgrid", () => ({
   sendAdminRegistrationNotification: jest.fn(),
   sendAdminSupportNotification: jest.fn(),
   sendAdminSalesNotification: jest.fn(),
+}));
+
+// Mock the slack notifications service
+jest.mock("../../services/slack-notifications", () => ({
+  sendSlackRegistrationNotification: jest.fn(),
+  sendSlackSupportNotification: jest.fn(),
+  sendSlackSalesNotification: jest.fn(),
 }));
 
 describe("Admin Notification Service", () => {
@@ -161,7 +169,37 @@ describe("Admin Notification Service", () => {
   });
 
   describe("sendRegistrationNotification", () => {
-    test("should send notification to all system admins", async () => {
+    test("should send notification via Slack when configured", async () => {
+      // Mock Slack notification success
+      (
+        slackService.sendSlackRegistrationNotification as jest.Mock
+      ).mockResolvedValue(true);
+
+      const userData: RegistrationData = {
+        username: "newuser",
+        email: "newuser@example.com",
+        organizationName: "Test Org",
+        registeredAt: new Date(),
+      };
+
+      // Call the function
+      await sendRegistrationNotification(userData);
+
+      // Wait for setImmediate to execute
+      await new Promise((resolve) => setImmediate(resolve));
+
+      // Verify Slack notification was sent
+      expect(
+        slackService.sendSlackRegistrationNotification
+      ).toHaveBeenCalledWith(userData);
+
+      // Verify email was NOT sent (Slack succeeded)
+      expect(
+        sendgridService.sendAdminRegistrationNotification
+      ).not.toHaveBeenCalled();
+    });
+
+    test("should fall back to email when Slack fails", async () => {
       const mockAdmins = [
         { id: 1, email: "admin1@example.com", username: "admin1" },
         { id: 2, email: "admin2@example.com", username: "admin2" },
@@ -174,6 +212,11 @@ describe("Admin Notification Service", () => {
       });
 
       (db.select as jest.Mock).mockReturnValue(mockSelect());
+
+      // Mock Slack failure
+      (
+        slackService.sendSlackRegistrationNotification as jest.Mock
+      ).mockResolvedValue(false);
 
       const mockSendNotification = jest.fn().mockResolvedValue(true);
       (
@@ -193,7 +236,12 @@ describe("Admin Notification Service", () => {
       // Wait for setImmediate to execute
       await new Promise((resolve) => setImmediate(resolve));
 
-      // Verify notifications were sent to all admins
+      // Verify Slack was tried first
+      expect(
+        slackService.sendSlackRegistrationNotification
+      ).toHaveBeenCalledWith(userData);
+
+      // Verify email fallback was used
       expect(mockSendNotification).toHaveBeenCalledTimes(2);
       expect(mockSendNotification).toHaveBeenCalledWith(
         "admin1@example.com",
@@ -205,7 +253,7 @@ describe("Admin Notification Service", () => {
       );
     });
 
-    test("should handle case with no system admins", async () => {
+    test("should handle case with no system admins when Slack fails", async () => {
       const mockSelect = jest.fn().mockReturnValue({
         from: jest.fn().mockReturnValue({
           where: jest.fn().mockResolvedValue([]),
@@ -213,6 +261,11 @@ describe("Admin Notification Service", () => {
       });
 
       (db.select as jest.Mock).mockReturnValue(mockSelect());
+
+      // Mock Slack failure
+      (
+        slackService.sendSlackRegistrationNotification as jest.Mock
+      ).mockResolvedValue(false);
 
       const userData: RegistrationData = {
         username: "newuser",
@@ -225,6 +278,12 @@ describe("Admin Notification Service", () => {
       // Wait for setImmediate to execute
       await new Promise((resolve) => setImmediate(resolve));
 
+      // Verify Slack was tried
+      expect(
+        slackService.sendSlackRegistrationNotification
+      ).toHaveBeenCalledWith(userData);
+
+      // Verify email was not sent (no admins)
       expect(
         sendgridService.sendAdminRegistrationNotification
       ).not.toHaveBeenCalled();
@@ -301,7 +360,39 @@ describe("Admin Notification Service", () => {
   });
 
   describe("sendSupportRequestNotification", () => {
-    test("should send notification to all system admins", async () => {
+    test("should send notification via Slack when configured", async () => {
+      // Mock Slack notification success
+      (
+        slackService.sendSlackSupportNotification as jest.Mock
+      ).mockResolvedValue(true);
+
+      const supportRequest: SupportRequest = {
+        name: "John Doe",
+        email: "john@example.com",
+        subject: "Need help",
+        description: "I need assistance with my account",
+        urgency: "high",
+        category: "technical",
+        createdAt: new Date(),
+      };
+
+      await sendSupportRequestNotification(supportRequest);
+
+      // Wait for setImmediate to execute
+      await new Promise((resolve) => setImmediate(resolve));
+
+      // Verify Slack notification was sent
+      expect(slackService.sendSlackSupportNotification).toHaveBeenCalledWith(
+        supportRequest
+      );
+
+      // Verify email was NOT sent (Slack succeeded)
+      expect(
+        sendgridService.sendAdminSupportNotification
+      ).not.toHaveBeenCalled();
+    });
+
+    test("should fall back to email when Slack fails", async () => {
       const mockAdmins = [
         { id: 1, email: "admin1@example.com", username: "admin1" },
         { id: 2, email: "admin2@example.com", username: "admin2" },
@@ -314,6 +405,11 @@ describe("Admin Notification Service", () => {
       });
 
       (db.select as jest.Mock).mockReturnValue(mockSelect());
+
+      // Mock Slack failure
+      (
+        slackService.sendSlackSupportNotification as jest.Mock
+      ).mockResolvedValue(false);
 
       const mockSendNotification = jest.fn().mockResolvedValue(true);
       (
@@ -335,6 +431,12 @@ describe("Admin Notification Service", () => {
       // Wait for setImmediate to execute
       await new Promise((resolve) => setImmediate(resolve));
 
+      // Verify Slack was tried first
+      expect(slackService.sendSlackSupportNotification).toHaveBeenCalledWith(
+        supportRequest
+      );
+
+      // Verify email fallback was used
       expect(mockSendNotification).toHaveBeenCalledTimes(2);
       expect(mockSendNotification).toHaveBeenCalledWith(
         "admin1@example.com",
@@ -346,7 +448,7 @@ describe("Admin Notification Service", () => {
       );
     });
 
-    test("should handle case with no system admins", async () => {
+    test("should handle case with no system admins when Slack fails", async () => {
       const mockSelect = jest.fn().mockReturnValue({
         from: jest.fn().mockReturnValue({
           where: jest.fn().mockResolvedValue([]),
@@ -354,6 +456,11 @@ describe("Admin Notification Service", () => {
       });
 
       (db.select as jest.Mock).mockReturnValue(mockSelect());
+
+      // Mock Slack failure
+      (
+        slackService.sendSlackSupportNotification as jest.Mock
+      ).mockResolvedValue(false);
 
       const supportRequest: SupportRequest = {
         name: "John Doe",
@@ -370,6 +477,12 @@ describe("Admin Notification Service", () => {
       // Wait for setImmediate to execute
       await new Promise((resolve) => setImmediate(resolve));
 
+      // Verify Slack was tried
+      expect(slackService.sendSlackSupportNotification).toHaveBeenCalledWith(
+        supportRequest
+      );
+
+      // Verify email was not sent (no admins)
       expect(
         sendgridService.sendAdminSupportNotification
       ).not.toHaveBeenCalled();
@@ -381,7 +494,38 @@ describe("Admin Notification Service", () => {
   });
 
   describe("sendSalesInquiryNotification", () => {
-    test("should send notification to all system admins", async () => {
+    test("should send notification via Slack when configured", async () => {
+      // Mock Slack notification success
+      (slackService.sendSlackSalesNotification as jest.Mock).mockResolvedValue(
+        true
+      );
+
+      const salesInquiry: SalesInquiry = {
+        name: "Jane Smith",
+        email: "jane@company.com",
+        organization: "ABC Corp",
+        organizationSize: "50-100",
+        interestedModules: ["K12", "PostSecondary"],
+        message: "Interested in pricing for enterprise",
+        inquiryType: "pricing",
+        createdAt: new Date(),
+      };
+
+      await sendSalesInquiryNotification(salesInquiry);
+
+      // Wait for setImmediate to execute
+      await new Promise((resolve) => setImmediate(resolve));
+
+      // Verify Slack notification was sent
+      expect(slackService.sendSlackSalesNotification).toHaveBeenCalledWith(
+        salesInquiry
+      );
+
+      // Verify email was NOT sent (Slack succeeded)
+      expect(sendgridService.sendAdminSalesNotification).not.toHaveBeenCalled();
+    });
+
+    test("should fall back to email when Slack fails", async () => {
       const mockAdmins = [
         { id: 1, email: "admin1@example.com", username: "admin1" },
         { id: 2, email: "admin2@example.com", username: "admin2" },
@@ -395,6 +539,11 @@ describe("Admin Notification Service", () => {
       });
 
       (db.select as jest.Mock).mockReturnValue(mockSelect());
+
+      // Mock Slack failure
+      (slackService.sendSlackSalesNotification as jest.Mock).mockResolvedValue(
+        false
+      );
 
       const mockSendNotification = jest.fn().mockResolvedValue(true);
       (
@@ -417,6 +566,12 @@ describe("Admin Notification Service", () => {
       // Wait for setImmediate to execute
       await new Promise((resolve) => setImmediate(resolve));
 
+      // Verify Slack was tried first
+      expect(slackService.sendSlackSalesNotification).toHaveBeenCalledWith(
+        salesInquiry
+      );
+
+      // Verify email fallback was used
       expect(mockSendNotification).toHaveBeenCalledTimes(3);
       expect(mockSendNotification).toHaveBeenCalledWith(
         "admin1@example.com",
@@ -432,7 +587,7 @@ describe("Admin Notification Service", () => {
       );
     });
 
-    test("should handle case with no system admins", async () => {
+    test("should handle case with no system admins when Slack fails", async () => {
       const mockSelect = jest.fn().mockReturnValue({
         from: jest.fn().mockReturnValue({
           where: jest.fn().mockResolvedValue([]),
@@ -440,6 +595,11 @@ describe("Admin Notification Service", () => {
       });
 
       (db.select as jest.Mock).mockReturnValue(mockSelect());
+
+      // Mock Slack failure
+      (slackService.sendSlackSalesNotification as jest.Mock).mockResolvedValue(
+        false
+      );
 
       const salesInquiry: SalesInquiry = {
         name: "Jane Smith",
@@ -456,6 +616,12 @@ describe("Admin Notification Service", () => {
       // Wait for setImmediate to execute
       await new Promise((resolve) => setImmediate(resolve));
 
+      // Verify Slack was tried
+      expect(slackService.sendSlackSalesNotification).toHaveBeenCalledWith(
+        salesInquiry
+      );
+
+      // Verify email was not sent (no admins)
       expect(sendgridService.sendAdminSalesNotification).not.toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalledWith(
         "No system admins to notify for sales inquiry:",
@@ -463,7 +629,7 @@ describe("Admin Notification Service", () => {
       );
     });
 
-    test("should handle partial email sending failures", async () => {
+    test("should handle partial email sending failures when Slack fails", async () => {
       const mockAdmins = [
         { id: 1, email: "admin1@example.com", username: "admin1" },
         { id: 2, email: "admin2@example.com", username: "admin2" },
@@ -477,6 +643,11 @@ describe("Admin Notification Service", () => {
       });
 
       (db.select as jest.Mock).mockReturnValue(mockSelect());
+
+      // Mock Slack failure
+      (slackService.sendSlackSalesNotification as jest.Mock).mockResolvedValue(
+        false
+      );
 
       // First succeeds, second fails, third succeeds
       (sendgridService.sendAdminSalesNotification as jest.Mock)

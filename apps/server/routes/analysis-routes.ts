@@ -480,15 +480,20 @@ export function registerAnalysisRoutes(app: Express): void {
 
         // Handle tutoring module with JSON-first approach
         if (moduleType === "tutoring") {
-          console.log(
-            "🧩 Processing tutoring module with JSON-first pipeline..."
-          );
+          console.log("\n========================================");
+          console.log("🧩 TUTORING MODULE - JSON-FIRST PIPELINE");
+          console.log("========================================");
+          console.log(`Documents: ${documents.length}`);
+          console.log(`Student: ${uniqueId || "unknown"}`);
+          console.log(`Grade: ${studentGrade || "unknown"}`);
 
           try {
             // Convert documents to simple string array for JSON service
             const documentStrings = documents.map(
               (doc: any) => `${doc.filename}:\n${doc.content}`
             );
+
+            console.log("📤 Calling aiJSONService.generateJSONReport...");
 
             // Generate JSON report with QC metadata
             const { jsonReport, markdownReport } =
@@ -498,6 +503,8 @@ export function registerAnalysisRoutes(app: Express): void {
                 uniqueId,
                 studentGrade
               );
+
+            console.log("✅ aiJSONService.generateJSONReport completed");
 
             console.log("✅ JSON report generated successfully");
             if (moduleType === "tutoring") {
@@ -570,7 +577,14 @@ export function registerAnalysisRoutes(app: Express): void {
               module_type: moduleType,
             });
           } catch (error) {
-            console.error("❌ Tutoring module analysis failed:", error);
+            console.error("\n❌❌❌ TUTORING MODULE ANALYSIS FAILED ❌❌❌");
+            console.error("Error details:", error);
+            if (error instanceof Error) {
+              console.error("Error message:", error.message);
+              console.error("Error stack:", error.stack);
+            }
+            console.error("========================================\n");
+
             const errorMessage =
               error instanceof Error
                 ? error.message

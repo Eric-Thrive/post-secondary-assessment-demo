@@ -1,8 +1,15 @@
-
-import React from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, RefreshCw, TestTube, Database } from "lucide-react";
-import { ModulePromptUpdateButton } from './prompts/ModulePromptUpdateButton';
+import { ModulePromptUpdateButton } from "./prompts/ModulePromptUpdateButton";
+import { useModule } from "@/contexts/ModuleContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PromptManagerHeaderProps {
   onImportPrompts: () => void;
@@ -17,8 +24,10 @@ const PromptManagerHeader: React.FC<PromptManagerHeaderProps> = ({
   onRestoreOriginal,
   onTestPrompts,
   onSyncToDatabase,
-  isRestoring
+  isRestoring,
 }) => {
+  const { activeModule, setActiveModule } = useModule();
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -30,8 +39,22 @@ const PromptManagerHeader: React.FC<PromptManagerHeaderProps> = ({
             Configure AI prompts, lookup tables, and system settings
           </p>
         </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-700">Module:</span>
+          <Select value={activeModule} onValueChange={setActiveModule}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select module" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="k12">K-12</SelectItem>
+              <SelectItem value="tutoring">Tutoring</SelectItem>
+              <SelectItem value="post_secondary">Post-Secondary</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      
+
       <div className="flex flex-wrap gap-3">
         <Button
           onClick={onImportPrompts}
@@ -42,7 +65,7 @@ const PromptManagerHeader: React.FC<PromptManagerHeaderProps> = ({
           <Upload className="h-4 w-4" />
           Import Prompts
         </Button>
-        
+
         <Button
           onClick={onRestoreOriginal}
           variant="outline"
@@ -55,9 +78,9 @@ const PromptManagerHeader: React.FC<PromptManagerHeaderProps> = ({
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-          {isRestoring ? 'Restoring...' : 'Restore Original'}
+          {isRestoring ? "Restoring..." : "Restore Original"}
         </Button>
-        
+
         <Button
           onClick={onTestPrompts}
           variant="outline"
@@ -67,7 +90,7 @@ const PromptManagerHeader: React.FC<PromptManagerHeaderProps> = ({
           <TestTube className="h-4 w-4" />
           Test Prompts
         </Button>
-        
+
         <Button
           onClick={onSyncToDatabase}
           variant="outline"

@@ -87,7 +87,7 @@ export const StrengthAccordion: React.FC<StrengthAccordionProps> = ({
                   >
                     What You See
                   </h4>
-                  <ul className="list-disc pl-5 md:pl-6 m-0">
+                  <ul className="pl-0 m-0">
                     {strength.whatYouSee.map((item, idx) => (
                       <li
                         key={idx}
@@ -97,6 +97,7 @@ export const StrengthAccordion: React.FC<StrengthAccordionProps> = ({
                           fontWeight: theme.typography.fontWeights.regular,
                           lineHeight: theme.typography.lineHeights.relaxed,
                           color: theme.colors.gray700,
+                          listStyle: "none",
                         }}
                       >
                         {item}

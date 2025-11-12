@@ -1,7 +1,7 @@
 /**
- * K12ReportViewer Component
+ * TutoringReportViewer Component
  *
- * Main component for displaying K-12 Teacher Guide reports.
+ * Main component for displaying Tutoring Tutor Guide reports.
  * Uses the design system layout components and config-driven section rendering.
  *
  * Features:
@@ -17,20 +17,27 @@ import React, { useState, Suspense, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import { ThriveReportLayout, ThriveReportSection } from "@/design-system";
-import { k12Config, type K12SectionId, getNextSection } from "./k12Config";
-import { getSectionContent, type SectionContentProps } from "./sectionRegistry";
+import {
+  tutoringConfig,
+  type TutoringSectionId,
+  getNextSection,
+} from "./tutoringConfig";
+import {
+  getSectionContent,
+  type SectionContentProps,
+} from "../k12/sectionRegistry";
 import { K12MarkdownExportService } from "@/services/k12MarkdownExportService";
 import { UniversalCompactPrintReport } from "../report/UniversalCompactPrintReport";
 import { Loader2 } from "lucide-react";
 
 /**
- * Props for K12ReportViewer
+ * Props for TutoringReportViewer
  */
-export interface K12ReportViewerProps {
+export interface TutoringReportViewerProps {
   /**
    * Initial section to display (defaults to "case-info")
    */
-  initialSection?: K12SectionId;
+  initialSection?: TutoringSectionId;
 
   /**
    * Report data to display
@@ -51,7 +58,7 @@ export interface K12ReportViewerProps {
   /**
    * Callback when section changes
    */
-  onSectionChange?: (sectionId: K12SectionId) => void;
+  onSectionChange?: (sectionId: TutoringSectionId) => void;
 }
 
 /**
@@ -61,19 +68,19 @@ const LoadingFallback: React.FC = () => (
   <div
     className="flex items-center justify-center min-h-screen"
     style={{
-      fontFamily: k12Config.theme.typography.fontFamilies.primary,
+      fontFamily: tutoringConfig.theme.typography.fontFamilies.primary,
     }}
   >
     <div className="flex flex-col items-center gap-4">
       <Loader2
         className="animate-spin"
         size={48}
-        style={{ color: k12Config.theme.colors.primary }}
+        style={{ color: tutoringConfig.theme.colors.primary }}
       />
       <p
         style={{
-          fontSize: k12Config.theme.typography.fontSizes.bodyLarge,
-          color: k12Config.theme.colors.gray600,
+          fontSize: tutoringConfig.theme.typography.fontSizes.bodyLarge,
+          color: tutoringConfig.theme.colors.gray600,
         }}
       >
         Loading section...
@@ -83,9 +90,9 @@ const LoadingFallback: React.FC = () => (
 );
 
 /**
- * K12ReportViewer Component
+ * TutoringReportViewer Component
  */
-const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
+const TutoringReportViewer: React.FC<TutoringReportViewerProps> = ({
   initialSection = "case-info",
   reportData,
   originalMarkdown,
@@ -94,7 +101,7 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
 }) => {
   const navigate = useNavigate();
   const [currentSection, setCurrentSection] =
-    useState<K12SectionId>(initialSection);
+    useState<TutoringSectionId>(initialSection);
   const compactPrintRef = useRef<HTMLDivElement>(null);
   const [showDebugMenu, setShowDebugMenu] = useState(false);
   const debugMenuRef = useRef<HTMLDivElement>(null);
@@ -103,7 +110,7 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
    * Handle section navigation
    */
   const handleSectionChange = (sectionId: string) => {
-    const newSection = sectionId as K12SectionId;
+    const newSection = sectionId as TutoringSectionId;
     setCurrentSection(newSection);
 
     // Call optional callback
@@ -130,7 +137,7 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
    */
   const handleCompactPrint = useReactToPrint({
     contentRef: compactPrintRef,
-    documentTitle: `Teacher_Guide_${
+    documentTitle: `Tutor_Guide_${
       reportData?.caseInfo?.studentName || "Student"
     }_${new Date().toISOString().split("T")[0]}`,
     pageStyle: `
@@ -230,7 +237,7 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
   /**
    * Get the current section configuration
    */
-  const currentSectionConfig = k12Config.sections.find(
+  const currentSectionConfig = tutoringConfig.sections.find(
     (section) => section.id === currentSection
   );
 
@@ -346,30 +353,30 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
 
       <ThriveReportLayout
         config={{
-          ...k12Config,
+          ...tutoringConfig,
           // Override utility button routes and add click handlers
-          utilityButtons: k12Config.utilityButtons?.map((button) => ({
+          utilityButtons: tutoringConfig.utilityButtons?.map((button) => ({
             ...button,
             route:
               button.id === "review" && caseId
-                ? `/k12-review-edit/${caseId}`
+                ? `/tutoring-review-edit/${caseId}`
                 : button.route,
             onClick: button.id === "print" ? handleCompactPrint : undefined,
           })),
         }}
         currentSection={currentSection}
         onSectionChange={handleSectionChange}
-        theme={k12Config.theme}
+        theme={tutoringConfig.theme}
       >
         {currentSectionConfig && ContentComponent ? (
           <ThriveReportSection
             section={currentSectionConfig}
             isActive={true}
-            theme={k12Config.theme}
+            theme={tutoringConfig.theme}
           >
             <Suspense fallback={<LoadingFallback />}>
               <ContentComponent
-                theme={k12Config.theme}
+                theme={tutoringConfig.theme}
                 onNext={handleNext}
                 reportData={reportData}
               />
@@ -379,24 +386,24 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
           <div
             className="flex items-center justify-center min-h-screen"
             style={{
-              fontFamily: k12Config.theme.typography.fontFamilies.primary,
+              fontFamily: tutoringConfig.theme.typography.fontFamilies.primary,
             }}
           >
             <div className="text-center">
               <h2
                 style={{
-                  fontSize: k12Config.theme.typography.fontSizes.h2,
-                  fontWeight: k12Config.theme.typography.fontWeights.bold,
-                  color: k12Config.theme.colors.gray900,
-                  marginBottom: k12Config.theme.spacing.md,
+                  fontSize: tutoringConfig.theme.typography.fontSizes.h2,
+                  fontWeight: tutoringConfig.theme.typography.fontWeights.bold,
+                  color: tutoringConfig.theme.colors.gray900,
+                  marginBottom: tutoringConfig.theme.spacing.md,
                 }}
               >
                 Section Not Found
               </h2>
               <p
                 style={{
-                  fontSize: k12Config.theme.typography.fontSizes.body,
-                  color: k12Config.theme.colors.gray600,
+                  fontSize: tutoringConfig.theme.typography.fontSizes.body,
+                  color: tutoringConfig.theme.colors.gray600,
                 }}
               >
                 The requested section could not be found.
@@ -405,10 +412,11 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
                 onClick={() => handleSectionChange("case-info")}
                 className="mt-6 px-6 py-3 rounded-lg transition-colors"
                 style={{
-                  backgroundColor: k12Config.theme.colors.primary,
-                  color: k12Config.theme.colors.white,
-                  fontSize: k12Config.theme.typography.fontSizes.body,
-                  fontWeight: k12Config.theme.typography.fontWeights.medium,
+                  backgroundColor: tutoringConfig.theme.colors.primary,
+                  color: tutoringConfig.theme.colors.white,
+                  fontSize: tutoringConfig.theme.typography.fontSizes.body,
+                  fontWeight:
+                    tutoringConfig.theme.typography.fontWeights.medium,
                 }}
               >
                 Go to Case Information
@@ -431,7 +439,7 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
           <UniversalCompactPrintReport
             ref={compactPrintRef}
             markdownReport={originalMarkdown || ""}
-            reportType="k12"
+            reportType="tutoring"
             studentName={reportData.caseInfo?.studentName}
             hidePrintButton={true}
           />
@@ -441,4 +449,4 @@ const K12ReportViewer: React.FC<K12ReportViewerProps> = ({
   );
 };
 
-export default K12ReportViewer;
+export default TutoringReportViewer;

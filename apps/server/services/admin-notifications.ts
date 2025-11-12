@@ -9,6 +9,11 @@ import {
   type SupportRequest,
   type SalesInquiry,
 } from "./sendgrid";
+import {
+  sendSlackRegistrationNotification,
+  sendSlackSupportNotification,
+  sendSlackSalesNotification,
+} from "./slack-notifications";
 
 // Cache for system admin list
 interface AdminCache {
@@ -81,6 +86,7 @@ export function invalidateAdminCache(): void {
 /**
  * Send registration notification to all system administrators
  * Runs asynchronously to avoid blocking user registration
+ * Sends to Slack webhook if configured, otherwise falls back to email
  * @param userData User registration data
  */
 export async function sendRegistrationNotification(
@@ -89,6 +95,16 @@ export async function sendRegistrationNotification(
   // Run asynchronously without blocking
   setImmediate(async () => {
     try {
+      // Try Slack notification first
+      const slackSuccess = await sendSlackRegistrationNotification(userData);
+
+      if (slackSuccess) {
+        console.log("✅ Registration notification sent to Slack");
+        return;
+      }
+
+      // Fall back to email if Slack fails or is not configured
+      console.log("Falling back to email notifications for registration");
       const admins = await getSystemAdmins();
 
       if (admins.length === 0) {
@@ -139,6 +155,7 @@ export async function sendRegistrationNotification(
 /**
  * Send support request notification to all system administrators
  * Runs asynchronously to avoid blocking user request submission
+ * Sends to Slack webhook if configured, otherwise falls back to email
  * @param request Support request data
  */
 export async function sendSupportRequestNotification(
@@ -147,6 +164,16 @@ export async function sendSupportRequestNotification(
   // Run asynchronously without blocking
   setImmediate(async () => {
     try {
+      // Try Slack notification first
+      const slackSuccess = await sendSlackSupportNotification(request);
+
+      if (slackSuccess) {
+        console.log("✅ Support request notification sent to Slack");
+        return;
+      }
+
+      // Fall back to email if Slack fails or is not configured
+      console.log("Falling back to email notifications for support request");
       const admins = await getSystemAdmins();
 
       if (admins.length === 0) {
@@ -197,6 +224,7 @@ export async function sendSupportRequestNotification(
 /**
  * Send sales inquiry notification to all system administrators
  * Runs asynchronously to avoid blocking user inquiry submission
+ * Sends to Slack webhook if configured, otherwise falls back to email
  * @param inquiry Sales inquiry data
  */
 export async function sendSalesInquiryNotification(
@@ -205,6 +233,16 @@ export async function sendSalesInquiryNotification(
   // Run asynchronously without blocking
   setImmediate(async () => {
     try {
+      // Try Slack notification first
+      const slackSuccess = await sendSlackSalesNotification(inquiry);
+
+      if (slackSuccess) {
+        console.log("✅ Sales inquiry notification sent to Slack");
+        return;
+      }
+
+      // Fall back to email if Slack fails or is not configured
+      console.log("Falling back to email notifications for sales inquiry");
       const admins = await getSystemAdmins();
 
       if (admins.length === 0) {

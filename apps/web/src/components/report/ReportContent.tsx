@@ -44,9 +44,6 @@ export const ReportContent: React.FC<ReportContentProps> = ({
 }) => {
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [fontSize, setFontSize] = useState("text-sm");
-  const [reportView, setReportView] = useState<
-    "enhanced" | "compact" | "figma"
-  >("figma");
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Check if we're in K-12 demo environment
@@ -327,7 +324,7 @@ export const ReportContent: React.FC<ReportContentProps> = ({
     console.log("hasAnalysisResult flag:", hasAnalysisResult);
   }, [currentCase, markdownReport, hasAnalysisResult]);
 
-  // If K-12, tutoring, or post-secondary module, use the enhanced card-based report display with PDF export
+  // If K-12, tutoring, or post-secondary module, use the unified viewer
   const isTutoringModule = currentCase?.module_type === "tutoring";
   const isPostSecondaryModule = currentCase?.module_type === "post_secondary";
   if (
@@ -354,71 +351,12 @@ export const ReportContent: React.FC<ReportContentProps> = ({
       );
     }
 
-    // For K-12 and tutoring, use the existing view toggle
+    // For K-12 and tutoring, use the unified viewer (no view toggle)
     return (
-      <div>
-        {/* View Toggle Buttons */}
-        <div className="flex justify-center mb-4 gap-2">
-          <Button
-            variant={reportView === "figma" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setReportView("figma")}
-            className="flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            Figma View
-          </Button>
-          <Button
-            variant={reportView === "enhanced" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setReportView("enhanced")}
-            className="flex items-center gap-2"
-          >
-            <Layers className="w-4 h-4" />
-            Enhanced View
-          </Button>
-          <Button
-            variant={reportView === "compact" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setReportView("compact")}
-            className="flex items-center gap-2"
-          >
-            <Layout className="w-4 h-4" />
-            Compact View (1-2 pages)
-          </Button>
-        </div>
-
-        {/* Render selected report view */}
-        {reportView === "figma" ? (
-          // Figma view - use card report for both K-12 and tutoring
-          <TutoringCardReportEditable
-            markdownReport={markdownReport}
-            studentName={studentName}
-            currentCaseId={currentCase.id}
-          />
-        ) : reportView === "enhanced" ? (
-          // Enhanced view - use specialized components for each module
-          isTutoringModule ? (
-            <TutoringCardReportEditable
-              markdownReport={markdownReport}
-              studentName={studentName}
-              currentCaseId={currentCase.id}
-            />
-          ) : (
-            <K12CardReportEnhanced
-              markdownReport={markdownReport}
-              studentName={studentName}
-            />
-          )
-        ) : (
-          // Compact view - use K12CompactReport for both K12 and tutoring (since tutoring is K12-focused)
-          <K12CompactReport
-            markdownReport={markdownReport}
-            studentName={studentName}
-            reportId={currentCase.id}
-          />
-        )}
-      </div>
+      <K12CardReportEnhanced
+        markdownReport={markdownReport}
+        studentName={studentName}
+      />
     );
   }
 

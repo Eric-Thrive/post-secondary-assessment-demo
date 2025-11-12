@@ -230,42 +230,60 @@ export class AIJSONService {
   }
 
   private async loadJSONSystemPrompt(moduleType: string): Promise<string> {
-    const candidateKeys = [
-      `system_instructions_${moduleType}_json`,
-      `system_instructions_${moduleType}_json_report`,
-      `system_instructions_${moduleType}_json_generation`,
-      `json_report_system_prompt_${moduleType}`,
-      `system_instructions_${moduleType}`,
-    ];
+    // Simple approach: just look for system_instructions_{moduleType}
+    const systemPrompts = await storage.getPromptSections(moduleType, "system");
 
-    const jsonScopedPrompts = await storage.getPromptSections(
-      moduleType,
-      "system",
-      "json"
+    const primaryKey = `system_instructions_${moduleType}`;
+    const match = systemPrompts.find(
+      (prompt: any) => prompt.section_key === primaryKey
     );
-    const systemPrompts =
-      jsonScopedPrompts.length > 0
-        ? jsonScopedPrompts
-        : await storage.getPromptSections(moduleType, "system");
 
-    for (const key of candidateKeys) {
-      const match = systemPrompts.find(
-        (prompt: any) => prompt.section_key === key
+    if (match?.content) {
+      console.log(
+        `✅ Loaded system prompt: ${primaryKey} (${match.content.length} chars)`
       );
-      if (match?.content) {
-        console.log(`✅ Loaded JSON system prompt for ${moduleType}: ${key}`);
-        return match.content;
-      }
+      return match.content;
     }
 
     throw new Error(
-      `JSON system prompt not found for module: ${moduleType}. Please ensure one of the following keys exists: ${candidateKeys.join(
-        ", "
-      )}`
+      `System prompt not found: ${primaryKey}. Available prompts: ${systemPrompts
+        .map((p: any) => p.section_key)
+        .join(", ")}`
     );
   }
 
   private buildJSONUserPrompt(
+    moduleType: string,
+    documents: string[],
+    studentName?: string,
+    gradeBand?: string
+  ): string {
+    // The system prompt contains all instructions and schema
+    // User prompt just provides the documents and student context
+    const learnerContextParts: string[] = [];
+    if (studentName) {
+      learnerContextParts.push(`Student Name: ${studentName}`);
+    }
+    if (gradeBand) {
+      learnerContextParts.push(`Grade: ${gradeBand}`);
+    }
+
+    const documentSection =
+      documents.length > 0
+        ? `Documents to analyze:\n\n${documents.join("\n\n---\n\n")}`
+        : "No documents were supplied. Base the report on available context.";
+
+    const learnerContext =
+      learnerContextParts.length > 0
+        ? `${learnerContextParts.join("\n")}\n\n`
+        : "";
+
+    return `${learnerContext}${documentSection}`;
+  }
+
+  // LEGACY: Old buildJSONUserPrompt with schema in user message
+  // Keeping for reference but no longer used
+  private buildJSONUserPromptLegacy(
     moduleType: string,
     documents: string[],
     studentName?: string,
@@ -484,6 +502,11 @@ export class AIJSONService {
     gradeBand?: string
   ): TutoringReportStructure {
     try {
+      console.log(
+        "🔍 DEBUG: Raw AI response (first 500 chars):",
+        response.substring(0, 500)
+      );
+
       // Clean up response - remove any markdown formatting
       const cleanResponse = response
         .replace(/```json\n?/g, "")
@@ -493,6 +516,16 @@ export class AIJSONService {
       const parsed = JSON.parse(cleanResponse);
 
       // Validate strict tutoring schema structure
+      console.log("🔍 DEBUG: Parsed JSON keys:", Object.keys(parsed));
+      console.log("🔍 DEBUG: Has meta?", !!parsed.meta);
+      console.log("🔍 DEBUG: Has student_overview?", !!parsed.student_overview);
+      console.log(
+        "🔍 DEBUG: Has key_support_strategies?",
+        !!parsed.key_support_strategies
+      );
+      console.log("🔍 DEBUG: Has strengths?", !!parsed.strengths);
+      console.log("🔍 DEBUG: Has challenges?", !!parsed.challenges);
+
       if (
         !parsed.meta ||
         !parsed.student_overview ||

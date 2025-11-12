@@ -1,5 +1,5 @@
-import { db } from "./apps/server/db.js";
-import { promptSections } from "./packages/shared/src/schema.js";
+import { db } from "./apps/server/db";
+import { promptSections } from "./packages/db/schema";
 import { eq } from "drizzle-orm";
 
 async function checkTutoringPrompts() {

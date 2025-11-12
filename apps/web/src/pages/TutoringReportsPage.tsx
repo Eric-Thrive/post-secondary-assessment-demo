@@ -1,8 +1,7 @@
-import BaseReportGenerator from "@/components/BaseReportGenerator";
-import { MODULE_CONFIGS } from "@/types/moduleConfig";
+import TutoringReportGenerator from "@/components/TutoringReportGeneratorNew";
 
 const TutoringReportsPage = () => {
-  return <BaseReportGenerator config={MODULE_CONFIGS.tutoring} />;
+  return <TutoringReportGenerator />;
 };
 
 export default TutoringReportsPage;

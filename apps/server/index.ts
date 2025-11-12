@@ -11,8 +11,9 @@ import { performanceMiddleware } from "./middleware/performance-monitoring";
 import { OptimizedPromptService } from "./services/optimized-prompt-service";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Increase payload limits to 50mb for K-12 and tutoring reports
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
 // Add performance monitoring middleware
 app.use(performanceMiddleware);
@@ -101,7 +102,11 @@ app.use((req, res, next) => {
       await OptimizedPromptService.warmUpCache();
       log("Prompt cache warmed up successfully");
     } catch (error) {
-      log("Failed to warm up prompt cache:", error);
+      log(
+        `Failed to warm up prompt cache: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   });
 

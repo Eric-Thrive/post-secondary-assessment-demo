@@ -24,6 +24,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PromptManager from "@/components/PromptManager";
 
 interface AdminStats {
   users: {
@@ -82,7 +83,10 @@ export default function AdminDashboard() {
   // Determine which dashboard to show based on role
   const isOrgAdmin = user?.role === "org_admin";
   const isAdminOrDeveloper =
-    user?.role === "admin" || user?.role === "developer";
+    user?.role === "admin" ||
+    user?.role === "developer" ||
+    user?.role === "system_admin" ||
+    user?.role === "SYSTEM_ADMIN";
 
   // Fetch admin stats for admin/developer
   const {
@@ -386,6 +390,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="organizations">Organizations</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="prompts">Prompts</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -639,6 +644,21 @@ export default function AdminDashboard() {
                     )
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prompts" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Prompt Manager</CardTitle>
+                <CardDescription>
+                  Manage AI prompts for all modules (K-12, Tutoring,
+                  Post-Secondary)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PromptManager />
               </CardContent>
             </Card>
           </TabsContent>

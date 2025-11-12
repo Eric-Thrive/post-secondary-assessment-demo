@@ -10,11 +10,12 @@ This specification defines an email-verified user registration system with admin
 - **Registration_System**: The user account creation interface and workflow
 - **Email_Verification**: The process of confirming user email address ownership through a confirmation link
 - **Verification_Link**: A unique, time-limited URL sent to users for email confirmation
-- **System_Admin**: Users with the system_admin role who receive administrative notifications
+- **System_Admin**: Users with the system_admin role who receive administrative notifications via Slack
+- **Slack_Webhook**: A configured webhook URL for sending notifications to a designated Slack channel
 - **Demo_Mode_Banner**: A visual indicator informing users the platform is in demonstration mode
 - **Sales_Inquiry**: A user request for information about purchasing or upgrading platform access
 - **Support_Request**: A user request for technical assistance or help with platform features
-- **Registration_Notification**: An automated email sent to System_Admin users when new users register
+- **Registration_Notification**: An automated Slack message sent via webhook when new users register
 - **Confirmation_Email**: The email containing the Verification_Link sent to newly registered users
 - **Verified_User**: A user who has successfully clicked their Verification_Link and completed email verification
 - **Pending_User**: A user who has registered but not yet verified their email address
@@ -59,50 +60,51 @@ This specification defines an email-verified user registration system with admin
 
 ### Requirement 4
 
-**User Story:** As a user who has received a confirmation email, I want to click the verification link and have my account activated, so that I can log in and use the platform.
+**User Story:** As a user who has received a confirmation email, I want to click the verification link and have my account activated with demo access information, so that I understand my trial limitations and upgrade options.
 
 #### Acceptance Criteria
 
 1. WHEN users click the Verification_Link, THE Registration_System SHALL validate the link token and expiration time
 2. WHEN the Verification_Link is valid, THE Assessment_Platform SHALL convert the Pending_User to a Verified_User
-3. WHEN email verification succeeds, THE Registration_System SHALL redirect users to a success page with login instructions
-4. IF the Verification_Link is expired or invalid, THEN THE Registration_System SHALL display an error message with options to request a new link
-5. WHILE processing verification, THE Assessment_Platform SHALL update the user's email_verified status in the database
+3. WHEN email verification succeeds, THE Registration_System SHALL redirect users to a success page informing them they have demo access to run 5 reports
+4. WHEN users view the verification success page, THE Assessment_Platform SHALL display information about contacting customer support to upgrade to a paid plan
+5. IF the Verification_Link is expired or invalid, THEN THE Registration_System SHALL display an error message with options to request a new link
+6. WHILE processing verification, THE Assessment_Platform SHALL update the user's email_verified status in the database
 
 ### Requirement 5
 
-**User Story:** As a system administrator, I want to receive an email notification when a new user registers, so that I can monitor platform growth and respond to new user needs.
+**User Story:** As a system administrator, I want to receive a Slack notification when a new user registers, so that I can monitor platform growth and respond to new user needs.
 
 #### Acceptance Criteria
 
-1. WHEN a new user completes registration, THE Assessment_Platform SHALL send a Registration_Notification to all users with the system_admin role
-2. WHEN the Registration_Notification is sent, THE email SHALL include the new user's name, email, organization, and registration timestamp
-3. WHEN multiple System_Admin users exist, THE Assessment_Platform SHALL send the notification to all of them
-4. WHERE no System_Admin users exist, THE Assessment_Platform SHALL log the registration event for manual review
+1. WHEN a new user completes registration, THE Assessment_Platform SHALL send a Registration_Notification to the configured Slack_Webhook
+2. WHEN the Registration_Notification is sent, THE Slack message SHALL include the new user's name, email, organization, and registration timestamp in a formatted message
+3. WHEN the Slack_Webhook is configured, THE Assessment_Platform SHALL send the notification to the designated Slack channel
+4. WHERE the Slack_Webhook is not configured or fails, THE Assessment_Platform SHALL log the registration event for manual review
 5. WHILE sending notifications, THE Assessment_Platform SHALL not block or delay the user's registration process
 
 ### Requirement 6
 
-**User Story:** As a system administrator, I want to receive an email notification when users request support, so that I can provide timely assistance and maintain user satisfaction.
+**User Story:** As a system administrator, I want to receive a Slack notification when users request support, so that I can provide timely assistance and maintain user satisfaction.
 
 #### Acceptance Criteria
 
-1. WHEN users submit a Support_Request through the platform, THE Assessment_Platform SHALL send a notification email to all System_Admin users
-2. WHEN the support notification is sent, THE email SHALL include the user's contact information, issue description, and urgency level
-3. WHEN users request support before completing registration, THE Assessment_Platform SHALL still capture and forward the request to System_Admin users
-4. WHERE support requests include attachments or screenshots, THE notification SHALL include or reference these materials
+1. WHEN users submit a Support_Request through the platform, THE Assessment_Platform SHALL send a notification message to the configured Slack_Webhook
+2. WHEN the support notification is sent, THE Slack message SHALL include the user's contact information, issue description, and urgency level in a formatted message
+3. WHEN users request support before completing registration, THE Assessment_Platform SHALL still capture and forward the request via Slack_Webhook
+4. WHERE support requests include attachments or screenshots, THE notification SHALL include links or references to these materials in the Slack message
 5. WHILE processing support requests, THE Assessment_Platform SHALL provide users with a confirmation that their request was received
 
 ### Requirement 7
 
-**User Story:** As a system administrator, I want to receive an email notification when users inquire about sales or purchasing, so that I can follow up with potential customers promptly.
+**User Story:** As a system administrator, I want to receive a Slack notification when users inquire about sales or purchasing, so that I can follow up with potential customers promptly.
 
 #### Acceptance Criteria
 
-1. WHEN users submit a Sales_Inquiry through the platform, THE Assessment_Platform SHALL send a notification email to all System_Admin users
-2. WHEN the sales notification is sent, THE email SHALL include the user's contact information, organization details, and specific inquiry
-3. WHEN users express interest in specific modules or features, THE notification SHALL include this information for targeted follow-up
-4. WHERE users request pricing information, THE Assessment_Platform SHALL include their organization size and use case in the notification
+1. WHEN users submit a Sales_Inquiry through the platform, THE Assessment_Platform SHALL send a notification message to the configured Slack_Webhook
+2. WHEN the sales notification is sent, THE Slack message SHALL include the user's contact information, organization details, and specific inquiry in a formatted message
+3. WHEN users express interest in specific modules or features, THE notification SHALL include this information in the Slack message for targeted follow-up
+4. WHERE users request pricing information, THE Assessment_Platform SHALL include their organization size and use case in the Slack notification
 5. WHILE capturing sales inquiries, THE Assessment_Platform SHALL provide users with expected response timeframes
 
 ### Requirement 8
@@ -119,17 +121,29 @@ This specification defines an email-verified user registration system with admin
 
 ### Requirement 9
 
-**User Story:** As a system administrator, I want email notifications to be reliable and properly formatted, so that I can efficiently process and respond to user actions.
+**User Story:** As a system administrator, I want Slack notifications to be reliable and properly formatted, so that I can efficiently process and respond to user actions.
 
 #### Acceptance Criteria
 
-1. WHEN the Assessment_Platform sends administrative notifications, THE system SHALL use a reliable email service with delivery confirmation
-2. WHEN notification emails are composed, THE Assessment_Platform SHALL use professional templates with consistent branding
-3. WHEN multiple notification types are sent, THE email subject lines SHALL clearly indicate the notification type (Registration, Support, Sales)
-4. WHERE email delivery fails, THE Assessment_Platform SHALL retry sending and log failures for manual follow-up
-5. WHILE sending notifications, THE Assessment_Platform SHALL include direct links to relevant admin interfaces for quick action
+1. WHEN the Assessment_Platform sends administrative notifications, THE system SHALL use the configured Slack_Webhook with proper error handling
+2. WHEN Slack notifications are composed, THE Assessment_Platform SHALL use consistent formatting with clear message structure and relevant emojis
+3. WHEN multiple notification types are sent, THE Slack messages SHALL clearly indicate the notification type (Registration, Support, Sales) with distinct formatting
+4. WHERE Slack webhook delivery fails, THE Assessment_Platform SHALL retry sending and log failures for manual follow-up
+5. WHILE sending notifications, THE Assessment_Platform SHALL include relevant information and context in the Slack message for quick action
 
 ### Requirement 10
+
+**User Story:** As a newly verified user, I want to clearly understand my demo access limitations and upgrade options, so that I can make informed decisions about using the platform.
+
+#### Acceptance Criteria
+
+1. WHEN users successfully verify their email, THE Assessment_Platform SHALL display a clear message that they have demo access to run 5 reports
+2. WHEN users view their demo access information, THE Assessment_Platform SHALL provide a clear call-to-action to contact customer support for upgrading to a paid plan
+3. WHEN users need to upgrade, THE Assessment_Platform SHALL provide contact information or a direct method to reach customer support
+4. WHERE users have questions about their demo limitations, THE Assessment_Platform SHALL include links to documentation or support resources
+5. WHILE displaying demo access information, THE Assessment_Platform SHALL maintain a positive and encouraging tone about the platform's capabilities
+
+### Requirement 11
 
 **User Story:** As a platform user, I want the registration and verification process to be secure, so that my account and data are protected from unauthorized access.
 
